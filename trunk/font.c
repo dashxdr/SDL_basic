@@ -254,10 +254,9 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c)
 char tt[2];
 	tt[0]=c;
 	tt[1]=0;
-	drawtext(bc, x*=FONTW, y*=FONTH, bc->white, bc->black, tt);
+	drawtext(bc, x*FONTW, y*FONTH, bc->white, bc->black, tt);
 	if(x<bc->txsize && y<bc->tysize)
 		bc->textstate[y*bc->txsize + x] = c;
-
 }
 
 void dprints(bc *bc, char *s)
