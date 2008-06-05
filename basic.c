@@ -52,6 +52,10 @@ void dolist(bc *bc, char *text)
 char aline[1024];
 char *p;
 int i;
+int min, max;
+	min=0;
+	max=0x7fffffff;
+
 	p=bc->program;
 	while(*p)
 	{
@@ -67,9 +71,16 @@ int i;
 	}
 }
 
+void doedit(bc *bc, char *text)
+{
+
+}
+
+
 struct cmd commandlist[]={
 {"exit", doexit},
 {"list", dolist},
+{"edit", doedit},
 {0, 0}};
 
 void error(bc *bc, char *s, ...)
