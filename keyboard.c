@@ -217,6 +217,7 @@ int new;
 	if(new-bc->lastupdate<20) return;
 	bc->lastupdate=new;
 	bc->tainted=0;
+#warning must lock
 	update(bc);
 }
 
@@ -282,7 +283,7 @@ void listall(char *base)
 
 void cr(bc *bc)
 {
-	termtext(bc, "\n");
+	tprintf(bc, "\n");
 }
 
 void typeline(bc *bc, char *prompt,int echocr)
@@ -304,7 +305,7 @@ int scrollback;
 	xdelta=0;
 	linesin=bc->hcount>HISTSIZE ? HISTSIZE : bc->hcount;
 	*bc->debline=0;
-	termtext(bc, prompt);
+	tprintf(bc, prompt);
 	ref=0;
 	i=0;
 	fake=0;
@@ -316,7 +317,7 @@ int scrollback;
 			SDL_Delay(10);
 			scaninput(bc);
 			code=takedown(bc);
-printf("code=%d\n", code);
+if(code==0x1b) exit(0);
 		} else
 		{
 			code=*fake++;
@@ -428,7 +429,7 @@ printf("code=%d\n", code);
 			if(scrollback)
 				scrollback=showhistory(bc, 0);
 			i=strlen(bc->debline);
-			termtext(bc, "\r%s%s\033k\033%dx",prompt,bc->debline,plen+i+xdelta);
+			tprintf(bc, "\r%s%s\033k\033%dx",prompt,bc->debline,plen+i+xdelta);
 			ref=0;
 		}
 

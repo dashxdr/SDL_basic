@@ -26,9 +26,10 @@ typedef struct basic_context {
 	char *dp;
 	char *debhist;
 	int hcount;
-	int fheight;
+	int fwidth, fheight;
 	int lastupdate;
 	int tainted;
+	char *textstate;
 } bc;
 
 #define MYF1 0x180
@@ -73,6 +74,7 @@ void inittext(bc *bc);
 void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str);
 void termtext(bc *bc, char *str, ...);
 void cursor(bc *bc, int onoff);
+void tprintf(bc *bc, char *s, ...);
 
 // render.c
 
@@ -80,3 +82,4 @@ void cursor(bc *bc, int onoff);
 
 void markkey(bc *bc, int code, int mod, int downup);
 void typeline(bc *bc, char *prompt,int echocr);
+void updatef(bc *bc);
