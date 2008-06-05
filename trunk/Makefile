@@ -3,8 +3,9 @@ CFLAGS = -O2 -Wall $(shell sdl-config --cflags)
 LDFLAGS = $(shell sdl-config --libs)
 
 all: basic
-basic: basic.o font.o render.o keyboard.o
+basic: main.o basic.o font.o render.o keyboard.o
 
+main.o: main.c misc.h
 basic.o: basic.c misc.h
 font.o: font.c misc.h
 render.o: render.c misc.h

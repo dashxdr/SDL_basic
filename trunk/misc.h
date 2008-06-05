@@ -11,6 +11,7 @@ extern int txsize, tysize;
 #define LINESIZE 128
 
 typedef struct basic_context {
+	int doneflag;
 	SDL_Surface *thescreen;
 	int xsize, ysize;
 	int txsize, tysize; // screen dimensions in characters
@@ -30,6 +31,7 @@ typedef struct basic_context {
 	int lastupdate;
 	int tainted;
 	char *textstate;
+	char program[1000000]; // 1M ought to be big enough...
 } bc;
 
 #define MYF1 0x180
@@ -63,7 +65,7 @@ typedef struct basic_context {
 
 
 
-// basic.c
+// main.c
 void colordot(bc *bc, unsigned int x,unsigned int y,int c);
 void update(bc *bc);
 
@@ -72,7 +74,6 @@ void update(bc *bc);
 
 void inittext(bc *bc);
 void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str);
-void termtext(bc *bc, char *str, ...);
 void cursor(bc *bc, int onoff);
 void tprintf(bc *bc, char *s, ...);
 
@@ -83,3 +84,7 @@ void tprintf(bc *bc, char *s, ...);
 void markkey(bc *bc, int code, int mod, int downup);
 void typeline(bc *bc, char *prompt,int echocr);
 void updatef(bc *bc);
+
+// basic.c
+
+int processline(bc *bc, char *line);
