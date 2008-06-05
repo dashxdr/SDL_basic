@@ -196,63 +196,6 @@ void newline(bc *bc)
 	}
 }
 
-
-void termtext(bc *bc, char *str, ...)
-{
-char c;
-char temp[1024];
-int intemp;
-int white, black;
-char tbuff[2048];
-va_list ap;
-
-	va_start(ap, str);
-	vsnprintf(tbuff, sizeof(tbuff), str, ap);
-	va_end(ap);
-	str = tbuff;
-
-	cursor(bc, 0);
-	white = bc->white;
-	black = bc->black;
-	intemp=0;
-	for(;;)
-	{
-		c=*str++;
-		if(c==0 || c=='\n')
-		{
-			if(intemp)
-			{
-				temp[intemp]=0;
-				if(bc->txpos + intemp >= bc->txsize)
-				{
-					int clip, csave;
-					clip = bc->txsize - bc->txpos;
-					csave = temp[clip];
-					temp[clip] = 0;
-					drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
-						white, black, temp);
-					temp[clip] = csave;
-					memmove(temp, temp+clip, intemp-clip);
-					intemp -= clip;
-					temp[intemp] = 0;
-					bc->txpos = 0;
-					newline(bc);
-				}
-				drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
-					white, black, temp);
-				bc->txpos += intemp;
-				intemp=0;
-			}
-			if(!c) break;
-// must have a newline then
-			bc->txpos = 0;
-			newline(bc);
-		} else
-			if(intemp<sizeof(temp)-1)
-				temp[intemp++] = c;
-	}
-}
-
 void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c)
 {
 char tt[2];
