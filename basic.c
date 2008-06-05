@@ -109,7 +109,7 @@ char moved;
 SDL_Event event;
 int videoflags;
 int doneflag;
-bc mybc;
+bc mybc, *bc;
 
 
 	xsize=IXSIZE;
@@ -129,29 +129,32 @@ bc mybc;
 		exit(5);
 	}
 
-	memset(&mybc, 0, sizeof(mybc));
-	mybc.lastcode = -1;
-	mybc.xsize = xsize;
-	mybc.ysize = ysize;
-	mybc.txpos = 0;
-	mybc.typos = 0;
-	mybc.cursorstate = 0;
-	mybc.thescreen = thescreen;
-	mybc.white = SDL_MapRGB(mybc.thescreen->format, 255, 255, 255);
-	mybc.black = SDL_MapRGB(mybc.thescreen->format, 0, 0, 0);
-	mybc.cursorcolor = SDL_MapRGB(mybc.thescreen->format, 255, 0, 0);
-	inittext(&mybc);
+	bc=&mybc;
+	memset(bc, 0, sizeof(mybc));
+	bc->lastcode = -1;
+	bc->xsize = xsize;
+	bc->ysize = ysize;
+	bc->txpos = 0;
+	bc->typos = 0;
+	bc->cursorstate = 0;
+	bc->thescreen = thescreen;
+	bc->white = SDL_MapRGB(bc->thescreen->format, 255, 255, 255);
+	bc->black = SDL_MapRGB(bc->thescreen->format, 0, 0, 0);
+	bc->cursorcolor = SDL_MapRGB(bc->thescreen->format, 255, 0, 0);
+	inittext(bc);
 
 
-	lock(&mybc);
-//	drawtext(&mybc, 20,20,mybc.white, mybc.black, "This is a test!");
-	termtext(&mybc, "Ready\nFOOOOO");
-int i;for(i=0;i<2192;++i) {char ttt[128];sprintf(ttt, " %d", i);termtext(&mybc, ttt);}
-	cursor(&mybc, 1);
-	unlock(&mybc);
-	update(&mybc);
+	lock(bc);
+//	drawtext(bc, 20,20,bc->white, bc->black, "This is a test!");
+//	termtext(bc, "Ready\nFOOOOO");
+//int i;for(i=0;i<2192;++i) tprintf(bc, "%d ", i);
+	cursor(bc, 1);
+	unlock(bc);
+	update(bc);
 
-	typeline(&mybc, "Ready", 1);
+	tprintf(bc, "Ready\n");
+	typeline(bc, "", 1);
+return 0;
 
 	doneflag = 0;
 	while(!doneflag)
@@ -174,12 +177,12 @@ int i;for(i=0;i<2192;++i) {char ttt[128];sprintf(ttt, " %d", i);termtext(&mybc, 
 				code=event.key.keysym.sym;
 				mod=event.key.keysym.mod;
 				if(code==SDLK_ESCAPE) doneflag = 1;
-				markkey(&mybc, code, mod, 1);
+				markkey(bc, code, mod, 1);
 				break;
 			case SDL_KEYUP:
 				code=event.key.keysym.sym;
 				mod=event.key.keysym.mod;
-				markkey(&mybc, code,mod,0);
+				markkey(bc, code,mod,0);
 				break;
 			case SDL_QUIT:
 				doneflag = 1;
