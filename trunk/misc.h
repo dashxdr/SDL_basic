@@ -7,6 +7,8 @@ extern int txsize, tysize;
 #define KEYMAX 32
 #define KEYHISTSIZE 16
 
+#define SCROLLHISTORYSIZE 8192
+
 #define HISTSIZE 512
 #define LINESIZE 128
 
@@ -34,9 +36,12 @@ typedef struct basic_context {
 	int fwidth, fheight;
 	int lastupdate;
 	int tainted;
-	char *textstate;
+	int textsize;
+	char *textstate, *textbak;
 	char filename[128];
 	char workspace[1024];
+	int scrollhistoryin;
+	char *scrollhistory;
 	char program[1000000]; // 1M ought to be big enough...
 } bc;
 
@@ -82,6 +87,7 @@ void inittext(bc *bc);
 void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str);
 void cursor(bc *bc, int onoff);
 void tprintf(bc *bc, char *s, ...);
+void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 
 // render.c
 
