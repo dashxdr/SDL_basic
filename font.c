@@ -108,8 +108,11 @@ void inittext(bc *bc)
 	bc->tysize = bc->ysize/FONTH;
 	bc->fwidth = FONTW;
 	bc->fheight = FONTH;
-#warning memory check
-	bc->textstate = malloc(bc->txsize * bc->tysize);
+	bc->textsize = bc->txsize * bc->tysize;
+#warning 3 memory checks
+	bc->textstate = malloc(bc->textsize);
+	bc->textbak = malloc(bc->textsize);
+	bc->scrollhistory = malloc(bc->txsize * SCROLLHISTORYSIZE);
 	memset(bc->textstate, ' ', bc->txsize * bc->tysize);
 	bc->debhist=malloc(LINESIZE*HISTSIZE);
 }
@@ -164,6 +167,8 @@ int pitch;
 		memset(p1, 0, w);
 		p1+=pitch;
 	}
+	memcpy(bc->scrollhistory+(bc->scrollhistoryin++ & (SCROLLHISTORYSIZE-1))*
+			bc->txsize, bc->textstate, bc->txsize);
 	memmove(bc->textstate, bc->textstate + bc->txsize,
 		bc->txsize * (bc->tysize-1));
 	memset(bc->textstate + bc->txsize * (bc->tysize-1), ' ', bc->txsize);

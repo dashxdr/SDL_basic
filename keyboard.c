@@ -267,7 +267,26 @@ int key,mod;
 
 int showhistory(bc *bc, int back)
 {
-	return 0;
+char *p;
+int i,j,k;
+
+	if(back>bc->scrollhistoryin) back=bc->scrollhistoryin;
+	memcpy(bc->textbak,bc->textstate,bc->textsize);
+	for(j=0;j<bc->tysize;++j)
+	{
+		k=bc->scrollhistoryin-back+j;
+		if(k<bc->scrollhistoryin)
+			p=bc->scrollhistory+bc->txsize*(k&(SCROLLHISTORYSIZE-1));
+		else
+			p=bc->textbak+bc->txsize*(k-bc->scrollhistoryin);
+		for(i=0;i<bc->txsize;++i)
+			drawcharxy(bc, i,j,*p++);
+	}
+
+	updatef(bc);
+	memcpy(bc->textstate, bc->textbak, bc->textsize);
+	return back;
+
 }
 
 char *complete(char *base)
@@ -286,7 +305,7 @@ void cr(bc *bc)
 	tprintf(bc, "\n");
 }
 
-void typeline(bc *bc, char *prompt,int echocr)
+void typeline(bc *bc, char *preload,int echocr)
 {
 int i=0,j;
 int code;
@@ -295,19 +314,17 @@ char linesave[LINESIZE],ch;
 int linesin;
 char ref;
 int xdelta;
-int plen;
 char *p1,*p2;
 char token[128];
 char *fake;
 int scrollback;
 
-	plen=strlen(prompt);
 	xdelta=0;
 	linesin=bc->hcount>HISTSIZE ? HISTSIZE : bc->hcount;
-	*bc->debline=0;
-	tprintf(bc, prompt);
+	strcpy(bc->debline, preload);
+	i=strlen(bc->debline);
+	tprintf(bc, preload);
 	ref=0;
-	i=0;
 	fake=0;
 	scrollback=0;
 	for(;;)
@@ -429,7 +446,7 @@ if(code==0x1b) exit(0);
 			if(scrollback)
 				scrollback=showhistory(bc, 0);
 			i=strlen(bc->debline);
-			tprintf(bc, "\r%s%s\033k\033%dx",prompt,bc->debline,plen+i+xdelta);
+			tprintf(bc, "\r%s\033k\033%dx",bc->debline,i+xdelta);
 			ref=0;
 		}
 
