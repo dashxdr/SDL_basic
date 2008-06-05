@@ -12,6 +12,7 @@ extern int txsize, tysize;
 
 #define BF_QUIT         1 // we can quit
 #define BF_NOPROMPT     2 // don't put up "Ready" prompt.
+#define BF_EDIT         4 // preload a line, for editing
 
 typedef struct basic_context {
 	int flags;
@@ -35,6 +36,7 @@ typedef struct basic_context {
 	int tainted;
 	char *textstate;
 	char filename[128];
+	char workspace[1024];
 	char program[1000000]; // 1M ought to be big enough...
 } bc;
 

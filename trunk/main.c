@@ -151,7 +151,8 @@ bc mybc, *bc;
 			tprintf(bc, "Ready\n\n");
 		else
 			bc->flags &= ~BF_NOPROMPT;
-		typeline(bc, "", 1);
+		typeline(bc, (bc->flags & BF_EDIT) ? bc->workspace : "", 1);
+		bc->flags &= ~BF_EDIT;
 		processline(bc, bc->debline);
 		if(bc->flags & BF_QUIT) break;
 //		printf("%s\n", bc->debline);
