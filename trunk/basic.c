@@ -299,6 +299,13 @@ char *p;
 		t, t==1 ? "" : "s");
 }
 
+void donew(bc *bc, char *text)
+{
+	bc->program[0]=0;
+	bc->filename[0]=0;
+	tprintf(bc, "Program erased.\n");
+}
+
 struct cmd commandlist[]={
 {"exit", doexit},
 {"list", dolist},
@@ -306,6 +313,7 @@ struct cmd commandlist[]={
 {"save", dosave},
 {"load", doload},
 {"info", doinfo},
+{"new", donew},
 {0, 0}};
 
 int processline(bc *bc, char *line)
