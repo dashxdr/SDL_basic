@@ -106,7 +106,11 @@ void inittext(bc *bc)
 {
 	bc->txsize = bc->xsize/FONTW;
 	bc->tysize = bc->ysize/FONTH;
+	bc->fwidth = FONTW;
 	bc->fheight = FONTH;
+#warning memory check
+	bc->textstate = malloc(bc->txsize * bc->tysize);
+	memset(bc->textstate, ' ', bc->txsize * bc->tysize);
 }
 
 
@@ -114,6 +118,7 @@ void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str)
 {
 int v;
 unsigned char *p, c;
+	bc->tainted = 1;
 	while((c=*str++))
 	{
 		c-=' ';
@@ -162,20 +167,17 @@ int pitch;
 
 void cursor(bc *bc, int onoff)
 {
-Uint32 color;
-int x,y, u, v;
+char tt[2];
 
 	onoff = !!onoff;
 	if(bc->cursorstate != onoff)
 	{
-		color = onoff ? bc->cursorcolor : bc->black;
-		x=bc->txpos * FONTW;
-		y=bc->typos * FONTH;
-		for(v=0;v<FONTH;++v)
-		{
-			for(u=0;u<FONTW;++u)
-				colordot(bc, x+u, y+v, color);
-		}
+		bc->tainted = 1;
+		tt[0] = bc->textstate[bc->typos*bc->txsize + bc->txpos];
+		tt[1] = 0;
+		drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
+			onoff ? bc->black : bc->white,
+			onoff ? bc->cursorcolor : bc->black, tt);
 		bc->cursorstate = onoff;
 	}
 }
@@ -247,3 +249,101 @@ va_list ap;
 	}
 }
 
+void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c)
+{
+char tt[2];
+	tt[0]=c;
+	tt[1]=0;
+	drawtext(bc, x*=FONTW, y*=FONTH, bc->white, bc->black, tt);
+	if(x<bc->txsize && y<bc->tysize)
+		bc->textstate[y*bc->txsize + x] = c;
+
+}
+
+void dprints(bc *bc, char *s)
+{
+char *p,ch;
+static char escape=0;
+int i;
+static int escapedata[20],ecount;
+
+	cursor(bc, 0);
+	p=s;
+	ecount=escape=0;
+	while((ch=*p++))
+	{
+		if(escape)
+		{
+			if(ch>='0' && ch<='9')
+			{
+				escapedata[ecount]*=10;
+				escapedata[ecount]+=ch-'0';
+			} else if(ch==';')
+			{
+				++ecount;
+				escapedata[ecount]=0;
+			}
+			else
+			{
+				escape=0;
+				switch(ch)
+				{
+				case 'k':
+					i=bc->txpos;
+					while(i<bc->txsize)
+						drawcharxy(bc, i++, bc->typos,' ');
+					break;
+				case 'x':
+					bc->txpos=escapedata[0];
+					if(bc->txpos<=0) bc->txpos=0;
+					if(bc->txpos>=bc->txsize) bc->txpos=bc->txsize-1;
+					break;
+				}
+			}
+			continue;
+		}
+		switch(ch)
+		{
+		case '\r':
+			bc->txpos=0;
+			break;
+		case '\n':
+			bc->txpos=0;
+			if(bc->typos<bc->tysize-1)
+				++bc->typos;
+			else
+				scrollup(bc);
+			break;
+		case '\t':
+			while(bc->txpos&7)
+				drawcharxy(bc, bc->txpos++,bc->typos,' ');
+			break;
+		case 8:
+			if(bc->txpos)
+				drawcharxy(bc, --bc->txpos,bc->typos,' ');
+			break;
+		case 0x1b:
+			ecount=0;
+			escapedata[ecount]=0;
+			escape=1;
+			break;
+		default:
+			drawcharxy(bc, bc->txpos++,bc->typos,ch);
+			break;
+		}
+	}
+	cursor(bc, 1);
+	updatef(bc);
+}
+
+void tprintf(bc *bc, char *s, ...)
+{
+char tbuff[2048];
+va_list ap;
+
+	va_start(ap, s);
+	vsnprintf(tbuff, sizeof(tbuff), s, ap);
+	va_end(ap);
+	dprints(bc, tbuff);
+
+}
