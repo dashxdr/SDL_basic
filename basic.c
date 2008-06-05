@@ -192,7 +192,25 @@ int v1, v2;
 
 void doedit(bc *bc, char *text)
 {
-
+char *p;
+int num;
+int i;
+	num=atoi(text);
+	p=findline(bc, num);
+	if(!*p)
+	{
+		error(bc, "Line %d does not exist.", num);
+		return;
+	}
+	i=0;
+	while(*p && *p!='\n')
+	{
+		if(i<sizeof(bc->workspace)-1)
+			bc->workspace[i++] = *p;
+		++p;
+	}
+	bc->workspace[i] = 0;
+	bc->flags |= BF_EDIT;
 }
 
 #define NAMETAIL ".bas"
@@ -261,7 +279,24 @@ int len;
 	close(fd);
 	if(len>=0)
 		bc->program[len]=0;
-	tprintf(bc, "Loaded %d bytes\n", len);
+	tprintf(bc, "Loaded %d bytes from file '%s'\n", len, filename);
+	snprintf(bc->filename, sizeof(bc->filename), "%s", filename);
+}
+
+void doinfo(bc *bc, char *text)
+{
+int t;
+char *p;
+	tprintf(bc, "Program name: '%s'\n", bc->filename);
+	t=0;
+	p=bc->program;
+	while(*p)
+	{
+		if(*p++ == '\n')
+			++t;
+	}
+	tprintf(bc, "Program size: %d bytes, %d line%s\n", strlen(bc->program),
+		t, t==1 ? "" : "s");
 }
 
 struct cmd commandlist[]={
@@ -270,6 +305,7 @@ struct cmd commandlist[]={
 {"edit", doedit},
 {"save", dosave},
 {"load", doload},
+{"info", doinfo},
 {0, 0}};
 
 int processline(bc *bc, char *line)
@@ -299,8 +335,10 @@ struct cmd *cmd;
 			addline(bc, line);
 		else
 			deleteline(bc, atoi(line));
-	} else
+	} else if(*line)
 		unknown_command(bc, line);
+	else
+		bc->flags |= BF_NOPROMPT;
 
 	return 0;
 }
