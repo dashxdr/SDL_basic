@@ -55,6 +55,7 @@ tone <frequency>,<volume>,<duration>[,array] ;freq hz, vol 0-100,
 quiet
 data expression[,...]
 read variable[,...]
+end
 
 
 
