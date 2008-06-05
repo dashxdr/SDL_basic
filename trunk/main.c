@@ -147,10 +147,13 @@ bc mybc, *bc;
 
 	for(;;)
 	{
-		tprintf(bc, "\nReady\n");
+		if(!(bc->flags & BF_NOPROMPT))
+			tprintf(bc, "Ready\n\n");
+		else
+			bc->flags &= ~BF_NOPROMPT;
 		typeline(bc, "", 1);
 		processline(bc, bc->debline);
-		if(bc->doneflag) break;
+		if(bc->flags & BF_QUIT) break;
 //		printf("%s\n", bc->debline);
 	}
 return 0;

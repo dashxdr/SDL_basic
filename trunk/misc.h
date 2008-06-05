@@ -10,8 +10,11 @@ extern int txsize, tysize;
 #define HISTSIZE 512
 #define LINESIZE 128
 
+#define BF_QUIT         1 // we can quit
+#define BF_NOPROMPT     2 // don't put up "Ready" prompt.
+
 typedef struct basic_context {
-	int doneflag;
+	int flags;
 	SDL_Surface *thescreen;
 	int xsize, ysize;
 	int txsize, tysize; // screen dimensions in characters
@@ -31,7 +34,8 @@ typedef struct basic_context {
 	int lastupdate;
 	int tainted;
 	char *textstate;
-	char program[100]; // 1M ought to be big enough...
+	char filename[128];
+	char program[1000000]; // 1M ought to be big enough...
 } bc;
 
 #define MYF1 0x180

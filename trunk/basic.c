@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "misc.h"
 
@@ -42,46 +44,6 @@ char c;
 	}
 }
 
-void doexit(bc *bc, char *text)
-{
-	bc->doneflag = 1;
-}
-
-void dolist(bc *bc, char *text)
-{
-char aline[1024];
-char *p;
-int i;
-int min, max;
-	min=0;
-	max=0x7fffffff;
-
-	p=bc->program;
-	while(*p)
-	{
-		i=0;
-		while(*p)
-		{
-			aline[i] = *p;
-			if(i<sizeof(aline)-1) ++i;
-			if(*p++ == '\n') break;
-		}
-		aline[i]=0;
-		tprintf(bc, "%s", aline);
-	}
-}
-
-void doedit(bc *bc, char *text)
-{
-
-}
-
-
-struct cmd commandlist[]={
-{"exit", doexit},
-{"list", dolist},
-{"edit", doedit},
-{0, 0}};
 
 void error(bc *bc, char *s, ...)
 {
@@ -91,6 +53,16 @@ char temp[1024];
 	vsnprintf(temp, sizeof(temp), s, ap);
 	va_end(ap);
 	tprintf(bc, "%s\n", temp);
+}
+
+void unknown_command(bc *bc, char *str)
+{
+	error(bc, "Unknown command '%s'", str);
+}
+
+void missing_parameter(bc *bc, char *str)
+{
+	error(bc, "Command is missing a parameter: %s", str);
 }
 
 char *findline(bc *bc, int linenumber)
@@ -164,6 +136,142 @@ int len;
 	p[len-1] = '\n';
 }
 
+
+void doexit(bc *bc, char *text)
+{
+	bc->flags |= BF_QUIT;
+}
+
+/*
+   list
+   list 10-50
+   list -50
+   list 10-
+   list 10
+*/
+void dolist(bc *bc, char *text)
+{
+char aline[1024];
+char *p;
+int i;
+int min, max;
+int v1, v2;
+	min=0;
+	max=0x7fffffff;
+
+	if(sscanf(text, "%d-%d", &v1, &v2) == 2)
+	{
+		min=v1;
+		max=v2;
+	} else if(*text=='-' && text[1]>='0' && text[1]<='9')
+		max=atoi(text+1);
+	else if(sscanf(text, "%d", &v1) == 1)
+	{
+		min=v1;
+		while(*text>='0' && *text<='9') ++text;
+		if(*text != '-')
+			max=v1;
+	}
+
+	p=bc->program;
+	while(*p)
+	{
+		i=0;
+		while(*p)
+		{
+			aline[i] = *p;
+			if(i<sizeof(aline)-1) ++i;
+			if(*p++ == '\n') break;
+		}
+		aline[i]=0;
+		i=atoi(aline);
+		if(min<=i && i<=max)
+			tprintf(bc, "%s", aline);
+	}
+}
+
+void doedit(bc *bc, char *text)
+{
+
+}
+
+#define NAMETAIL ".bas"
+
+void makename(char *name, int len)
+{
+int t;
+int k;
+	k=strlen(NAMETAIL);
+	t=strlen(name);
+	if(t > k && !strcmp(NAMETAIL, name+t-k))
+		return;
+	if(t+k<len-1)
+		strcat(name, NAMETAIL);
+}
+
+void dosave(bc *bc, char *text)
+{
+char filename[128];
+int fd;
+int len;
+	gettoken(filename, sizeof(filename), &text);
+	if(!filename[0])
+	{
+		strncpy(filename, bc->filename, sizeof(filename));
+		if(!filename[0])
+		{
+			missing_parameter(bc, "Must specify filename");
+			return;
+		}
+	}
+	makename(filename, sizeof(filename));
+
+	fd=open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+	if(fd<0)
+	{
+		error(bc, "Can't open file '%s' for writing.", filename);
+		return;
+	}
+	len=write(fd, bc->program, strlen(bc->program));
+	close(fd);
+	if(len!=strlen(bc->program))
+		error(bc, "ERROR: Short write, the entire program wasn't saved.");
+	strncpy(bc->filename, filename, sizeof(bc->filename));
+}
+
+void doload(bc *bc, char *text)
+{
+char filename[128];
+int fd;
+int len;
+	gettoken(filename, sizeof(filename), &text);
+	if(!filename[0])
+	{
+		missing_parameter(bc, "Must specify filename");
+		return;
+	}
+	makename(filename, sizeof(filename));
+	fd=open(filename, O_RDONLY);
+	if(fd<0)
+	{
+		error(bc, "Can't open file '%s' for reading.", filename);
+		return;
+	}
+	len=read(fd, bc->program, sizeof(bc->program)-1);
+	close(fd);
+	if(len>=0)
+		bc->program[len]=0;
+	tprintf(bc, "Loaded %d bytes\n", len);
+}
+
+struct cmd commandlist[]={
+{"exit", doexit},
+{"list", dolist},
+{"edit", doedit},
+{"save", dosave},
+{"load", doload},
+{0, 0}};
+
 int processline(bc *bc, char *line)
 {
 char token[64], *lp;
@@ -186,11 +294,13 @@ struct cmd *cmd;
 	if(cmd->name) return 0; // we found a match
 	if(line[0]>='0' && line[0]<='9') // line number
 	{
+		bc->flags |= BF_NOPROMPT;
 		if(*lp)
 			addline(bc, line);
 		else
 			deleteline(bc, atoi(line));
-	}
+	} else
+		unknown_command(bc, line);
 
 	return 0;
 }
