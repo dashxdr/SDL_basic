@@ -152,9 +152,13 @@ bc mybc, *bc;
 	unlock(bc);
 	update(bc);
 
-	tprintf(bc, "Ready\n");
-	typeline(bc, "", 1);
-return 0;
+	for(;;)
+	{
+		tprintf(bc, "Ready\n\n");
+		typeline(bc, "", 1);
+		printf("%s\n", bc->debline);
+	}
+return;
 
 	doneflag = 0;
 	while(!doneflag)

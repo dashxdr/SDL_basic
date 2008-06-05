@@ -111,6 +111,7 @@ void inittext(bc *bc)
 #warning memory check
 	bc->textstate = malloc(bc->txsize * bc->tysize);
 	memset(bc->textstate, ' ', bc->txsize * bc->tysize);
+	bc->debhist=malloc(LINESIZE*HISTSIZE);
 }
 
 
@@ -163,6 +164,9 @@ int pitch;
 		memset(p1, 0, w);
 		p1+=pitch;
 	}
+	memmove(bc->textstate, bc->textstate + bc->txsize,
+		bc->txsize * (bc->tysize-1));
+	memset(bc->textstate + bc->txsize * (bc->tysize-1), ' ', bc->txsize);
 }
 
 void cursor(bc *bc, int onoff)
