@@ -307,16 +307,16 @@ void donew(bc *bc, char *text)
 }
 
 struct cmd commandlist[]={
-{"exit", doexit},
 {"list", dolist},
 {"edit", doedit},
 {"save", dosave},
 {"load", doload},
 {"info", doinfo},
 {"new", donew},
+{"exit", doexit},
 {0, 0}};
 
-int processline(bc *bc, char *line)
+void processline(bc *bc, char *line)
 {
 char token[64], *lp;
 struct cmd *cmd;
@@ -328,17 +328,18 @@ struct cmd *cmd;
 	cmd=commandlist;
 	while(cmd->name)
 	{
-		if(!strcmp(token, cmd->name))
+		if(!strncmp(token, cmd->name, strlen(token)))
 		{
 			cmd->func(bc, lp);
-			break;
+			return;
 		}
 		++cmd;
 	}
-	if(cmd->name) return 0; // we found a match
 	if(line[0]>='0' && line[0]<='9') // line number
 	{
 		bc->flags |= BF_NOPROMPT;
+		lp=line;
+		while(*lp>='0' && *lp<='9') ++lp;
 		if(*lp)
 			addline(bc, line);
 		else
@@ -348,5 +349,5 @@ struct cmd *cmd;
 	else
 		bc->flags |= BF_NOPROMPT;
 
-	return 0;
+	return;
 }

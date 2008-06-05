@@ -99,4 +99,4 @@ void updatef(bc *bc);
 
 // basic.c
 
-int processline(bc *bc, char *line);
+void processline(bc *bc, char *line);
