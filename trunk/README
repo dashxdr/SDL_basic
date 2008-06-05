@@ -28,4 +28,29 @@ dim variable(#, ...)
 for variable = expression to espression
 next [variable]
 print string|expression[,|;][...][,|;]
+plot  <x>,<y>
+color <r>,<g>,<b>   ; range 0-255 each
+pen <radius>
+move <x>,<y>
+line <x>,<y>
+curve <cx>,<cy>,<x>,<y>  ; bezier curve
+rectangle <x1>,<y1>,<x2>,<y2>
+circle <x1>,<y1>,<radius>
+disc <x1>,<y1>,<radius>
+text <x1>,<y1>,<string>
+
+cls   ; clear screen
+input variable|string
+wait <time>  ; in seconds
+if expression then statement
+
+Functions:
+
+sgn(expr)
+sqrt(expr)
+sin(expr)
+cos(expr)
+log(expr) (base 10)
+exp(expr) (base 10)
+pow(expr,expr)  (pow(x,y) = x^y
 
