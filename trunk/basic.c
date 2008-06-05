@@ -47,8 +47,29 @@ void doexit(bc *bc, char *text)
 	bc->doneflag = 1;
 }
 
+void dolist(bc *bc, char *text)
+{
+char aline[1024];
+char *p;
+int i;
+	p=bc->program;
+	while(*p)
+	{
+		i=0;
+		while(*p)
+		{
+			aline[i] = *p;
+			if(i<sizeof(aline)-1) ++i;
+			if(*p++ == '\n') break;
+		}
+		aline[i]=0;
+		tprintf(bc, "%s", aline);
+	}
+}
+
 struct cmd commandlist[]={
 {"exit", doexit},
+{"list", dolist},
 {0, 0}};
 
 void error(bc *bc, char *s, ...)
@@ -64,41 +85,72 @@ char temp[1024];
 char *findline(bc *bc, int linenumber)
 {
 char *p=bc->program;
-char text[32];
-int tl;
 
-	sprintf(text, "%d", linenumber);
-	tl=strlen(text);
 	while(*p)
 	{
-		if(!strncmp(p, text, tl) && iswhite(p[tl]))
-			return p;
+		if(atoi(p) == linenumber)
+			break;
 		while(*p && *p++ != '\n');
 	}
-	return 0;
+	return p;
 }
 
-
-
-void addline(bc *bc, char *line)
+char *findnextline(bc *bc, int linenumber)
 {
-int lnum;
-printf("addline\n");
-	lnum = atoi(line);
-	error(bc, "Not enough space to add line %d", 100);
+char *p=bc->program;
 
+	while(*p)
+	{
+		if(atoi(p) > linenumber)
+			break;
+		while(*p && *p++ != '\n');
+	}
+	return p;
 }
+
 
 void deleteline(bc *bc, int lnum)
 {
 char *p, *p2;
 	p=findline(bc, lnum);
-	if(p)
+	if(*p)
 	{
 		p2=p;
 		while(*p2 && *p2++ != '\n');
 		while((*p++ = *p2++));
 	}
+}
+
+// line assumed not to have '\n' on end
+void addline(bc *bc, char *line)
+{
+int lnum;
+char *p;
+int len;
+
+	lnum = atoi(line);
+	len = strlen(bc->program) + strlen(line) + 1;
+	p=findline(bc, lnum);
+	if(*p)
+	{
+		while(*p)
+		{
+			--len;
+			if(*p++ == '\n')
+				break;
+		}
+	}
+	if(len > sizeof(bc->program)-1)
+	{
+		error(bc, "Not enough space to add line to program.");
+		return;
+	}
+	deleteline(bc, lnum);
+	p=findnextline(bc, lnum);
+	len=strlen(line)+1;
+	memmove(p+len, p, strlen(p)+1);
+	memcpy(p, line, len-1);
+	p[len-1] = '\n';
 }
 
 int processline(bc *bc, char *line)
@@ -121,12 +173,12 @@ struct cmd *cmd;
 		++cmd;
 	}
 	if(cmd->name) return 0; // we found a match
-	if(token[0]>='0' && token[0]<='9') // line number
+	if(line[0]>='0' && line[0]<='9') // line number
 	{
 		if(*lp)
 			addline(bc, line);
 		else
-			deleteline(bc, atoi(token));
+			deleteline(bc, atoi(line));
 	}
 
 	return 0;

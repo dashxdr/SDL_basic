@@ -31,7 +31,7 @@ typedef struct basic_context {
 	int lastupdate;
 	int tainted;
 	char *textstate;
-	char program[1000000]; // 1M ought to be big enough...
+	char program[100]; // 1M ought to be big enough...
 } bc;
 
 #define MYF1 0x180
