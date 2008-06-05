@@ -1,0 +1,31 @@
+Basic interpreter commands. Commands can be shortened
+
+edit #             = edit line, arrow keys, delete, backspace, always in
+                     insert mode
+del #              = delete line
+ren #[,#]          = renumber lines
+save filename      = save out program to file (appends .c automatically)
+load filename      = load program from file (appends .c automatically)
+run                = Initialize everything run program
+cont               = continue running program from last line
+quit               = quit
+dir [directory]    = list directory
+<statement>        = Can execute any statement
+
+
+Statements
+
+One statement per line, no ':' separaters (has to do with "cont" statement)
+Variables are any string starting with a-z. Case is not sensitive. Can
+contain numbers. Any length. Can use keywords IF you use "let" on assignment
+statements.
+
+[let] variable = expression
+goto #
+on expr goto #, ...          ;zero based
+rem <comment>
+dim variable(#, ...)
+for variable = expression to espression
+next [variable]
+print string|expression[,|;][...][,|;]
+
