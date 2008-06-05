@@ -61,6 +61,7 @@ read variable[,...]
 
 Functions:
 
+int(expr)
 sgn(expr)
 sqrt(expr)
 sin(expr)
