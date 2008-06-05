@@ -12,6 +12,7 @@ quit               = quit
 dir [directory]    = list directory
 <statement>        = Can execute any statement
 list [#[,#]]
+new
 
 Statements
 

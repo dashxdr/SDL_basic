@@ -179,16 +179,13 @@ void cursor(bc *bc, int onoff)
 char tt[2];
 
 	onoff = !!onoff;
-	if(bc->cursorstate != onoff)
-	{
-		bc->tainted = 1;
-		tt[0] = bc->textstate[bc->typos*bc->txsize + bc->txpos];
-		tt[1] = 0;
-		drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
-			onoff ? bc->black : bc->white,
-			onoff ? bc->cursorcolor : bc->black, tt);
-		bc->cursorstate = onoff;
-	}
+	bc->tainted = 1;
+	tt[0] = bc->textstate[bc->typos*bc->txsize + bc->txpos];
+	tt[1] = 0;
+	drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
+		onoff ? bc->black : bc->white,
+		onoff ? bc->cursorcolor : bc->black, tt);
+	bc->cursorstate = onoff;
 }
 
 void newline(bc *bc)

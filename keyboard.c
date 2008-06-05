@@ -344,16 +344,19 @@ if(code==0x1b) exit(0);
 		if(code==MYPAGEUP || code==(MYPAGEUP|MYSHIFTED))
 		{
 			if(code==MYPAGEUP) ++scrollback;
-			else scrollback+=bc->fheight;
+			else scrollback+=bc->tysize;
 			scrollback=showhistory(bc, scrollback);
 			continue;
 		} else if(code==MYPAGEDOWN || code==(MYPAGEDOWN|MYSHIFTED))
 		{
 			if(code==MYPAGEDOWN) --scrollback;
-			else scrollback-=bc->fheight;
+			else scrollback-=bc->tysize;
 			if(scrollback<0) scrollback=0;
 			scrollback=showhistory(bc, scrollback);
-			continue;
+			if(scrollback)
+				continue;
+			else
+				++ref;
 		}
 		if(code==9 || code==4)
 		{
