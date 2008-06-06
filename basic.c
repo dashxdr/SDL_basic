@@ -359,6 +359,7 @@ struct cmd *cmd;
 #define SYNTAX_ERROR          "Syntax error"
 #define NON_TERMINATED_STRING "Nonterminated string"
 #define NO_SUCH_LINE          "Invalid line number"
+#define DUPLICATE_ARRAY       "Duplicate array declaration"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -497,6 +498,79 @@ void doif(bc *bc, char **take)
 
 void dodim(bc *bc, char **take)
 {
+char name[16];
+int type;
+int value;
+int rank;
+int fail=0;
+int dimensions[128];
+struct variable *v;
+int i,j;
+
+	while(!fail)
+	{
+		type = gather_variable_name(bc, name, take);
+		if(type==RANK_INVALID || !(type & RANK_MASK))
+		{
+			run_error(bc, SYNTAX_ERROR);
+			fail=1;
+			break;
+		}
+		rank=0;
+		while(!fail)
+		{
+			if(!isdigit(**take))
+			{
+				run_error(bc, SYNTAX_ERROR);
+				fail=1;
+				break;
+			}
+			value=0;
+			while(isdigit(**take))
+				value = value * 10 + *(*take)++ - '0';
+			dimensions[rank++] = value;
+			if(**take==',')
+			{
+				++*take;
+				continue;
+			}
+			if(**take==')')
+			{
+				++*take;
+				break;
+			}
+			run_error(bc, SYNTAX_ERROR);
+			fail=1;
+			break;
+		}
+		if(fail) break;
+		v=find_variable(bc, name);
+		if(v)
+		{
+			run_error(bc, DUPLICATE_ARRAY);
+			break;
+		}
+		v=add_variable(bc, name, type);
+#warning check for out of variables needed
+		v->rank = (type & ~RANK_MASK) | rank;
+		for(i=0;i<=rank;++i)
+		{
+			v->dimensions[i]=1;
+			for(j=i;j<rank;++j)
+				v->dimensions[i] *= dimensions[j];
+		}
+		if(!(type & RANK_STRING)) // array of doubles
+			v->array = calloc(v->dimensions[0], sizeof(double));
+#warning check for out of memory
+		if(**take == ',')
+		{
+			++*take;
+			continue;
+		}
+		if(**take)
+			run_error(bc, SYNTAX_ERROR);
+		break;
+	}
 }
 
 void dothen(bc *bc, char **take)

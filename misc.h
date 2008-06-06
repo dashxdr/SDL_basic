@@ -153,9 +153,13 @@ void processline(bc *bc, char *line);
 #define OT_PDOUBLE  3
 #define OT_PBSTRING 4
 
-#define EXPR_ERR_MISMATCH   1 // mix of strings/numbers
-#define EXPR_ERR_INVALID    2 // invalid operation
-#define EXPR_ERR_BAD_LVALUE 4 // illegal item on left side of assignment
+#define EXPR_ERR_MISMATCH   "Type mismatch -- can't mix strings and numbers"
+#define EXPR_ERR_INVALID    "Illegal operation"
+#define EXPR_ERR_BAD_LVALUE "Illegal item on left side of '='"
+#define EXPR_ERR_BAD_INDEX  "Illegal array index"
+#define EXPR_ERR_RANGE_ERROR "Array index out of range"
+#define EXPR_ERR_MISCOUNT   "Incorrect number of indexes on array"
+
 
 typedef struct expr_info {
 	int flags_in;
@@ -164,6 +168,7 @@ typedef struct expr_info {
 	bstring *string;
 	double value;
 	int type;
+	char *error;
 } einfo;
 
 
