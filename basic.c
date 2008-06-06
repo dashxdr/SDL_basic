@@ -385,6 +385,12 @@ void dolet(bc *bc, char **take)
 
 void doprint(bc *bc, char **take)
 {
+double value;
+	value = expr(bc, take);
+	if((long)value == value)
+		tprintf(bc, "%ld\n", (long)value);
+	else
+		tprintf(bc, "%.16f\n", value);
 }
 
 void doinput(bc *bc, char **take)
@@ -549,6 +555,29 @@ int i;
 	return err;
 }
 
+int findrunline(bc *bc, int num)
+{
+struct linepointer *lp;
+int low, high, mid;
+	low = 0;
+	high = bc->numlines;
+	lp = bc->lps;
+	for(;;)
+	{
+		mid = (low+high) >> 1;
+		if(mid==low) break;
+		if(lp[mid].linenum<num)
+			low=mid;
+		else
+			high=mid;
+	}
+	if(lp[mid].linenum == num)
+		return mid;
+	else
+		return -1;
+
+}
+
 void dorun(bc *bc, char *line)
 {
 char *put;
@@ -580,12 +609,32 @@ int err;
 		put += strlen(put)+1;
 		while(*take && *take++!= '\n');
 	}
-{
+if(0){
 int fd;
 fd=open("/ram/ttt", O_WRONLY|O_CREAT|O_TRUNC, 0644);
 write(fd, bc->runnable, put-bc->runnable);
 close(fd);
 }
+
+	if(!bc->numlines) return;
+	bc->nextline = 0;
+	for(;;)
+	{
+		char *p;
+		int f;
+		bc->online = bc->nextline;
+		if(bc->online >= bc->numlines)
+			break; // out of lines
+		p=bc->lps[bc->online].line;
+		++bc->nextline;
+		if((f=*(unsigned char *)p++)>=128)
+		{
+			statements[255-f].func(bc, &p);
+		} else
+		{
+			--p;
+		}
+	}
 
 
 }

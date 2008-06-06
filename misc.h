@@ -54,6 +54,7 @@ typedef struct basic_context {
 	char runnable[1000000];
 	int numlines;
 	struct linepointer lps[100000]; // 100K lines
+	int online, nextline;
 } bc;
 
 #define MYF1 0x180
@@ -111,3 +112,7 @@ void updatef(bc *bc);
 // basic.c
 
 void processline(bc *bc, char *line);
+
+// expr.c
+
+double expr(bc *bc, char **take);
