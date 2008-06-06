@@ -85,12 +85,19 @@ int back(ec *ec)
 
 int expr2(ec *ec);
 
+void expr_error(ec *ec, char *msg)
+{
+	ec->ei->error = msg;
+	ec->ei->flags_out |= EXPR_ERROR;
+}
+
 int expr(bc *bc, char **take, einfo *ei)
 {
 ec ecl, *ec = &ecl;
 int res;
 
 	ei->flags_out = 0;
+	ei->error = 0;
 
 	ec->bc = bc;
 	ec->pnt = *take;
@@ -101,9 +108,18 @@ int res;
 //	if(ec->exprflag & 1) unbalanced();
 //	if(ec->exprflag & 2) badoperation();
 	*take = ec->pnt;
-	return 0;
+	return ei->flags_out;
 }
 /*uchar opchars[]={'+','-','/','*','|','&','<<','>>','!'};*/
+
+void trythunk(ee *thing)
+{
+	if(thing->type == OT_PDOUBLE)
+	{
+		thing->value = *(double *)thing->indirect;
+		thing->type = OT_DOUBLE;
+	}
+}
 
 int expr2(ec *ec)
 {
@@ -126,12 +142,10 @@ int expr2(ec *ec)
 		if(trytop(ec)) break;
 
 		++ec->exprsp;
-		ec->exprsp->value = ec->tos.value;
-		ec->exprsp->string = ec->tos.string;
-		ec->exprsp->operation = ec->tos.operation;
-		ec->exprsp->priority = ec->tos.priority;
+		*ec->exprsp = ec->tos;
 	}
 	--ec->exprsp;
+	trythunk(&ec->tos);
 	ec->ei->string = ec->tos.string;
 	ec->ei->value = ec->tos.value;
 	ec->ei->type = ec->tos.type;
@@ -142,6 +156,7 @@ int is_string_type(int type)
 {
 	return type==OT_BSTRING || type==OT_PBSTRING;
 }
+
 
 int trytop(ec *ec)
 {
@@ -156,13 +171,10 @@ ee *left, *right;
 		--ec->exprsp;
 
 		if(is_string_type(left->type) ^ is_string_type(right->type))
-			ec->exprflags |= EXPR_ERR_MISMATCH;
+			expr_error(ec, EXPR_ERR_MISMATCH);
 
-		if(right->type == OT_PDOUBLE)
-		{
-			right->value = *(double *)right->indirect;
-			right->type = OT_DOUBLE;
-		}
+		trythunk(right);
+
 		if(right->type == OT_DOUBLE)
 			switch(left->operation)
 			{
@@ -180,7 +192,7 @@ ee *left, *right;
 					break;
 				case oper_assign: // =
 					if(left->type != OT_PDOUBLE)
-						ec->exprflags |= EXPR_ERR_BAD_LVALUE;
+						expr_error(ec, EXPR_ERR_BAD_LVALUE);
 					else
 					{
 						*(double *)left->indirect = right->value;
@@ -456,7 +468,60 @@ ee *newop = &ec->tos;
 					v=add_variable(ec->bc, name, type);
 			}
 #warning check for ran out of variables
-			newop->value = v->value;
+			if(type&RANK_MASK)
+			{
+				int indexes[128];
+				int i,j;
+				int rank;
+				int res;
+
+				rank = type & RANK_MASK;
+				for(i=0;i<rank;++i)
+				{
+					res = expr2(ec);
+					if(ec->ei->type != OT_DOUBLE)
+					{
+						expr_error(ec, EXPR_ERR_BAD_INDEX);
+						indexes[i]=0;
+					} else
+						indexes[i] = ec->ei->value;
+					if(indexes[i]<0 ||
+						 indexes[i]*v->dimensions[i+1] > v->dimensions[i])
+					{
+						expr_error(ec, EXPR_ERR_RANGE_ERROR);
+						indexes[i]=0;
+					}
+					if(i+1<rank) // more indexes coming
+					{
+						if(at(ec) == ',')
+							get(ec);
+						else
+							expr_error(ec, EXPR_ERR_MISCOUNT);
+					} else
+					{
+						if(at(ec) == ')')
+							get(ec);
+						else
+							expr_error(ec, EXPR_ERR_MISCOUNT);
+					}
+				}
+				j=0;
+				for(i=0;i<rank;++i)
+					j+=indexes[i]*v->dimensions[i+1];
+				if(!(type & RANK_STRING))
+				{
+					newop->indirect = (double *)v->array + j;
+					newop->type = OT_PDOUBLE;
+				}
+			} else
+			{
+				if(!(type & RANK_STRING))
+				{
+					newop->value = v->value;
+					newop->indirect = &v->value;
+					newop->type = OT_PDOUBLE;
+				}
+			}
 		}
 	}
 }
