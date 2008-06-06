@@ -23,6 +23,22 @@ int linenum;
 char *line;
 };
 
+#define MAX_VARIABLES 2048 // a, b, c, i, j, a(10,20), etc max
+#define RANK_VARIABLE 0
+#define RANK_STRING -1
+#define RANK_ARRAY  1 // and 2, 3, 4, etc.
+#define RANK_INVALID -50
+
+
+struct variable {
+	char name[16];
+	int rank; // RANK_* above, > 0 = array, <0 = string
+	int dimensions[20];
+	void *data;
+	double value;
+	int strlen;
+};
+
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
@@ -57,6 +73,8 @@ typedef struct basic_context {
 	struct linepointer lps[100000]; // 100K lines
 	int online, nextline;
 	int execute_count;
+	int numvariables;
+	struct variable vars[MAX_VARIABLES];
 } bc;
 
 #define MYF1 0x180
@@ -120,3 +138,6 @@ void processline(bc *bc, char *line);
 // expr.c
 
 double expr(bc *bc, char **take);
+int gather_variable_name(bc *bc, char *put, char **take);
+struct variable *find_variable(bc *bc, char *name);
+struct variable *add_variable(bc *bc, char *name);

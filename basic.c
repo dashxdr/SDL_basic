@@ -414,6 +414,28 @@ void dorem(bc *bc, char **take)
 
 void dolet(bc *bc, char **take)
 {
+int res;
+char name[16];
+struct variable *v;
+double value;
+
+	res = gather_variable_name(bc, name, take);
+	if(res==RANK_INVALID)
+	{
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	if(**take!='=')
+	{
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	++*take;
+	value = expr(bc, take);
+	v=find_variable(bc, name);
+	if(!v)
+		v=add_variable(bc, name);
+	v->value = value;
 }
 
 void doprint(bc *bc, char **take)
@@ -594,6 +616,23 @@ int i;
 	return err;
 }
 
+void free_variables(bc *bc)
+{
+int i;
+struct variable *v;
+	for(i=0;i>bc->numvariables;++i)
+	{
+		v=bc->vars+i;
+		if(v->rank != RANK_VARIABLE && v->data)
+		{
+			free(v->data);
+			v->data = 0;
+		}
+	}
+	bc->numvariables = 0;
+}
+
+
 void dorun(bc *bc, char *line)
 {
 char *put;
@@ -632,9 +671,9 @@ write(fd, bc->runnable, put-bc->runnable);
 close(fd);
 }
 
-	if(!bc->numlines) return;
 	bc->nextline = 0;
 	bc->execute_count = 0;
+	free_variables(bc);
 	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR)))
 	{
 		char *p;
@@ -651,8 +690,7 @@ close(fd);
 			statements[255-f].func(bc, &p);
 		} else
 		{
-			--p;
-#warning need to do a let a=b here
+			if(*--p) dolet(bc, &p);
 		}
 		++bc->execute_count;
 //if(bc->execute_count%1000000 == 0) printf("%d\n", bc->execute_count);

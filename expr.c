@@ -1,4 +1,6 @@
 #include <ctype.h>
+#include <string.h>
+
 #include "misc.h"
 
 typedef unsigned char uchar;
@@ -78,8 +80,10 @@ double expr(bc *bc, char **take)
 {
 double eval;
 ec ecl, *ec;
+
 	ec = &ecl;
 
+	ec->bc = bc;
 	ec->pnt = *take;
 	ec->exprsp=ec->exprstack;
 	ec->exprflag=0;
@@ -194,6 +198,80 @@ uchar ch;
 . , ( ) white ; 008
 */
 
+struct variable *find_v_low(bc *bc, char *name)
+{
+struct variable *v;
+int low, mid, high;
+	v=bc->vars;
+	low=0;
+	high=bc->numvariables;
+	for(;;)
+	{
+		mid=(low + high) >> 1;
+		if(mid==low) break;
+		if(strcmp(name, v[mid].name)<0)
+			high=mid;
+		else
+			low=mid;
+	}
+	return v+mid;
+}
+
+struct variable *find_variable(bc *bc, char *name)
+{
+struct variable *v;
+	v=find_v_low(bc, name);
+	if(!strcmp(name, v->name))
+		return v;
+	return 0;
+}
+
+struct variable *add_variable(bc *bc, char *name)
+{
+struct variable *v;
+int which;
+	v=find_v_low(bc, name);
+	which=v-bc->vars;
+	memmove(v+1, v, sizeof(*v)*(bc->numvariables - which));
+	if(which < bc->numvariables && strcmp(name, v->name)>0)
+		++v,++which;
+	v->rank = RANK_VARIABLE;
+	strcpy(v->name, name);
+	v->value = 0.0;
+	v->data = 0;
+	v->strlen = 0;
+	++ bc->numvariables;
+#warning check for out of variables needed
+	return v;
+}
+
+int gather_variable_name(bc *bc, char *put, char **take)
+{
+int n;
+int type;
+	n=0;
+	put[n] = tolower(*(*take));
+	if(!isalpha(put[0]))
+		return RANK_INVALID;
+	++*take;
+	++n;
+	put[n] = tolower(*(*take));
+	if(isalpha(put[1]) || isdigit(put[1]))
+	{
+		++*take;++n;
+	}
+	if(**take == '$')
+	{
+		put[n++] = *(*take)++;
+		type = RANK_STRING;
+	} else if(**take == '(')
+	{
+		put[n++] = *(*take)++;
+		type = RANK_ARRAY;
+	} else type=RANK_VARIABLE;
+	put[n]=0;
+	return type;
+}
 
 /* fills in operval and opertype, leaves pointer on character stopped on */
 void operand(ec *ec)
@@ -236,10 +314,18 @@ void operand(ec *ec)
 		get(ec);
 		ec->operval=expr2(ec);
 		if(get(ec)!=')') {ec->exprflag|=1;back(ec);}
-	}  /*else
+	}  else
 	{
-		ec->operval=0.0;
-		while(ishex(ch=get(ec))) {ec->operval*=16;ec->operval+=tohex(ch);}
-		back(ec);
-	}*/
+		char name[16];
+		struct variable *v;
+
+		if(gather_variable_name(ec->bc, name, &ec->pnt) != RANK_INVALID)
+		{
+			v=find_variable(ec->bc, name);
+			if(!v)
+				v=add_variable(ec->bc, name);
+#warning check for ran out of variables
+			ec->operval = v->value;
+		}
+	}
 }
