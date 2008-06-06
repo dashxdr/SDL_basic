@@ -383,13 +383,107 @@ void dolet(bc *bc, char **take)
 {
 }
 
+void doprint(bc *bc, char **take)
+{
+}
+
+void doinput(bc *bc, char **take)
+{
+}
+
+void dogoto(bc *bc, char **take)
+{
+}
+
+void doif(bc *bc, char **take)
+{
+}
+
+void dodim(bc *bc, char **take)
+{
+}
+
+void dothen(bc *bc, char **take)
+{
+}
+
+void dofor(bc *bc, char **take)
+{
+}
+
+void doto(bc *bc, char **take)
+{
+}
+
+void doread(bc *bc, char **take)
+{
+}
+
+void donext(bc *bc, char **take)
+{
+}
+
+void dogosub(bc *bc, char **take)
+{
+}
+
+void doreturn(bc *bc, char **take)
+{
+}
+
+void doend(bc *bc, char **take)
+{
+}
+
+void dodata(bc *bc, char **take)
+{
+}
+
+void doint(bc *bc, char **take)
+{
+}
+
+void dosgn(bc *bc, char **take)
+{
+}
+
+void dosin(bc *bc, char **take)
+{
+}
+
+void docos(bc *bc, char **take)
+{
+}
+
+void dornd(bc *bc, char **take)
+{
+}
+
+
 struct stmt statements[]={
 {"'", docomment},
 {"rem", docomment},
 {"let", dolet},
-//{"input", doinput},
-//{"print", doprint},
-//{"goto", dogoto},
+{"input", doinput},
+{"print", doprint},
+{"goto", dogoto},
+{"read", doread},
+{"dim", dodim},
+{"then", dothen},
+{"for", dofor},
+{"to", doto},
+{"next", doif},
+{"if", doif},
+{"gosub", dogosub},
+{"return", doreturn},
+{"end", doend},
+{"data", dodata},
+{"int", doint},
+{"sgn", dosgn},
+{"sin", dosin},
+{"cos", docos},
+{"rnd", dornd},
+
 {0,0}};
 
 
@@ -439,7 +533,7 @@ int i;
 				if(s->name[i] != tolower(take[i]))
 					break;
 			}
-			if(s->name[i]) break;
+			if(!s->name[i]) break;
 			++s;
 		}
 		if(s->name)
@@ -456,8 +550,41 @@ int i;
 
 void dorun(bc *bc, char *line)
 {
+char *put;
+char *take;
+int linenum;
+int err;
+
 // tokenize program
 // delete all variables
 // start executing on first line
+
+	put=bc->runnable;
+	take=bc->program;
+	bc->numlines=0;
+	while(*take)
+	{
+		linenum=atoi(take);
+		bc->lps[bc->numlines].linenum = linenum;
+		bc->lps[bc->numlines].line = put;
+		++bc->numlines;
+		while(*take>='0' && *take<='9') take++;
+		err=convertline(bc, put, take);
+		if(err)
+		{
+			error(bc, "Error before running: %s in line %d", bc->lineerror,
+					linenum);
+			return;
+		}
+		put += strlen(put)+1;
+		while(*take && *take++!= '\n');
+	}
+{
+int fd;
+fd=open("/ram/ttt", O_WRONLY|O_CREAT|O_TRUNC, 0644);
+write(fd, bc->runnable, put-bc->runnable);
+close(fd);
+}
+
 
 }

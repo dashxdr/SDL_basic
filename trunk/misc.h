@@ -17,6 +17,11 @@ extern int txsize, tysize;
 #define BF_EDIT         4 // preload a line, for editing
 #define BF_LINEERROR    8 // Error on a line
 
+struct linepointer {
+int linenum;
+char *line;
+};
+
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
@@ -46,6 +51,9 @@ typedef struct basic_context {
 	int let_code;
 	char lineerror[256];
 	char program[1000000]; // 1M ought to be big enough...
+	char runnable[1000000];
+	int numlines;
+	struct linepointer lps[100000]; // 100K lines
 } bc;
 
 #define MYF1 0x180
