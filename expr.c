@@ -186,6 +186,35 @@ int res;
 	return left->length < right->length ? -1 : 1;
 }
 
+int string_comps(ee *left, ee *right)
+{
+int res=0;
+	if(left->type == OT_BSTRING && right->type == OT_BSTRING)
+	{
+		res = bstring_comp(left->string, right->string);
+	} else
+		right->value = 0;
+	if(right->type == OT_BSTRING);
+	{
+		free_bstring(right->string);
+		right->string = 0;
+	}
+	right->type = OT_DOUBLE;
+	return res;
+}
+
+int double_comps(ee *left, ee *right)
+{
+int res=0;
+	if(left->type == OT_DOUBLE && right->type == OT_DOUBLE)
+	{
+		if(left->value < right->value) res=-1;
+		else if(left->value > right->value) res=1;
+	}
+	right->type = OT_DOUBLE;
+	return res;
+}
+
 
 int trytop(ec *ec)
 {
@@ -231,7 +260,22 @@ ee *left, *right;
 					}
 					break;
 				case oper_eq: // comparison =
-					right->value = (left->value == right->value) ? 1.0 : 0.0;
+					right->value = !double_comps(left, right) ? 1.0 : 0;
+					break;
+				case oper_lt: // comparison <
+					right->value = double_comps(left, right)<0 ? 1.0 : 0;
+					break;
+				case oper_gt: // comparison >
+					right->value = double_comps(left, right)>0 ? 1.0 : 0;
+					break;
+				case oper_le: // comparison <=
+					right->value = double_comps(left, right)<=0 ? 1.0 : 0;
+					break;
+				case oper_ge: // comparison >=
+					right->value = double_comps(left, right)>=0 ? 1.0 : 0;
+					break;
+				case oper_ne: // comparison <>
+					right->value = double_comps(left, right) ? 1.0 : 0;
 					break;
 //				case oper_or: /* | */
 //					right->value=(int)left->value | (int)right->value;
@@ -280,18 +324,22 @@ ee *left, *right;
 					}
 					break;
 				case oper_eq: // comparison =
-					if(left->type == OT_BSTRING && right->type == OT_BSTRING)
-					{
-						right->value = !bstring_comp(left->string,
-							right->string);
-					} else
-						right->value = 0;
-					if(right->type == OT_BSTRING);
-					{
-						free_bstring(right->string);
-						right->string = 0;
-					}
-					right->type = OT_DOUBLE;
+					right->value = !string_comps(left, right) ? 1.0 : 0;
+					break;
+				case oper_lt: // comparison <
+					right->value = string_comps(left, right)<0 ? 1.0 : 0;
+					break;
+				case oper_gt: // comparison >
+					right->value = string_comps(left, right)>0 ? 1.0 : 0;
+					break;
+				case oper_le: // comparison <=
+					right->value = string_comps(left, right)<=0 ? 1.0 : 0;
+					break;
+				case oper_ge: // comparison >=
+					right->value = string_comps(left, right)>=0 ? 1.0 : 0;
+					break;
+				case oper_ne: // comparison <>
+					right->value = string_comps(left, right) ? 1.0 : 0;
 					break;
 				default:
 					expr_error(ec, EXPR_ERR_INVALID);
@@ -329,6 +377,20 @@ int backup=0;
 				ec->tos.priority=PRI_0c;ec->tos.operation=oper_eq;
 			} else
 				backup=1;
+			break;
+		case '<':
+			if((ch=get(ec))=='=')
+				{ec->tos.priority=PRI_0c;ec->tos.operation=oper_le;}
+			else if(ch=='>')
+				{ec->tos.priority=PRI_0c;ec->tos.operation=oper_ne;}
+			else
+				{back(ec);ec->tos.priority=PRI_0c;ec->tos.operation=oper_lt;}
+			break;
+		case '>':
+			if((ch=get(ec))=='=')
+				{ec->tos.priority=PRI_0c;ec->tos.operation=oper_ge;}
+			else
+				{back(ec);ec->tos.priority=PRI_0c;ec->tos.operation=oper_gt;}
 			break;
 //		case '|': ec->tos.priority=PRI_20;ec->tos.operation=oper_or;break;
 //		case '&': ec->tos.priority=PRI_28;ec->tos.operation=oper_and;break;
