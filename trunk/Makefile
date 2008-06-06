@@ -1,4 +1,4 @@
-DBG = # -g
+DBG =  -g
 CC	= gcc
 CFLAGS = -O2 -Wall $(shell sdl-config --cflags) $(DBG)
 LDFLAGS = $(shell sdl-config --libs) $(DBG)
@@ -10,8 +10,8 @@ main.o: main.c misc.h
 basic.o: basic.c misc.h
 font.o: font.c misc.h
 render.o: render.c misc.h
-keyboard.o: keyboard.c
-expr.o: expr.c
+keyboard.o: keyboard.c misc.h
+expr.o: expr.c misc.h
 
 clean:
 	rm -f *.o basic
