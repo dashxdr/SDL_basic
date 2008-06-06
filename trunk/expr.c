@@ -119,6 +119,12 @@ void trythunk(ee *thing)
 	{
 		thing->value = *(double *)thing->indirect;
 		thing->type = OT_DOUBLE;
+	} else if(thing->type == OT_PBSTRING)
+	{
+		bstring *bs;
+		bs = *(bstring **)thing->indirect;
+		thing->string = make_bstring(bs->string, bs->length);
+		thing->type = OT_BSTRING;
 	}
 }
 
@@ -175,6 +181,8 @@ ee *left, *right;
 			expr_error(ec, EXPR_ERR_MISMATCH);
 
 		trythunk(right);
+		if(left->operation != oper_assign)
+			trythunk(left);
 
 		if(right->type == OT_DOUBLE)
 			switch(left->operation)
@@ -213,6 +221,44 @@ ee *left, *right;
 //					right->value=(int)left->value >> (int)ec->value;
 //					break;
 				case oper_end: return 1;
+			}
+		else
+			switch(left->operation)
+			{
+				case oper_assign: // =
+					if(left->type != OT_PBSTRING)
+						expr_error(ec, EXPR_ERR_BAD_LVALUE);
+					else
+					{
+						bstring *bs;
+						bs = *(bstring **)left->indirect;
+						free_bstring(bs);
+						bs = right->string;
+						*(bstring **)left->indirect = dup_bstring(bs);
+
+						right->type=OT_BSTRING;
+					}
+					break;
+				case oper_plus: // +
+					if(left->type == OT_BSTRING && right->type == OT_BSTRING)
+					{
+						bstring *bs;
+						bs = make_raw_bstring(left->string->length +
+								right->string->length);
+						memcpy(bs->string, left->string->string,
+								left->string->length);
+						memcpy(bs->string + left->string->length,
+								right->string->string,
+								right->string->length);
+						free_bstring(right->string);
+						right->string = bs;
+					}
+					break;
+				default:
+					expr_error(ec, EXPR_ERR_INVALID);
+					break;
+				case oper_end: return 1;
+			
 			}
 		if(left->type == OT_BSTRING)
 		{
@@ -356,18 +402,36 @@ int type=0;
 	return type;
 }
 
-bstring *make_bstring(char *string, int length)
+bstring *make_raw_bstring(int length)
 {
 bstring *bs;
-	bs=malloc(length+sizeof(bstring)+1);
-#warning check for allocation failure
+	bs=malloc(length + sizeof(bstring) + 1);
 	if(bs)
 	{
 		bs->length = length;
-		memcpy(bs->string, string, length);
 		bs->string[length]=0;
 	}
 	return bs;
+}
+
+bstring *make_bstring(char *string, int length)
+{
+bstring *bs;
+	bs=make_raw_bstring(length);
+#warning check for allocation failure
+	if(bs)
+	{
+		memcpy(bs->string, string, length);
+	}
+	return bs;
+}
+
+
+
+
+bstring *dup_bstring(bstring *bs)
+{
+	return make_bstring(bs->string, bs->length);
 }
 
 void free_bstring(bstring *bs)
@@ -509,16 +573,29 @@ ee *newop = &ec->tos;
 				j=0;
 				for(i=0;i<rank;++i)
 					j+=indexes[i]*v->dimensions[i+1];
-				if(!(type & RANK_STRING))
+				if(type & RANK_STRING)
+				{
+					bstring **ind;
+					ind = (bstring **)v->array + j;
+					newop->indirect = ind;
+					if(!*ind)
+						*ind = make_bstring("",0);
+					newop->type = OT_PBSTRING;
+				} else
 				{
 					newop->indirect = (double *)v->array + j;
 					newop->type = OT_PDOUBLE;
 				}
 			} else
 			{
-				if(!(type & RANK_STRING))
+				if(type & RANK_STRING)
 				{
-					newop->value = v->value;
+					if(!v->string)
+						v->string = make_bstring("", 0);
+					newop->indirect = &v->string;
+					newop->type = OT_PBSTRING;
+				} else
+				{
 					newop->indirect = &v->value;
 					newop->type = OT_PDOUBLE;
 				}
