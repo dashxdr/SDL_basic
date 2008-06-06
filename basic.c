@@ -470,7 +470,7 @@ int newline=1;
 		}
 		if(**take != ';')
 		{
-			if(**take)
+			if(**take && token_code(bc, **take) != TOKEN_ELSE)
 				run_error(bc, SYNTAX_ERROR);
 			break;
 		}
@@ -508,7 +508,54 @@ int res;
 		free_bstring(ei->string);
 		run_error(bc, SYNTAX_ERROR);
 	}
-printf("if value returned %f\n", ei->value);
+	if(ei->value != 0.0) // take the true side
+	{
+		if(token_code(bc, **take) != TOKEN_THEN)
+			run_error(bc, SYNTAX_ERROR);
+		else
+		{
+			++*take;
+			if(isdigit(**take)) // if X then 20
+			{
+				int newline;
+				newline = findrunline(bc, atoi(*take));
+				if(newline<0)
+					run_error(bc, NO_SUCH_LINE);
+				else
+					bc->nextline = newline;
+			} else
+				execute(bc, take);
+
+		}
+	} else // look for an else
+	{
+		int ifc=1;
+		int code;
+		char c;
+
+		for(;;)
+		{
+			c=*(*take)++;
+			if(!c)
+			{
+				--*take;
+				break;
+			}
+			code = token_code(bc, c);
+			if(code==TOKEN_IF)
+				++ifc;
+			else if(code==TOKEN_ELSE)
+			{
+				--ifc;
+				if(!ifc)
+				{
+					execute(bc, take);
+					break;
+				}
+			}
+
+		}
+	}
 
 }
 
@@ -653,29 +700,28 @@ void dornd(bc *bc, char **take)
 
 
 struct stmt statements[]={
-{"rem", dorem},
-{"let", dolet},
-{"input", doinput},
-{"print", doprint},
-{"goto", dogoto},
-{"read", doread},
-{"dim", dodim},
+{"rem", dorem, TOKEN_STATEMENT},
+{"let", dolet, TOKEN_STATEMENT},
+{"input", doinput, TOKEN_STATEMENT},
+{"print", doprint, TOKEN_STATEMENT},
+{"goto", dogoto, TOKEN_STATEMENT},
+{"read", doread, TOKEN_STATEMENT},
+{"dim", dodim, TOKEN_STATEMENT},
 {"then", dothen, TOKEN_THEN},
-{"for", dofor},
+{"for", dofor, TOKEN_STATEMENT},
 {"to", doto, TOKEN_TO},
-{"next", doif},
-{"if", doif},
+{"next", donext, TOKEN_STATEMENT},
+{"if", doif, TOKEN_STATEMENT | TOKEN_IF},
 {"else", doelse, TOKEN_ELSE},
-{"gosub", dogosub},
-{"return", doreturn},
-{"end", doend},
-{"data", dodata},
+{"gosub", dogosub, TOKEN_STATEMENT},
+{"return", doreturn, TOKEN_STATEMENT},
+{"end", doend, TOKEN_STATEMENT},
+{"data", dodata, TOKEN_STATEMENT},
 {"int", doint, TOKEN_FUNCTION},
 {"sgn", dosgn, TOKEN_FUNCTION},
 {"sin", dosin, TOKEN_FUNCTION},
 {"cos", docos, TOKEN_FUNCTION},
 {"rnd", dornd, TOKEN_FUNCTION},
-
 {0,0}};
 
 
@@ -761,12 +807,32 @@ struct variable *v;
 
 int token_code(bc *bc, unsigned char val)
 {
+	return bc->tokenmap[val] & 255;
+}
+int token_flags(bc *bc, unsigned char val)
+{
 	return bc->tokenmap[val];
 }
 
 void (*token_handler(bc *bc, unsigned char val))(bc *, char **)
 {
 	return statements[255-val].func;
+}
+
+void execute(bc *bc, char **p)
+{
+unsigned char f;
+
+	if((f=*(*(unsigned char **)p)++)>=128)
+	{
+		struct stmt *s;
+		s = statements + 255-f;
+		if(s->token_code & TOKEN_STATEMENT)
+			s->func(bc, p);
+	} else
+	{
+		if(*--*p) dolet(bc, p);
+	}
 }
 
 
@@ -820,7 +886,6 @@ close(fd);
 	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR)))
 	{
 		char *p;
-		int f;
 		updatef(bc);
 		scaninput(bc);
 		bc->online = bc->nextline;
@@ -828,13 +893,7 @@ close(fd);
 			break; // out of lines
 		p=bc->lps[bc->online].line;
 		++bc->nextline;
-		if((f=*(unsigned char *)p++)>=128)
-		{
-			statements[255-f].func(bc, &p);
-		} else
-		{
-			if(*--p) dolet(bc, &p);
-		}
+		execute(bc, &p);
 		++bc->execute_count;
 //if(bc->execute_count%1000000 == 0) printf("%d\n", bc->execute_count);
 
