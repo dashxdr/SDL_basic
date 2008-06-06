@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -18,21 +19,23 @@ oper_xor,
 oper_lshift,
 oper_rshift,
 oper_end,
+oper_assign,
 };
 
 #define PRI_08    0x08
+#define PRI_0c    0x0c
 #define PRI_10    0x10
 #define PRI_18    0x18
 #define PRI_20    0x20
 #define PRI_28    0x28
 #define PRI_30    0x30
 
-
 typedef struct expr_element {
 	double value;
-	char *string;
+	bstring *string;
 	int operation;
 	int priority;
+	int type;
 } ee;
 
 
@@ -41,10 +44,12 @@ typedef struct expr_context {
 	ee exprstack[EXPRMAX];
 	ee *exprsp;
 	int exprflag;
-	int oppri;
-	int opop;
-	double operval;
-	char *operstring;
+	ee tos;
+//	int priority;
+//	int operation;
+//	int type;
+//	double operval;
+//	bstring *operstring;
 	int exprflags;
 	char *pnt;
 	einfo *ei;
@@ -111,6 +116,7 @@ int expr2(ec *ec)
 		ec->exprsp->string = 0;
 		ec->exprsp->operation = oper_minus;
 		ec->exprsp->priority = PRI_10;
+		ec->exprsp->type = OT_DOUBLE;
 	}
 	for(;;)
 	{
@@ -119,26 +125,28 @@ int expr2(ec *ec)
 		if(trytop(ec)) break;
 
 		++ec->exprsp;
-		ec->exprsp->value = ec->operval;
-		ec->exprsp->string = ec->operstring;
-		ec->exprsp->operation = ec->opop;
-		ec->exprsp->priority = ec->oppri;
+		ec->exprsp->value = ec->tos.value;
+		ec->exprsp->string = ec->tos.string;
+		ec->exprsp->operation = ec->tos.operation;
+		ec->exprsp->priority = ec->tos.priority;
 	}
 	--ec->exprsp;
-	ec->ei->value = ec->operval;
+	ec->ei->string = ec->tos.string;
+	ec->ei->value = ec->tos.value;
+	ec->ei->type = ec->tos.type;
 	return 0;
 }
 
 int trytop(ec *ec)
 {
 	int topop;
-	char *topstring;
+	bstring *topstring;
 	double topval;
 
 	for(;;)
 	{
-		if(ec->oppri > ec->exprsp->priority)
-			return ec->oppri==PRI_08;
+		if(ec->tos.priority > ec->exprsp->priority)
+			return ec->tos.priority==PRI_08;
 		topop = ec->exprsp->operation;
 		topval = ec->exprsp->value;
 		topstring = ec->exprsp->string;
@@ -147,29 +155,29 @@ int trytop(ec *ec)
 		switch(topop)
 		{
 			case oper_plus: /* + */
-				ec->operval+=topval;
+				ec->tos.value+=topval;
 				break;
 			case oper_minus: /* - */
-				ec->operval=topval-ec->operval;
+				ec->tos.value=topval-ec->tos.value;
 				break;
 			case oper_divide: /* / */
-				ec->operval=topval/ec->operval;
+				ec->tos.value=topval/ec->tos.value;
 				break;
 			case oper_multiply: /* * */
-				ec->operval*=topval;
+				ec->tos.value*=topval;
 				break;
-			case oper_or: /* | */
-				ec->operval=(int)ec->operval | (int)topval;
-				break;
-			case oper_and: /* & */
-				ec->operval=(int)ec->operval | (int)topval;
-				break;
-			case oper_lshift: /* << */
-				ec->operval=(int)topval<<(int)ec->operval;
-				break;
-			case oper_rshift: /* >> */
-				ec->operval=(int)topval>>(int)ec->operval;
-				break;
+//			case oper_or: /* | */
+//				ec->tos.value=(int)ec->operval | (int)topval;
+//				break;
+//			case oper_and: /* & */
+//				ec->tos.value=(int)ec->operval | (int)topval;
+//				break;
+//			case oper_lshift: /* << */
+//				ec->tos.value=(int)topval<<(int)ec->operval;
+//				break;
+//			case oper_rshift: /* >> */
+//				ec->tos.value=(int)topval>>(int)ec->operval;
+//				break;
 			case oper_end: return 1;
 		}
 	}
@@ -178,24 +186,38 @@ int trytop(ec *ec)
 void operator(ec *ec)
 {
 uchar ch;
+int backup=0;
 
 	ch=get(ec);
 	switch(ch)
 	{
-		case '+': ec->oppri=PRI_10;ec->opop=oper_plus;break;
-		case '-': ec->oppri=PRI_10;ec->opop=oper_minus;break;
-		case '/': ec->oppri=PRI_18;ec->opop=oper_divide;break;
-		case '*': ec->oppri=PRI_18;ec->opop=oper_multiply;break;
-		case '|': ec->oppri=PRI_20;ec->opop=oper_or;break;
-		case '&': ec->oppri=PRI_28;ec->opop=oper_and;break;
-		case '<':
-			if(get(ec)!='<') back(ec);
-			ec->oppri=PRI_30;ec->opop=6;break;
-		case '>':
-			if(get(ec)!='>') back(ec);
-			ec->oppri=PRI_20;ec->opop=7;break;
+		case '+': ec->tos.priority=PRI_10;ec->tos.operation=oper_plus;break;
+		case '-': ec->tos.priority=PRI_10;ec->tos.operation=oper_minus;break;
+		case '/': ec->tos.priority=PRI_18;ec->tos.operation=oper_divide;break;
+		case '*': ec->tos.priority=PRI_18;ec->tos.operation=oper_multiply;break;
+		case '=':
+			if(ec->ei->flags_in & EXPR_LET)
+			{
+				ec->tos.priority=PRI_0c;ec->tos.operation=oper_assign;
+			} else
+				backup=1;
+			break;
+//		case '|': ec->tos.priority=PRI_20;ec->tos.operation=oper_or;break;
+//		case '&': ec->tos.priority=PRI_28;ec->tos.operation=oper_and;break;
+//		case '<':
+//			if(get(ec)!='<') back(ec);
+//			ec->tos.priority=PRI_30;ec->tos.operation=6;break;
+//		case '>':
+//			if(get(ec)!='>') back(ec);
+//			ec->tos.priority=PRI_20;ec->tos.operation=7;break;
 		default:
-			back(ec);ec->oppri=PRI_08;ec->opop=oper_end;
+			backup=1;break;
+	}
+	if(backup)
+	{
+		back(ec);
+		ec->tos.priority=PRI_08;
+		ec->tos.operation=oper_end;
 	}
 }
 
@@ -239,7 +261,7 @@ struct variable *v;
 	return 0;
 }
 
-struct variable *add_variable(bc *bc, char *name)
+struct variable *add_variable(bc *bc, char *name, int type)
 {
 struct variable *v;
 int which;
@@ -251,7 +273,8 @@ int which;
 	v->rank = RANK_VARIABLE;
 	strcpy(v->name, name);
 	v->value = 0.0;
-	v->data = 0;
+	v->string = 0;
+	v->array = 0;
 	++ bc->numvariables;
 #warning check for out of variables needed
 	return v;
@@ -288,9 +311,51 @@ int type=0;
 	{
 		put[n++] = *(*take)++;
 		type |= RANK_ARRAY;
-	} else type=RANK_VARIABLE;
+	}
 	put[n]=0;
 	return type;
+}
+
+bstring *make_bstring(char *string, int length)
+{
+bstring *bs;
+	bs=malloc(length+sizeof(bstring)+1);
+#warning check for allocation failure
+	if(bs)
+	{
+		bs->length = length;
+		memcpy(bs->string, string, length);
+		bs->string[length]=0;
+	}
+	return bs;
+}
+
+void free_bstring(bstring *bs)
+{
+	if(bs) free(bs);
+}
+
+bstring *gather_bstring(ec *ec)
+{
+char tmp[4096];
+int in=0;
+char ch;
+	for(;;)
+	{
+		ch=get(ec);
+		if(ch=='"')
+			break;
+		if(ch=='\\')
+			ch=get(ec);
+		if(!ch || ch=='\n')
+		{
+			back(ec);
+			break;
+		}
+		if(in<sizeof(tmp))
+			tmp[in++] = ch;
+	}
+	return make_bstring(tmp, in);
 }
 
 /* fills in operval and opertype, leaves pointer on character stopped on */
@@ -314,40 +379,56 @@ void operand(ec *ec)
 				fracpart += digit * (ch - '0');
 				digit /= 10.0;
 			}
-			ec->operval = intpart + fracpart;
+			ec->tos.value = intpart + fracpart;
 		} else
-			ec->operval = intpart;
+			ec->tos.value = intpart;
 		back(ec);
+		ec->tos.type = OT_DOUBLE;
 	} else if(ch=='\'')
 	{
 		get(ec);
-		ec->operval=0.0;
+		ec->tos.value=0.0;
 		while((ch=get(ec)))
 		{
 			if(ch=='\n' || !ch) {back(ec);unbalancedq(ec);break;}
 			if(ch=='\'')
 				if(get(ec)!='\'') {back(ec);break;}
-			ec->operval*=256;ec->operval+=ch;
+			ec->tos.value*=256;ec->tos.value+=ch;
 		}
+		ec->tos.type = OT_DOUBLE;
 	} else if(ch=='(')
 	{
 		int res;
 		get(ec);
 		res=expr2(ec);
-		ec->operval=ec->ei->value;
+		ec->tos.value=ec->ei->value;
+		ec->tos.type = ec->ei->type;
 		if(get(ec)!=')') {ec->exprflag|=1;back(ec);}
-	}  else
+	} else if(ch=='"')
+	{
+		get(ec);
+		ec->tos.string = gather_bstring(ec);
+		ec->tos.type = OT_BSTRING;
+	} else
 	{
 		char name[16];
 		struct variable *v;
+		int type;
 
-		if(gather_variable_name(ec->bc, name, &ec->pnt) != RANK_INVALID)
+		type=gather_variable_name(ec->bc, name, &ec->pnt);
+		if(type != RANK_INVALID)
 		{
 			v=find_variable(ec->bc, name);
 			if(!v)
-				v=add_variable(ec->bc, name);
+			{
+				if(type&RANK_MASK) // error, we can't make this on the fly
+#warning have to deal with this
+					;
+				else
+					v=add_variable(ec->bc, name, type);
+			}
 #warning check for ran out of variables
-			ec->operval = v->value;
+			ec->tos.value = v->value;
 		}
 	}
 }

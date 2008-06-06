@@ -414,42 +414,67 @@ void dorem(bc *bc, char **take)
 
 void dolet(bc *bc, char **take)
 {
+//int type;
 int res;
-char name[16];
-struct variable *v;
+//char name[16];
+//struct variable *v;
 einfo einfo, *ei=&einfo;
 
-	res = gather_variable_name(bc, name, take);
-	if(res==RANK_INVALID)
-	{
-		run_error(bc, SYNTAX_ERROR);
-		return;
-	}
-	if(**take!='=')
-	{
-		run_error(bc, SYNTAX_ERROR);
-		return;
-	}
-	++*take;
-	ei->flags_in = 0;
+//	type = gather_variable_name(bc, name, take);
+//	if(type==RANK_INVALID)
+//	{
+//		run_error(bc, SYNTAX_ERROR);
+//		return;
+//	}
+//	if(**take!='=')
+//	{
+//		run_error(bc, SYNTAX_ERROR);
+//		return;
+//	}
+//	++*take;
+	ei->flags_in = EXPR_LET;
 	res = expr(bc, take, ei);
-	v=find_variable(bc, name);
-	if(!v)
-		v=add_variable(bc, name);
-	v->value = ei->value;
+//	v=find_variable(bc, name);
+//	if(!v)
+//		v=add_variable(bc, name, type);
+//	v->value = ei->value;
 }
 
 void doprint(bc *bc, char **take)
 {
 einfo einfo, *ei=&einfo;
 int res;
+int newline=1;
 
-	ei->flags_in = 0;
-	res = expr(bc, take, ei);
-	if((long)ei->value == ei->value)
-		tprintf(bc, "%ld\n", (long)ei->value);
-	else
-		tprintf(bc, "%.16f\n", ei->value);
+	while(**take && **take != '\n')
+	{
+		newline=1;
+		ei->flags_in = 0;
+		res = expr(bc, take, ei);
+		if(ei->type == OT_DOUBLE)
+		{
+			if((long)ei->value == ei->value)
+				tprintf(bc, "%ld ", (long)ei->value);
+			else
+				tprintf(bc, "%.16f ", ei->value);
+		} else if(ei->type == OT_BSTRING)
+		{
+			bstring *bs = ei->string;
+			if(bs)
+				tprintf(bc, "%s", bs->string);
+			free_bstring(bs);
+		}
+		if(**take != ';')
+		{
+			if(**take)
+				run_error(bc, SYNTAX_ERROR);
+			break;
+		}
+		newline=0;
+		++*take;
+	}
+	if(newline)
+		tprintf(bc, "\n");
 }
 
 void doinput(bc *bc, char **take)
@@ -627,10 +652,11 @@ struct variable *v;
 	for(i=0;i>bc->numvariables;++i)
 	{
 		v=bc->vars+i;
-		if(v->rank != RANK_VARIABLE && v->data)
+		if((v->rank&RANK_MASK) != RANK_VARIABLE && v->array)
 		{
-			free(v->data);
-			v->data = 0;
+			free(v->array);
+#warning not enough for bstrings
+			v->array = 0;
 		}
 	}
 	bc->numvariables = 0;
@@ -651,6 +677,7 @@ int err;
 	put=bc->runnable;
 	take=bc->program;
 	bc->numlines=0;
+	bc->flags = 0;
 	while(*take)
 	{
 		linenum=atoi(take);
