@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "misc.h"
 
@@ -306,6 +307,8 @@ void donew(bc *bc, char *text)
 	tprintf(bc, "Program erased.\n");
 }
 
+void dorun(bc *bc, char *text);
+
 struct cmd commandlist[]={
 {"list", dolist},
 {"edit", doedit},
@@ -314,6 +317,7 @@ struct cmd commandlist[]={
 {"info", doinfo},
 {"new", donew},
 {"exit", doexit},
+{"run", dorun},
 {0, 0}};
 
 void processline(bc *bc, char *line)
@@ -350,4 +354,110 @@ struct cmd *cmd;
 		bc->flags |= BF_NOPROMPT;
 
 	return;
+}
+
+#define SYNTAX_ERROR          "Syntax error"
+#define NON_TERMINATED_STRING "Nonterminated string"
+
+
+void line_error(bc *bc, char *s, ...)
+{
+va_list ap;
+	va_start(ap, s);
+	vsnprintf(bc->lineerror, sizeof(bc->lineerror), s, ap);
+	va_end(ap);
+	bc->flags |= BF_LINEERROR;
+}
+
+
+struct stmt {
+	char *name;
+	void (*func)(bc *, char **take);
+};
+
+void docomment(bc *bc, char **take)
+{
+}
+
+void dolet(bc *bc, char **take)
+{
+}
+
+struct stmt statements[]={
+{"'", docomment},
+{"rem", docomment},
+{"let", dolet},
+//{"input", doinput},
+//{"print", doprint},
+//{"goto", dogoto},
+{0,0}};
+
+
+int convertline(bc *bc, char *put, char *take)
+{
+int err=0;
+struct stmt *s;
+char c;
+int i;
+	while(!err)
+	{
+		if(*take=='\'') // comment introducer as special case
+			break;
+		skipwhite(&take);
+		c=tolower(*take);
+		if(!c || c=='\n') break;
+		if(c=='"')
+		{
+			*put++ = *take++;
+			for(;;)
+			{
+				c=*take;
+				if(c=='\\')
+				{
+					++take;
+					*put++ = c;
+					c=*take++;
+				}
+				if(!c || c=='\n')
+				{
+					line_error(bc, NON_TERMINATED_STRING);
+					err=1;
+					break;
+				}
+				++take;
+				*put++ = c;
+				if(c=='"')
+					break;
+			}
+			continue;
+		}
+		s=statements;
+		while(s->name)
+		{
+			for(i=0;s->name[i];++i)
+			{
+				if(s->name[i] != tolower(take[i]))
+					break;
+			}
+			if(s->name[i]) break;
+			++s;
+		}
+		if(s->name)
+		{
+			take+=i;
+			*put++ = 255 - (s - statements); // convert to token number
+			continue;
+		}
+		*put++ = *take++;
+	}
+	*put=0;
+	return err;
+}
+
+void dorun(bc *bc, char *line)
+{
+// tokenize program
+// delete all variables
+// start executing on first line
+
 }

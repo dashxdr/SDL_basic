@@ -15,6 +15,7 @@ extern int txsize, tysize;
 #define BF_QUIT         1 // we can quit
 #define BF_NOPROMPT     2 // don't put up "Ready" prompt.
 #define BF_EDIT         4 // preload a line, for editing
+#define BF_LINEERROR    8 // Error on a line
 
 typedef struct basic_context {
 	int flags;
@@ -42,6 +43,8 @@ typedef struct basic_context {
 	char workspace[1024];
 	int scrollhistoryin;
 	char *scrollhistory;
+	int let_code;
+	char lineerror[256];
 	char program[1000000]; // 1M ought to be big enough...
 } bc;
 
