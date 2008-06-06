@@ -358,15 +358,15 @@ struct cmd *cmd;
 
 #define SYNTAX_ERROR          "Syntax error"
 #define NON_TERMINATED_STRING "Nonterminated string"
+#define NO_SUCH_LINE          "Invalid line number"
 
-
-void line_error(bc *bc, char *s, ...)
+void run_error(bc *bc, char *s, ...)
 {
 va_list ap;
 	va_start(ap, s);
 	vsnprintf(bc->lineerror, sizeof(bc->lineerror), s, ap);
 	va_end(ap);
-	bc->flags |= BF_LINEERROR;
+	bc->flags |= BF_RUNERROR;
 }
 
 
@@ -374,6 +374,39 @@ struct stmt {
 	char *name;
 	void (*func)(bc *, char **take);
 };
+
+int findrunline(bc *bc, int num)
+{
+struct linepointer *lp;
+int low, high, mid;
+	low = 0;
+	high = bc->numlines;
+	lp = bc->lps;
+	for(;;)
+	{
+		mid = (low+high) >> 1;
+		if(mid==low) break;
+		if(num < lp[mid].linenum)
+			high=mid;
+		else
+			low=mid;
+	}
+	if(lp[mid].linenum == num)
+		return mid;
+	else
+		return -1;
+}
+
+int currentline(bc *bc)
+{
+int t;
+	t=bc->online;
+	if(t<bc->numlines)
+		t=bc->lps[t].linenum;
+	else
+		t=-1;
+	return t;
+}
 
 void dorem(bc *bc, char **take)
 {
@@ -399,6 +432,12 @@ void doinput(bc *bc, char **take)
 
 void dogoto(bc *bc, char **take)
 {
+int newline;
+	newline = findrunline(bc, atoi(*take));
+	if(newline<0)
+		run_error(bc, NO_SUCH_LINE);
+	else
+		bc->nextline = newline;
 }
 
 void doif(bc *bc, char **take)
@@ -519,7 +558,7 @@ int i;
 				}
 				if(!c || c=='\n')
 				{
-					line_error(bc, NON_TERMINATED_STRING);
+					run_error(bc, NON_TERMINATED_STRING);
 					err=1;
 					break;
 				}
@@ -553,29 +592,6 @@ int i;
 	}
 	*put=0;
 	return err;
-}
-
-int findrunline(bc *bc, int num)
-{
-struct linepointer *lp;
-int low, high, mid;
-	low = 0;
-	high = bc->numlines;
-	lp = bc->lps;
-	for(;;)
-	{
-		mid = (low+high) >> 1;
-		if(mid==low) break;
-		if(lp[mid].linenum<num)
-			low=mid;
-		else
-			high=mid;
-	}
-	if(lp[mid].linenum == num)
-		return mid;
-	else
-		return -1;
-
 }
 
 void dorun(bc *bc, char *line)
@@ -618,10 +634,12 @@ close(fd);
 
 	if(!bc->numlines) return;
 	bc->nextline = 0;
-	for(;;)
+	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR)))
 	{
 		char *p;
 		int f;
+		updatef(bc);
+		scaninput(bc);
 		bc->online = bc->nextline;
 		if(bc->online >= bc->numlines)
 			break; // out of lines
@@ -634,6 +652,16 @@ close(fd);
 		{
 			--p;
 		}
+	}
+	if(bc->flags & BF_CCHIT)
+	{
+		tprintf(bc, "\nControl-C stopped on line %d\n", currentline(bc));
+		bc->flags &= ~BF_CCHIT;
+	}
+	if(bc->flags & BF_RUNERROR)
+	{
+		error(bc, "Error on line %d: %s", currentline(bc), bc->lineerror);
+		bc->flags &= ~BF_RUNERROR;
 	}
 
 
