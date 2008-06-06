@@ -634,6 +634,7 @@ close(fd);
 
 	if(!bc->numlines) return;
 	bc->nextline = 0;
+	bc->execute_count = 0;
 	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR)))
 	{
 		char *p;
@@ -651,12 +652,17 @@ close(fd);
 		} else
 		{
 			--p;
+#warning need to do a let a=b here
 		}
+		++bc->execute_count;
+//if(bc->execute_count%1000000 == 0) printf("%d\n", bc->execute_count);
+
 	}
 	if(bc->flags & BF_CCHIT)
 	{
 		tprintf(bc, "\nControl-C stopped on line %d\n", currentline(bc));
 		bc->flags &= ~BF_CCHIT;
+		flushinput(bc);
 	}
 	if(bc->flags & BF_RUNERROR)
 	{

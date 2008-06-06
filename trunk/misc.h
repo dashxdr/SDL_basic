@@ -56,6 +56,7 @@ typedef struct basic_context {
 	int numlines;
 	struct linepointer lps[100000]; // 100K lines
 	int online, nextline;
+	int execute_count;
 } bc;
 
 #define MYF1 0x180
@@ -110,6 +111,7 @@ void markkey(bc *bc, int code, int mod, int downup);
 void typeline(bc *bc, char *prompt,int echocr);
 void updatef(bc *bc);
 void scaninput(bc *bc);
+void flushinput(bc *bc);
 
 // basic.c
 
