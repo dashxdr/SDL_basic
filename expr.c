@@ -31,6 +31,7 @@ oper_assign,
 #define PRI_30    0x30
 
 typedef struct expr_element {
+	void *indirect;
 	double value;
 	bstring *string;
 	int operation;
@@ -137,49 +138,75 @@ int expr2(ec *ec)
 	return 0;
 }
 
+int is_string_type(int type)
+{
+	return type==OT_BSTRING || type==OT_PBSTRING;
+}
+
 int trytop(ec *ec)
 {
-	int topop;
-	bstring *topstring;
-	double topval;
+ee *left, *right;
 
+	right = & ec->tos;
 	for(;;)
 	{
-		if(ec->tos.priority > ec->exprsp->priority)
-			return ec->tos.priority==PRI_08;
-		topop = ec->exprsp->operation;
-		topval = ec->exprsp->value;
-		topstring = ec->exprsp->string;
+		if(right->priority > ec->exprsp->priority)
+			return right->priority==PRI_08;
+		left = ec->exprsp;
 		--ec->exprsp;
 
-		switch(topop)
+		if(is_string_type(left->type) ^ is_string_type(right->type))
+			ec->exprflags |= EXPR_ERR_MISMATCH;
+
+		if(right->type == OT_PDOUBLE)
 		{
-			case oper_plus: /* + */
-				ec->tos.value+=topval;
-				break;
-			case oper_minus: /* - */
-				ec->tos.value=topval-ec->tos.value;
-				break;
-			case oper_divide: /* / */
-				ec->tos.value=topval/ec->tos.value;
-				break;
-			case oper_multiply: /* * */
-				ec->tos.value*=topval;
-				break;
-//			case oper_or: /* | */
-//				ec->tos.value=(int)ec->operval | (int)topval;
-//				break;
-//			case oper_and: /* & */
-//				ec->tos.value=(int)ec->operval | (int)topval;
-//				break;
-//			case oper_lshift: /* << */
-//				ec->tos.value=(int)topval<<(int)ec->operval;
-//				break;
-//			case oper_rshift: /* >> */
-//				ec->tos.value=(int)topval>>(int)ec->operval;
-//				break;
-			case oper_end: return 1;
+			right->value = *(double *)right->indirect;
+			right->type = OT_DOUBLE;
 		}
+		if(right->type == OT_DOUBLE)
+			switch(left->operation)
+			{
+				case oper_plus: /* + */
+					right->value+=left->value;
+					break;
+				case oper_minus: /* - */
+					right->value=left->value - right->value;
+					break;
+				case oper_divide: /* / */
+					right->value=left->value/right->value;
+					break;
+				case oper_multiply: /* * */
+					right->value*=left->value;
+					break;
+				case oper_assign: // =
+					if(left->type != OT_PDOUBLE)
+						ec->exprflags |= EXPR_ERR_BAD_LVALUE;
+					else
+					{
+						*(double *)left->indirect = right->value;
+						right->type = OT_DOUBLE;
+					}
+					break;
+//				case oper_or: /* | */
+//					right->value=(int)left->value | (int)right->value;
+//					break;
+//				case oper_and: /* & */
+//					right->value=(int)left->value | (int)right->value;
+//					break;
+//				case oper_lshift: /* << */
+//					right->value=(int)left->value << (int)right->value;
+//					break;
+//				case oper_rshift: /* >> */
+//					right->value=(int)left->value >> (int)ec->value;
+//					break;
+				case oper_end: return 1;
+			}
+		if(left->type == OT_BSTRING)
+		{
+			free_bstring(left->string);
+			left->string = 0;
+		}
+
 	}
 }
 
@@ -361,7 +388,8 @@ char ch;
 /* fills in operval and opertype, leaves pointer on character stopped on */
 void operand(ec *ec)
 {
-	uchar ch;
+uchar ch;
+ee *newop = &ec->tos;
 
 	ch=at(ec);
 	if((ch>='0' && ch<='9') || ch=='.')
@@ -379,36 +407,36 @@ void operand(ec *ec)
 				fracpart += digit * (ch - '0');
 				digit /= 10.0;
 			}
-			ec->tos.value = intpart + fracpart;
+			newop->value = intpart + fracpart;
 		} else
-			ec->tos.value = intpart;
+			newop->value = intpart;
 		back(ec);
-		ec->tos.type = OT_DOUBLE;
+		newop->type = OT_DOUBLE;
 	} else if(ch=='\'')
 	{
 		get(ec);
-		ec->tos.value=0.0;
+		newop->value=0.0;
 		while((ch=get(ec)))
 		{
 			if(ch=='\n' || !ch) {back(ec);unbalancedq(ec);break;}
 			if(ch=='\'')
 				if(get(ec)!='\'') {back(ec);break;}
-			ec->tos.value*=256;ec->tos.value+=ch;
+			newop->value*=256;newop->value+=ch;
 		}
-		ec->tos.type = OT_DOUBLE;
+		newop->type = OT_DOUBLE;
 	} else if(ch=='(')
 	{
 		int res;
 		get(ec);
 		res=expr2(ec);
-		ec->tos.value=ec->ei->value;
-		ec->tos.type = ec->ei->type;
+		newop->value=ec->ei->value;
+		newop->type = ec->ei->type;
 		if(get(ec)!=')') {ec->exprflag|=1;back(ec);}
 	} else if(ch=='"')
 	{
 		get(ec);
-		ec->tos.string = gather_bstring(ec);
-		ec->tos.type = OT_BSTRING;
+		newop->string = gather_bstring(ec);
+		newop->type = OT_BSTRING;
 	} else
 	{
 		char name[16];
@@ -428,7 +456,7 @@ void operand(ec *ec)
 					v=add_variable(ec->bc, name, type);
 			}
 #warning check for ran out of variables
-			ec->tos.value = v->value;
+			newop->value = v->value;
 		}
 	}
 }
