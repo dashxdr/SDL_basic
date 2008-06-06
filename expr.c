@@ -5,22 +5,53 @@
 
 typedef unsigned char uchar;
 
-#define EXPRMAX 128
+#define EXPRMAX 8
+
+enum expr_operations {
+oper_minus,
+oper_plus,
+oper_multiply,
+oper_divide,
+oper_and,
+oper_or,
+oper_xor,
+oper_lshift,
+oper_rshift,
+oper_end,
+};
+
+#define PRI_08    0x08
+#define PRI_10    0x10
+#define PRI_18    0x18
+#define PRI_20    0x20
+#define PRI_28    0x28
+#define PRI_30    0x30
+
+
+typedef struct expr_element {
+	double value;
+	char *string;
+	int operation;
+	int priority;
+} ee;
+
 
 typedef struct expr_context {
 	bc *bc;
-	uchar exprstack[EXPRMAX];
-	uchar *exprsp;
+	ee exprstack[EXPRMAX];
+	ee *exprsp;
 	int exprflag;
 	int oppri;
 	int opop;
 	double operval;
+	char *operstring;
 	int exprflags;
 	char *pnt;
+	einfo *ei;
 } ec;
 
 
-double expr2(ec *ec);
+int expr2(ec *ec);
 void operand(ec *ec);
 void operator(ec *ec);
 int trytop(ec *ec);
@@ -46,64 +77,40 @@ int back(ec *ec)
 	return *--ec->pnt;
 }
 
-int isoknum(uchar ach)
+int expr2(ec *ec);
+
+int expr(bc *bc, char **take, einfo *ei)
 {
-	return ach>='0' && ach<='9';
-}
+ec ecl, *ec = &ecl;
+int res;
 
-
-void pushl(ec *ec, double val)
-{
-	*(double *)ec->exprsp=val;
-	ec->exprsp+=sizeof(double);
-}
-
-void pushb(ec *ec, uchar val)
-{
-	*ec->exprsp++ = val;
-}
-
-double popl(ec *ec)
-{
-	ec->exprsp-=sizeof(double);
-	return *(double *)ec->exprsp;
-}
-
-int popb(ec *ec)
-{
-	return *--ec->exprsp;
-}
-
-double expr2(ec *ec);
-
-double expr(bc *bc, char **take)
-{
-double eval;
-ec ecl, *ec;
-
-	ec = &ecl;
+	ei->flags_out = 0;
 
 	ec->bc = bc;
 	ec->pnt = *take;
 	ec->exprsp=ec->exprstack;
 	ec->exprflag=0;
-	eval = expr2(ec);
+	ec->ei = ei;
+	res = expr2(ec);
 //	if(ec->exprflag & 1) unbalanced();
 //	if(ec->exprflag & 2) badoperation();
 	*take = ec->pnt;
-	return eval;
+	return 0;
 }
 /*uchar opchars[]={'+','-','/','*','|','&','<<','>>','!'};*/
 
-double expr2(ec *ec)
+int expr2(ec *ec)
 {
-	pushb(ec, 0);
-	if(at(ec)=='-')
+	++ec->exprsp;
+	ec->exprsp->priority = 0; // endmark
+	if(at(ec)=='-') // unary minus
 	{
 		get(ec);
-		pushl(ec, 0.0);
-		pushb(ec, 1);
-		pushb(ec, 0x10);
+		++ec->exprsp;
+		ec->exprsp->value = 0.0;
+		ec->exprsp->string = 0;
+		ec->exprsp->operation = oper_minus;
+		ec->exprsp->priority = PRI_10;
 	}
 	for(;;)
 	{
@@ -111,53 +118,59 @@ double expr2(ec *ec)
 		operator(ec);
 		if(trytop(ec)) break;
 
-		pushl(ec, ec->operval);
-		pushb(ec, ec->opop);
-		pushb(ec, ec->oppri);
+		++ec->exprsp;
+		ec->exprsp->value = ec->operval;
+		ec->exprsp->string = ec->operstring;
+		ec->exprsp->operation = ec->opop;
+		ec->exprsp->priority = ec->oppri;
 	}
-	popb(ec);
-	return ec->operval;
+	--ec->exprsp;
+	ec->ei->value = ec->operval;
+	return 0;
 }
 
 int trytop(ec *ec)
 {
-	uchar toppri,topop;
+	int topop;
+	char *topstring;
 	double topval;
 
 	for(;;)
 	{
-		toppri=popb(ec);
-		if(ec->oppri>toppri) {pushb(ec, toppri);return ec->oppri==8;}
-		topop=popb(ec);
-		topval=popl(ec);
+		if(ec->oppri > ec->exprsp->priority)
+			return ec->oppri==PRI_08;
+		topop = ec->exprsp->operation;
+		topval = ec->exprsp->value;
+		topstring = ec->exprsp->string;
+		--ec->exprsp;
 
 		switch(topop)
 		{
-			case 0: /* + */
+			case oper_plus: /* + */
 				ec->operval+=topval;
 				break;
-			case 1: /* - */
+			case oper_minus: /* - */
 				ec->operval=topval-ec->operval;
 				break;
-			case 2: /* / */
+			case oper_divide: /* / */
 				ec->operval=topval/ec->operval;
 				break;
-			case 3: /* * */
+			case oper_multiply: /* * */
 				ec->operval*=topval;
 				break;
-			case 4: /* | */
+			case oper_or: /* | */
 				ec->operval=(int)ec->operval | (int)topval;
 				break;
-			case 5: /* & */
+			case oper_and: /* & */
 				ec->operval=(int)ec->operval | (int)topval;
 				break;
-			case 6: /* << */
+			case oper_lshift: /* << */
 				ec->operval=(int)topval<<(int)ec->operval;
 				break;
-			case 7: /* >> */
+			case oper_rshift: /* >> */
 				ec->operval=(int)topval>>(int)ec->operval;
 				break;
-			case 8: return 1;
+			case oper_end: return 1;
 		}
 	}
 }
@@ -169,20 +182,20 @@ uchar ch;
 	ch=get(ec);
 	switch(ch)
 	{
-		case '+': ec->oppri=16;ec->opop=0;break;
-		case '-': ec->oppri=16;ec->opop=1;break;
-		case '/': ec->oppri=24;ec->opop=2;break;
-		case '*': ec->oppri=24;ec->opop=3;break;
-		case '|': ec->oppri=32;ec->opop=4;break;
-		case '&': ec->oppri=40;ec->opop=5;break;
+		case '+': ec->oppri=PRI_10;ec->opop=oper_plus;break;
+		case '-': ec->oppri=PRI_10;ec->opop=oper_minus;break;
+		case '/': ec->oppri=PRI_18;ec->opop=oper_divide;break;
+		case '*': ec->oppri=PRI_18;ec->opop=oper_multiply;break;
+		case '|': ec->oppri=PRI_20;ec->opop=oper_or;break;
+		case '&': ec->oppri=PRI_28;ec->opop=oper_and;break;
 		case '<':
 			if(get(ec)!='<') back(ec);
-			ec->oppri=48;ec->opop=6;break;
+			ec->oppri=PRI_30;ec->opop=6;break;
 		case '>':
 			if(get(ec)!='>') back(ec);
-			ec->oppri=32;ec->opop=7;break;
+			ec->oppri=PRI_20;ec->opop=7;break;
 		default:
-			back(ec);ec->oppri=8;ec->opop=8;
+			back(ec);ec->oppri=PRI_08;ec->opop=oper_end;
 	}
 }
 
@@ -239,16 +252,22 @@ int which;
 	strcpy(v->name, name);
 	v->value = 0.0;
 	v->data = 0;
-	v->strlen = 0;
 	++ bc->numvariables;
 #warning check for out of variables needed
 	return v;
 }
 
+/*
+A
+A$
+A(
+A$(
+*/
+
 int gather_variable_name(bc *bc, char *put, char **take)
 {
 int n;
-int type;
+int type=0;
 	n=0;
 	put[n] = tolower(*(*take));
 	if(!isalpha(put[0]))
@@ -263,11 +282,12 @@ int type;
 	if(**take == '$')
 	{
 		put[n++] = *(*take)++;
-		type = RANK_STRING;
-	} else if(**take == '(')
+		type |= RANK_STRING;
+	}
+	if(**take == '(')
 	{
 		put[n++] = *(*take)++;
-		type = RANK_ARRAY;
+		type |= RANK_ARRAY;
 	} else type=RANK_VARIABLE;
 	put[n]=0;
 	return type;
@@ -284,12 +304,12 @@ void operand(ec *ec)
 		double intpart;
 
 		intpart = 0.0;
-		while(isoknum(ch=get(ec))) {intpart*=10;intpart+=ch-'0';}
+		while(isdigit(ch=get(ec))) {intpart*=10;intpart+=ch-'0';}
 		if(ch=='.')
 		{
 			double digit=0.1;
 			double fracpart=0.0;
-			while(isoknum(ch=get(ec)))
+			while(isdigit(ch=get(ec)))
 			{
 				fracpart += digit * (ch - '0');
 				digit /= 10.0;
@@ -311,8 +331,10 @@ void operand(ec *ec)
 		}
 	} else if(ch=='(')
 	{
+		int res;
 		get(ec);
-		ec->operval=expr2(ec);
+		res=expr2(ec);
+		ec->operval=ec->ei->value;
 		if(get(ec)!=')') {ec->exprflag|=1;back(ec);}
 	}  else
 	{

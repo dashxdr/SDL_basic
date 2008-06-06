@@ -417,7 +417,7 @@ void dolet(bc *bc, char **take)
 int res;
 char name[16];
 struct variable *v;
-double value;
+einfo einfo, *ei=&einfo;
 
 	res = gather_variable_name(bc, name, take);
 	if(res==RANK_INVALID)
@@ -431,21 +431,25 @@ double value;
 		return;
 	}
 	++*take;
-	value = expr(bc, take);
+	ei->flags_in = 0;
+	res = expr(bc, take, ei);
 	v=find_variable(bc, name);
 	if(!v)
 		v=add_variable(bc, name);
-	v->value = value;
+	v->value = ei->value;
 }
 
 void doprint(bc *bc, char **take)
 {
-double value;
-	value = expr(bc, take);
-	if((long)value == value)
-		tprintf(bc, "%ld\n", (long)value);
+einfo einfo, *ei=&einfo;
+int res;
+
+	ei->flags_in = 0;
+	res = expr(bc, take, ei);
+	if((long)ei->value == ei->value)
+		tprintf(bc, "%ld\n", (long)ei->value);
 	else
-		tprintf(bc, "%.16f\n", value);
+		tprintf(bc, "%.16f\n", ei->value);
 }
 
 void doinput(bc *bc, char **take)
