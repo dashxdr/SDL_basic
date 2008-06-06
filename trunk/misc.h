@@ -153,6 +153,10 @@ void processline(bc *bc, char *line);
 #define OT_PDOUBLE  3
 #define OT_PBSTRING 4
 
+#define EXPR_ERR_MISMATCH   1 // mix of strings/numbers
+#define EXPR_ERR_INVALID    2 // invalid operation
+#define EXPR_ERR_BAD_LVALUE 4 // illegal item on left side of assignment
+
 typedef struct expr_info {
 	int flags_in;
 	int flags_out;
