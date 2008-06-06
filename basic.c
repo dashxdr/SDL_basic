@@ -480,6 +480,7 @@ int newline=1;
 
 void doinput(bc *bc, char **take)
 {
+	typeline(bc, "? ", 1);
 }
 
 void dogoto(bc *bc, char **take)
@@ -547,7 +548,7 @@ int i,j;
 		v=find_variable(bc, name);
 		if(v)
 		{
-			run_error(bc, DUPLICATE_ARRAY);
+			run_error(bc, DUPLICATE_ARRAY "xxx");
 			break;
 		}
 		v=add_variable(bc, name, type);
