@@ -1,6 +1,6 @@
 CC	= gcc
-CFLAGS = -O2 -Wall $(shell sdl-config --cflags)
-LDFLAGS = $(shell sdl-config --libs)
+CFLAGS = -O2 -Wall $(shell sdl-config --cflags) -g
+LDFLAGS = $(shell sdl-config --libs) -g
 
 all: basic
 basic: main.o basic.o font.o render.o keyboard.o
