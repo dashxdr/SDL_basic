@@ -179,3 +179,6 @@ int gather_variable_name(bc *bc, char *put, char **take);
 struct variable *find_variable(bc *bc, char *name);
 struct variable *add_variable(bc *bc, char *name, int type);
 void free_bstring(bstring *bs);
+bstring *make_bstring(char *string, int length);
+bstring *dup_bstring(bstring *bs);
+bstring *make_raw_bstring(int length);

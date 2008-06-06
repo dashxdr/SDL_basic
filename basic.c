@@ -435,6 +435,8 @@ einfo einfo, *ei=&einfo;
 //	++*take;
 	ei->flags_in = EXPR_LET;
 	res = expr(bc, take, ei);
+	if(ei->type == OT_BSTRING)
+		free_bstring(ei->string);
 //	v=find_variable(bc, name);
 //	if(!v)
 //		v=add_variable(bc, name, type);
@@ -560,7 +562,9 @@ int i,j;
 			for(j=i;j<rank;++j)
 				v->dimensions[i] *= dimensions[j];
 		}
-		if(!(type & RANK_STRING)) // array of doubles
+		if(type & RANK_STRING) // array of strings
+			v->array = calloc(v->dimensions[0], sizeof(bstring *));
+		else
 			v->array = calloc(v->dimensions[0], sizeof(double));
 #warning check for out of memory
 		if(**take == ',')
