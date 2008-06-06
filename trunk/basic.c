@@ -375,7 +375,7 @@ struct stmt {
 	void (*func)(bc *, char **take);
 };
 
-void docomment(bc *bc, char **take)
+void dorem(bc *bc, char **take)
 {
 }
 
@@ -461,8 +461,7 @@ void dornd(bc *bc, char **take)
 
 
 struct stmt statements[]={
-{"'", docomment},
-{"rem", docomment},
+{"rem", dorem},
 {"let", dolet},
 {"input", doinput},
 {"print", doprint},
@@ -539,6 +538,8 @@ int i;
 		if(s->name)
 		{
 			take+=i;
+			if(s->func == dorem) // don't bother storing it
+				break;
 			*put++ = 255 - (s - statements); // convert to token number
 			continue;
 		}
