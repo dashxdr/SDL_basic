@@ -81,6 +81,7 @@ typedef struct basic_context {
 	int execute_count;
 	int numvariables;
 	struct variable vars[MAX_VARIABLES];
+	int tokenmap[256];
 } bc;
 
 #define MYF1 0x180
@@ -141,6 +142,7 @@ void flushinput(bc *bc);
 
 void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
+int token_code(bc *bc, unsigned char val);
 
 // expr.c
 
@@ -182,3 +184,8 @@ void free_bstring(bstring *bs);
 bstring *make_bstring(char *string, int length);
 bstring *dup_bstring(bstring *bs);
 bstring *make_raw_bstring(int length);
+
+#define TOKEN_THEN            1
+#define TOKEN_TO              2
+#define TOKEN_ELSE            3
+#define TOKEN_FUNCTION        0x100 // flag
