@@ -171,6 +171,21 @@ int is_string_type(int type)
 	return type==OT_BSTRING || type==OT_PBSTRING;
 }
 
+int bstring_comp(bstring *left, bstring *right)
+{
+int min,max;
+int res;
+	min=left->length;
+	max=right->length;
+	if(max<min)
+		res=min,min=max,max=res;
+
+	res=memcmp(left->string, right->string, min);
+	if(res) return res;
+	if(min==max) return 0;
+	return left->length < right->length ? -1 : 1;
+}
+
 
 int trytop(ec *ec)
 {
@@ -263,6 +278,20 @@ ee *left, *right;
 						free_bstring(right->string);
 						right->string = bs;
 					}
+					break;
+				case oper_eq: // comparison =
+					if(left->type == OT_BSTRING && right->type == OT_BSTRING)
+					{
+						right->value = !bstring_comp(left->string,
+							right->string);
+					} else
+						right->value = 0;
+					if(right->type == OT_BSTRING);
+					{
+						free_bstring(right->string);
+						right->string = 0;
+					}
+					right->type = OT_DOUBLE;
 					break;
 				default:
 					expr_error(ec, EXPR_ERR_INVALID);

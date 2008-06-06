@@ -143,6 +143,8 @@ void flushinput(bc *bc);
 void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
 int token_code(bc *bc, unsigned char val);
+int token_flags(bc *bc, unsigned char val);
+void execute(bc *bc, char **p);
 
 // expr.c
 
@@ -188,4 +190,6 @@ bstring *make_raw_bstring(int length);
 #define TOKEN_THEN            1
 #define TOKEN_TO              2
 #define TOKEN_ELSE            3
+#define TOKEN_IF              4
 #define TOKEN_FUNCTION        0x100 // flag
+#define TOKEN_STATEMENT       0x200 // can execute it
