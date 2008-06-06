@@ -374,6 +374,7 @@ va_list ap;
 struct stmt {
 	char *name;
 	void (*func)(bc *, char **take);
+	int token_code;
 };
 
 int findrunline(bc *bc, int num)
@@ -496,6 +497,22 @@ int newline;
 }
 
 void doif(bc *bc, char **take)
+{
+einfo einfo, *ei=&einfo;
+int res;
+
+	ei->flags_in = EXPR_IF;
+	res = expr(bc, take, ei);
+	if(ei->type == OT_BSTRING)
+	{
+		free_bstring(ei->string);
+		run_error(bc, SYNTAX_ERROR);
+	}
+printf("if value returned %f\n", ei->value);
+
+}
+
+void doelse(bc *bc, char **take)
 {
 }
 
@@ -643,20 +660,21 @@ struct stmt statements[]={
 {"goto", dogoto},
 {"read", doread},
 {"dim", dodim},
-{"then", dothen},
+{"then", dothen, TOKEN_THEN},
 {"for", dofor},
-{"to", doto},
+{"to", doto, TOKEN_TO},
 {"next", doif},
 {"if", doif},
+{"else", doelse, TOKEN_ELSE},
 {"gosub", dogosub},
 {"return", doreturn},
 {"end", doend},
 {"data", dodata},
-{"int", doint},
-{"sgn", dosgn},
-{"sin", dosin},
-{"cos", docos},
-{"rnd", dornd},
+{"int", doint, TOKEN_FUNCTION},
+{"sgn", dosgn, TOKEN_FUNCTION},
+{"sin", dosin, TOKEN_FUNCTION},
+{"cos", docos, TOKEN_FUNCTION},
+{"rnd", dornd, TOKEN_FUNCTION},
 
 {0,0}};
 
@@ -741,6 +759,16 @@ struct variable *v;
 	bc->numvariables = 0;
 }
 
+int token_code(bc *bc, unsigned char val)
+{
+	return bc->tokenmap[val];
+}
+
+void (*token_handler(bc *bc, unsigned char val))(bc *, char **)
+{
+	return statements[255-val].func;
+}
+
 
 void dorun(bc *bc, char *line)
 {
@@ -748,10 +776,15 @@ char *put;
 char *take;
 int linenum;
 int err;
+struct stmt *st;
 
-// tokenize program
-// delete all variables
-// start executing on first line
+	memset(bc->tokenmap, 0, sizeof(bc->tokenmap));
+	st=statements;
+	while(st->name)
+	{
+		bc->tokenmap[255-(st-statements)] = st->token_code;
+		++st;
+	}
 
 	put=bc->runnable;
 	take=bc->program;

@@ -20,6 +20,13 @@ oper_lshift,
 oper_rshift,
 oper_end,
 oper_assign,
+oper_eq,
+oper_ne,
+oper_lt,
+oper_le,
+oper_gt,
+oper_ge,
+
 };
 
 #define PRI_08    0x08
@@ -208,6 +215,9 @@ ee *left, *right;
 						right->type = OT_DOUBLE;
 					}
 					break;
+				case oper_eq: // comparison =
+					right->value = (left->value == right->value) ? 1.0 : 0.0;
+					break;
 //				case oper_or: /* | */
 //					right->value=(int)left->value | (int)right->value;
 //					break;
@@ -285,6 +295,9 @@ int backup=0;
 			if(ec->ei->flags_in & EXPR_LET)
 			{
 				ec->tos.priority=PRI_0c;ec->tos.operation=oper_assign;
+			} else if(ec->ei->flags_in & EXPR_IF)
+			{
+				ec->tos.priority=PRI_0c;ec->tos.operation=oper_eq;
 			} else
 				backup=1;
 			break;
