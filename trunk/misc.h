@@ -15,7 +15,8 @@ extern int txsize, tysize;
 #define BF_QUIT         1 // we can quit
 #define BF_NOPROMPT     2 // don't put up "Ready" prompt.
 #define BF_EDIT         4 // preload a line, for editing
-#define BF_LINEERROR    8 // Error on a line
+#define BF_RUNERROR     8 // Error on a line
+#define BF_CCHIT       16 // Hit control-c
 
 struct linepointer {
 int linenum;
@@ -108,6 +109,7 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 void markkey(bc *bc, int code, int mod, int downup);
 void typeline(bc *bc, char *prompt,int echocr);
 void updatef(bc *bc);
+void scaninput(bc *bc);
 
 // basic.c
 

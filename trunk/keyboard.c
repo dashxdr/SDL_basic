@@ -119,6 +119,7 @@ int mapped[2];
 	if(code<0) return;
 	if(status)
 	{
+		if(*mapped==3) bc->flags |= BF_CCHIT;
 		if(bc->numdown<KEYMAX)
 			bc->downcodes[bc->numdown++]=code;
 		ip=bc->pressedcodes;
