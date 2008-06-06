@@ -1,6 +1,7 @@
+DBG = # -g
 CC	= gcc
-CFLAGS = -O2 -Wall $(shell sdl-config --cflags) -g
-LDFLAGS = $(shell sdl-config --libs) -g
+CFLAGS = -O2 -Wall $(shell sdl-config --cflags) $(DBG)
+LDFLAGS = $(shell sdl-config --libs) $(DBG)
 
 all: basic
 basic: main.o basic.o font.o render.o keyboard.o
