@@ -222,6 +222,10 @@ int new;
 	update(bc);
 }
 
+void flushinput(bc *bc)
+{
+	while(takedown(bc)>=0);
+}
 
 void scaninput(bc *bc)
 {
