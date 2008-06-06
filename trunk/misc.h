@@ -25,18 +25,23 @@ char *line;
 
 #define MAX_VARIABLES 2048 // a, b, c, i, j, a(10,20), etc max
 #define RANK_VARIABLE 0
-#define RANK_STRING -1
 #define RANK_ARRAY  1 // and 2, 3, 4, etc.
 #define RANK_INVALID -50
+#define RANK_MASK     0xff
 
+#define RANK_STRING   0x100 // mask
+
+typedef struct bstring {
+	int length;
+	char string[];
+} bstring;
 
 struct variable {
 	char name[16];
-	int rank; // RANK_* above, > 0 = array, <0 = string
+	int rank; // RANK_*
 	int dimensions[20];
-	void *data;
+	void *data; // pointer to longs or bstring
 	double value;
-	int strlen;
 };
 
 typedef struct basic_context {
@@ -137,7 +142,21 @@ void processline(bc *bc, char *line);
 
 // expr.c
 
-double expr(bc *bc, char **take);
+#define EXPR_IF          1 // it's an IF expression
+#define EXPR_ERROR       2 // an error occured
+#define EXPR_STRING      4 // result was a string type
+
+typedef struct expr_info {
+	int flags_in;
+	int flags_out;
+// results
+	char *string;
+	double value;
+} einfo;
+
+
+
+int expr(bc *bc, char **take, einfo *ei);
 int gather_variable_name(bc *bc, char *put, char **take);
 struct variable *find_variable(bc *bc, char *name);
 struct variable *add_variable(bc *bc, char *name);
