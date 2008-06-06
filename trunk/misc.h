@@ -140,6 +140,7 @@ void flushinput(bc *bc);
 // basic.c
 
 void processline(bc *bc, char *line);
+void run_error(bc *bc, char *s, ...);
 
 // expr.c
 

@@ -89,6 +89,7 @@ void expr_error(ec *ec, char *msg)
 {
 	ec->ei->error = msg;
 	ec->ei->flags_out |= EXPR_ERROR;
+	run_error(ec->bc, "%s", msg);
 }
 
 int expr(bc *bc, char **take, einfo *ei)
@@ -295,7 +296,7 @@ struct variable *find_variable(bc *bc, char *name)
 {
 struct variable *v;
 	v=find_v_low(bc, name);
-	if(!strcmp(name, v->name))
+	if(bc->numvariables && !strcmp(name, v->name))
 		return v;
 	return 0;
 }
@@ -475,7 +476,7 @@ ee *newop = &ec->tos;
 				int rank;
 				int res;
 
-				rank = type & RANK_MASK;
+				rank = v->rank & RANK_MASK;
 				for(i=0;i<rank;++i)
 				{
 					res = expr2(ec);
@@ -496,13 +497,13 @@ ee *newop = &ec->tos;
 						if(at(ec) == ',')
 							get(ec);
 						else
-							expr_error(ec, EXPR_ERR_MISCOUNT);
+							expr_error(ec, EXPR_ERR_MISCOUNT "1");
 					} else
 					{
 						if(at(ec) == ')')
 							get(ec);
 						else
-							expr_error(ec, EXPR_ERR_MISCOUNT);
+							expr_error(ec, EXPR_ERR_MISCOUNT "2");
 					}
 				}
 				j=0;
