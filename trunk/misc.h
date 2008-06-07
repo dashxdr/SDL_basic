@@ -17,11 +17,14 @@ extern int txsize, tysize;
 #define BF_EDIT         4 // preload a line, for editing
 #define BF_RUNERROR     8 // Error on a line
 #define BF_CCHIT       16 // Hit control-c
+#define BF_ENDHIT      32 // End
 
 struct linepointer {
 int linenum;
 char *line;
 };
+
+#define GOSUBMAX   10000
 
 #define MAX_VARIABLES 2048 // a, b, c, i, j, a(10,20), etc max
 #define RANK_VARIABLE  0
@@ -94,6 +97,8 @@ typedef struct basic_context {
 	struct forinfo fors[MAX_FORS];
 	int dataline;
 	char *datatake;
+	int gosubsp;
+	int gosubstack[GOSUBMAX];
 } bc;
 
 #define MYF1 0x180
