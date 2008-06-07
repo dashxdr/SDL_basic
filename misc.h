@@ -158,6 +158,7 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 
 void stroke(bc *bc, double x, double y);
 void fillscreen(bc *bc, int r, int g, int b);
+void circle(bc *bc, double cx, double cy, double radius);
 
 // keyboard.c
 

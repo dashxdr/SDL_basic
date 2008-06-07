@@ -50,7 +50,7 @@ float val,delta;
 }
 
 
-void circle(bc *bc, int cx,int cy,int radius,int c)
+void drawcircle(bc *bc, int cx,int cy,int radius,int c)
 {
 int x,y,e;
 
@@ -106,5 +106,14 @@ int w;
 		memcpy(thescreen->pixels + i*thescreen->pitch,
 				thescreen->pixels, w);
 	}
+
+}
+
+void circle(bc *bc, double cx, double cy, double radius)
+{
+Uint32 color;
+	bc->tainted = 1;
+	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
+	drawcircle(bc, cx, cy, radius, color);
 
 }
