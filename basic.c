@@ -360,6 +360,9 @@ struct cmd *cmd;
 #define NON_TERMINATED_STRING "Nonterminated string"
 #define NO_SUCH_LINE          "Invalid line number"
 #define DUPLICATE_ARRAY       "Duplicate array declaration"
+#define INVALID_VARIABLE      "Invalid variable"
+#define TOO_MANY_FORS         "Too many nested for loops"
+#define NEXT_WITHOUT_FOR      "Next without for"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -469,6 +472,7 @@ int newline=1;
 				tprintf(bc, "%s", bs->string);
 			free_bstring(bs);
 		}
+		if(!**take) break;
 		if(**take != ';')
 		{
 			if(*(unsigned char *)*take!=token_else);
@@ -632,7 +636,7 @@ int i,j;
 		v=find_variable(bc, name);
 		if(v)
 		{
-			run_error(bc, DUPLICATE_ARRAY "xxx");
+			run_error(bc, DUPLICATE_ARRAY);
 			break;
 		}
 		v=add_variable(bc, name, type);
@@ -660,12 +664,99 @@ int i,j;
 	}
 }
 
-void dothen(bc *bc, char **take)
+struct forinfo *findfor(bc *bc, char *name)
 {
+int i;
+	for(i=0;i<bc->numfors;++i)
+		if(!strcmp(name, bc->fors[i].name))
+			return bc->fors + i;
+	return 0;
+}
+
+struct forinfo *newfor(bc *bc)
+{
+	if(bc->numfors == MAX_FORS)
+		return 0;
+	return bc->fors + bc->numfors++;
 }
 
 void dofor(bc *bc, char **take)
 {
+char name[16];
+int type;
+einfo einfo, *ei=&einfo;
+int res;
+double start_val, end_val, step_val;
+struct forinfo *fi;
+
+	type=gather_variable_name(bc, name, take);
+	if(type!=RANK_VARIABLE)
+	{
+		run_error(bc, INVALID_VARIABLE);
+		return;
+	}
+	if(*(unsigned char *)*take != '=')
+	{
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	++*take;
+
+	ei->flags_in = 0;
+	res = expr(bc, take, ei);
+	if(ei->type == OT_BSTRING)
+	{
+		free_bstring(ei->string);
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	start_val = ei->value;
+
+	if(*(unsigned char *)*take != token_to)
+	{
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	++*take;
+
+	ei->flags_in = 0;
+	res = expr(bc, take, ei);
+	if(ei->type == OT_BSTRING)
+	{
+		free_bstring(ei->string);
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	end_val = ei->value;
+
+	if(*(unsigned char *)*take == token_step)
+	{
+		++*take;
+		ei->flags_in = 0;
+		res = expr(bc, take, ei);
+		if(ei->type == OT_BSTRING)
+		{
+			free_bstring(ei->string);
+			run_error(bc, SYNTAX_ERROR);
+			return;
+		}
+		step_val = ei->value;
+	} else
+		step_val = 1.0;
+
+	fi = findfor(bc, name);
+	if(!fi)
+		fi=newfor(bc);
+	if(!fi)
+	{
+		run_error(bc, TOO_MANY_FORS);
+		return;
+	}
+	strcpy(fi->name, name);
+	fi->step = step_val;
+	fi->end = end_val;
+	fi->nextline = bc->nextline;
+	set_variable(bc, name, start_val);
 }
 
 void doto(bc *bc, char **take)
@@ -678,6 +769,49 @@ void doread(bc *bc, char **take)
 
 void donext(bc *bc, char **take)
 {
+struct forinfo *fi;
+char name[16];
+int type;
+struct variable *v;
+int pos;
+
+	if(!bc->numfors)
+	{
+		run_error(bc, NEXT_WITHOUT_FOR);
+		return;
+	}
+	type=gather_variable_name(bc, name, take);
+	if(name[0] && type!=RANK_VARIABLE)
+	{
+		run_error(bc, INVALID_VARIABLE);
+		return;
+	}
+	if(name[0])
+	{
+		fi=findfor(bc, name);
+		if(!fi)
+		{
+			run_error(bc, NEXT_WITHOUT_FOR);
+			return;
+		}
+	}
+	else
+		fi=bc->fors+bc->numfors-1;
+	v=find_variable(bc, fi->name);
+#warning check for zero return, but can't really ever happen...
+
+	pos=fi->step>=0.0;
+
+	if((pos && v->value >= fi->end) || (!pos && v->value <= fi->end))
+		bc->numfors = fi - bc->fors; // done, toss this and all inner fors...
+	else
+	{
+		set_variable(bc, fi->name, v->value + fi->step);
+		bc->nextline = fi->nextline;
+	}
+
+
+
 }
 
 void dogosub(bc *bc, char **take)
@@ -721,7 +855,7 @@ int token_to;
 int token_else;
 int token_if;
 int token_to;
-
+int token_step;
 
 
 struct stmt statements[]={
@@ -732,9 +866,10 @@ struct stmt statements[]={
 {"goto", dogoto, TOKEN_STATEMENT, 0},
 {"read", doread, TOKEN_STATEMENT, 0},
 {"dim", dodim, TOKEN_STATEMENT, 0},
-{"then", dothen, 0, &token_then},
+{"then", 0, 0, &token_then},
 {"for", dofor, TOKEN_STATEMENT},
 {"to", doto, 0, &token_to},
+{"step", 0, 0, &token_step},
 {"next", donext, TOKEN_STATEMENT},
 {"if", doif, TOKEN_STATEMENT, &token_if},
 {"else", doelse, 0, &token_else},

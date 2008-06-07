@@ -36,6 +36,14 @@ typedef struct bstring {
 	char string[];
 } bstring;
 
+struct forinfo {
+	char name[16];
+	double step;
+	double end;
+	int nextline;
+};
+#define MAX_FORS 100
+
 struct variable {
 	char name[16];
 	int rank; // RANK_*
@@ -82,6 +90,8 @@ typedef struct basic_context {
 	int numvariables;
 	struct variable vars[MAX_VARIABLES];
 	int tokenmap[256];
+	int numfors;
+	struct forinfo fors[MAX_FORS];
 } bc;
 
 #define MYF1 0x180
@@ -150,6 +160,7 @@ extern int token_to;
 extern int token_else;
 extern int token_if;
 extern int token_to;
+extern int token_step;
 
 #define TOKEN_FUNCTION        0x1 // flag
 #define TOKEN_STATEMENT       0x2 // can execute it
@@ -174,6 +185,7 @@ extern int token_to;
 #define EXPR_ERR_RANGE_ERROR "Array index out of range"
 #define EXPR_ERR_MISCOUNT   "Incorrect number of indexes on array"
 #define EXPR_ERR_NO_ARRAY   "Array must be declared first"
+#define EXPR_ERR_MISSING    "Missing operand in expression"
 
 typedef struct expr_info {
 	int flags_in;
@@ -196,4 +208,5 @@ void free_bstring(bstring *bs);
 bstring *make_bstring(char *string, int length);
 bstring *dup_bstring(bstring *bs);
 bstring *make_raw_bstring(int length);
+void set_variable(bc *bc, char *name, double value);
 

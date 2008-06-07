@@ -289,12 +289,12 @@ ee *left, *right;
 //					break;
 				case oper_end: return 1;
 			}
-		else
+		else if(right->type == OT_BSTRING)
 			switch(left->operation)
 			{
 				case oper_assign: // =
 					if(left->type != OT_PBSTRING)
-						expr_error(ec, EXPR_ERR_BAD_LVALUE);
+						expr_error(ec, EXPR_ERR_BAD_LVALUE "xx");
 					else
 					{
 						bstring *bs;
@@ -345,6 +345,9 @@ ee *left, *right;
 				case oper_end: return 1;
 			
 			}
+		else
+			expr_error(ec, EXPR_ERR_MISSING);
+
 		if(left->type == OT_BSTRING)
 		{
 			free_bstring(left->string);
@@ -528,7 +531,16 @@ bstring *bs;
 	return bs;
 }
 
-
+void set_variable(bc *bc, char *name, double value)
+{
+struct variable *v;
+	v=find_variable(bc, name);
+	if(!v)
+		v=add_variable(bc, name, RANK_VARIABLE);
+	if(v)
+		v->value = value;
+#warning check if out of variables...
+}
 
 
 bstring *dup_bstring(bstring *bs)
