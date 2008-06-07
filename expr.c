@@ -629,8 +629,10 @@ ee tempop={0}, *newop = &tempop;
 			if(!v)
 			{
 				if(type&RANK_MASK) // error, we can't make this on the fly
-#warning have to deal with this
-					;
+				{
+					expr_error(ec, EXPR_ERR_NO_ARRAY);
+					goto crapout;
+				}
 				else
 					v=add_variable(ec->bc, name, type);
 			}
@@ -638,11 +640,14 @@ ee tempop={0}, *newop = &tempop;
 			if(type&RANK_MASK)
 			{
 				int indexes[128];
+				int dims[128];
 				int i,j;
 				int rank;
 				int res;
 
 				rank = v->rank & RANK_MASK;
+				for(i=0;i<rank+1;++i)
+					dims[i] = v->dimensions[i];
 				for(i=0;i<rank;++i)
 				{
 					res = expr2(ec);
@@ -653,7 +658,7 @@ ee tempop={0}, *newop = &tempop;
 					} else
 						indexes[i] = ec->ei->value - 1.0;
 					if(indexes[i]<0 ||
-						 indexes[i]*v->dimensions[i+1] >= v->dimensions[i])
+						 indexes[i]*dims[i+1] >= dims[i])
 					{
 						expr_error(ec, EXPR_ERR_RANGE_ERROR);
 						indexes[i]=0;
@@ -706,5 +711,6 @@ ee tempop={0}, *newop = &tempop;
 			}
 		}
 	}
+crapout:
 	ec->tos = tempop;
 }

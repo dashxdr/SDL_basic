@@ -165,7 +165,7 @@ void execute(bc *bc, char **p);
 #define EXPR_ERR_BAD_INDEX  "Illegal array index"
 #define EXPR_ERR_RANGE_ERROR "Array index out of range"
 #define EXPR_ERR_MISCOUNT   "Incorrect number of indexes on array"
-
+#define EXPR_ERR_NO_ARRAY   "Array must be declared first"
 
 typedef struct expr_info {
 	int flags_in;
