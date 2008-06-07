@@ -6,7 +6,7 @@
 
 typedef unsigned char uchar;
 
-#define EXPRMAX 8
+#define EXPRMAX 64
 
 enum expr_operations {
 oper_minus,

@@ -374,7 +374,8 @@ va_list ap;
 struct stmt {
 	char *name;
 	void (*func)(bc *, char **take);
-	int token_code;
+	int token_flags;
+	int *token_code;
 };
 
 int findrunline(bc *bc, int num)
@@ -470,7 +471,7 @@ int newline=1;
 		}
 		if(**take != ';')
 		{
-			if(**take && token_code(bc, **take) != TOKEN_ELSE)
+			if(*(unsigned char *)*take!=token_else);
 				run_error(bc, SYNTAX_ERROR);
 			break;
 		}
@@ -528,7 +529,7 @@ int res;
 	}
 	if(ei->value != 0.0) // take the true side
 	{
-		if(token_code(bc, **take) != TOKEN_THEN)
+		if(*(unsigned char *)*take != token_then)
 			run_error(bc, SYNTAX_ERROR);
 		else
 		{
@@ -548,21 +549,20 @@ int res;
 	} else // look for an else
 	{
 		int ifc=1;
-		int code;
-		char c;
+		int c;
 
 		for(;;)
 		{
-			c=*(*take)++;
+			c=*(unsigned char *)*take;
+			++*take;
 			if(!c)
 			{
 				--*take;
 				break;
 			}
-			code = token_code(bc, c);
-			if(code==TOKEN_IF)
+			if(c==token_if)
 				++ifc;
-			else if(code==TOKEN_ELSE)
+			else if(c==token_else)
 			{
 				--ifc;
 				if(!ifc)
@@ -716,30 +716,37 @@ void dornd(bc *bc, char **take)
 {
 }
 
+int token_then;
+int token_to;
+int token_else;
+int token_if;
+int token_to;
+
+
 
 struct stmt statements[]={
-{"rem", dorem, TOKEN_STATEMENT},
-{"let", dolet, TOKEN_STATEMENT},
-{"input", doinput, TOKEN_STATEMENT},
-{"print", doprint, TOKEN_STATEMENT},
-{"goto", dogoto, TOKEN_STATEMENT},
-{"read", doread, TOKEN_STATEMENT},
-{"dim", dodim, TOKEN_STATEMENT},
-{"then", dothen, TOKEN_THEN},
+{"rem", dorem, TOKEN_STATEMENT, 0},
+{"let", dolet, TOKEN_STATEMENT, 0},
+{"input", doinput, TOKEN_STATEMENT, 0},
+{"print", doprint, TOKEN_STATEMENT, 0},
+{"goto", dogoto, TOKEN_STATEMENT, 0},
+{"read", doread, TOKEN_STATEMENT, 0},
+{"dim", dodim, TOKEN_STATEMENT, 0},
+{"then", dothen, 0, &token_then},
 {"for", dofor, TOKEN_STATEMENT},
-{"to", doto, TOKEN_TO},
+{"to", doto, 0, &token_to},
 {"next", donext, TOKEN_STATEMENT},
-{"if", doif, TOKEN_STATEMENT | TOKEN_IF},
-{"else", doelse, TOKEN_ELSE},
-{"gosub", dogosub, TOKEN_STATEMENT},
-{"return", doreturn, TOKEN_STATEMENT},
-{"end", doend, TOKEN_STATEMENT},
-{"data", dodata, TOKEN_STATEMENT},
-{"int", doint, TOKEN_FUNCTION},
-{"sgn", dosgn, TOKEN_FUNCTION},
-{"sin", dosin, TOKEN_FUNCTION},
-{"cos", docos, TOKEN_FUNCTION},
-{"rnd", dornd, TOKEN_FUNCTION},
+{"if", doif, TOKEN_STATEMENT, &token_if},
+{"else", doelse, 0, &token_else},
+{"gosub", dogosub, TOKEN_STATEMENT, 0},
+{"return", doreturn, TOKEN_STATEMENT, 0},
+{"end", doend, TOKEN_STATEMENT, 0},
+{"data", dodata, TOKEN_STATEMENT, 0},
+{"int", doint, TOKEN_FUNCTION, 0},
+{"sgn", dosgn, TOKEN_FUNCTION, 0},
+{"sin", dosin, TOKEN_FUNCTION, 0},
+{"cos", docos, TOKEN_FUNCTION, 0},
+{"rnd", dornd, TOKEN_FUNCTION, 0},
 {0,0}};
 
 
@@ -824,10 +831,6 @@ struct variable *v;
 	bc->numvariables = 0;
 }
 
-int token_code(bc *bc, unsigned char val)
-{
-	return bc->tokenmap[val] & 255;
-}
 int token_flags(bc *bc, unsigned char val)
 {
 	return bc->tokenmap[val];
@@ -859,7 +862,7 @@ unsigned char f;
 	{
 		struct stmt *s;
 		s = statements + 255-f;
-		if(s->token_code & TOKEN_STATEMENT)
+		if(s->token_flags & TOKEN_STATEMENT)
 			s->func(bc, p);
 	} else
 	{
@@ -880,7 +883,9 @@ struct stmt *st;
 	st=statements;
 	while(st->name)
 	{
-		bc->tokenmap[255-(st-statements)] = st->token_code;
+		bc->tokenmap[255-(st-statements)] = st->token_flags;
+		if(st->token_code)
+			*st->token_code = 255-(st-statements);
 		++st;
 	}
 
