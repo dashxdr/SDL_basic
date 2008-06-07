@@ -463,6 +463,11 @@ if(code==0x1b) exit(0);
 		}
 
 	}
+	if(bc->flags & BF_CCHIT)
+	{
+		bc->flags &= ~BF_CCHIT;
+		flushinput(bc);
+	}
 	if(i)
 	{
 		memcpy(bc->debhist+LINESIZE*(bc->hcount & (HISTSIZE-1)),bc->debline,LINESIZE);
