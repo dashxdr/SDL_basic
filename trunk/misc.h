@@ -172,6 +172,7 @@ extern int token_step;
 #define EXPR_NOSTRING      4 // expression can't be a string
 #define EXPR_LET           8 // it's part of an assignment
 #define EXPR_LVALUE       16 // no operations, just an lvalue
+#define EXPR_DIDLET       32 // actually did a let
 
 #define OT_DOUBLE   1
 #define OT_BSTRING  2
@@ -186,6 +187,7 @@ extern int token_step;
 #define EXPR_ERR_MISCOUNT   "Incorrect number of indexes on array"
 #define EXPR_ERR_NO_ARRAY   "Array must be declared first"
 #define EXPR_ERR_MISSING    "Missing operand in expression"
+#define EXPR_ERR_NOOP       "Expression has no effect"
 
 typedef struct expr_info {
 	int flags_in;

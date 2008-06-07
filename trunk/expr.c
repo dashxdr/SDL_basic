@@ -111,6 +111,8 @@ int res;
 //	if(ec->exprflag & 1) unbalanced();
 //	if(ec->exprflag & 2) badoperation();
 	*take = ec->pnt;
+	if((ei->flags_in & EXPR_LET) && !(ei->flags_out & EXPR_DIDLET))
+		expr_error(ec, EXPR_ERR_NOOP);
 	return ei->flags_out;
 }
 /*uchar opchars[]={'+','-','/','*','|','&','<<','>>','!'};*/
@@ -249,6 +251,7 @@ ee *left, *right;
 					right->value*=left->value;
 					break;
 				case oper_assign: // =
+					ec->ei->flags_out |= EXPR_DIDLET;
 					if(left->type != OT_PDOUBLE)
 						expr_error(ec, EXPR_ERR_BAD_LVALUE);
 					else
@@ -293,6 +296,7 @@ ee *left, *right;
 			switch(left->operation)
 			{
 				case oper_assign: // =
+					ec->ei->flags_out |= EXPR_DIDLET;
 					if(left->type != OT_PBSTRING)
 						expr_error(ec, EXPR_ERR_BAD_LVALUE "xx");
 					else
