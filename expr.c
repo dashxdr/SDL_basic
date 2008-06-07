@@ -59,7 +59,7 @@ typedef struct expr_context {
 } ec;
 
 
-int expr2(ec *ec);
+int expr2(ec *ec, int flags);
 void operand(ec *ec);
 void operator(ec *ec);
 int trytop(ec *ec);
@@ -85,8 +85,6 @@ int back(ec *ec)
 	return *--ec->pnt;
 }
 
-int expr2(ec *ec);
-
 void expr_error(ec *ec, char *msg)
 {
 	ec->ei->error = msg;
@@ -107,7 +105,7 @@ int res;
 	ec->exprsp=ec->exprstack;
 	ec->exprflag=0;
 	ec->ei = ei;
-	res = expr2(ec);
+	res = expr2(ec, ei->flags_in);
 //	if(ec->exprflag & 1) unbalanced();
 //	if(ec->exprflag & 2) badoperation();
 	*take = ec->pnt;
@@ -132,8 +130,11 @@ void trythunk(ee *thing)
 	}
 }
 
-int expr2(ec *ec)
+int expr2(ec *ec, int flags)
 {
+int flag_save;
+	flag_save = ec->ei->flags_in;
+	ec->ei->flags_in = flags;
 	++ec->exprsp;
 	ec->exprsp->priority = 0; // endmark
 	if(at(ec)=='-') // unary minus
@@ -163,6 +164,7 @@ int expr2(ec *ec)
 	ec->ei->value = ec->tos.value;
 	ec->ei->type = ec->tos.type;
 	ec->ei->indirect = ec->tos.indirect;
+	ec->ei->flags_in = flag_save;
 	return 0;
 }
 
@@ -623,7 +625,7 @@ ee tempop={0}, *newop = &tempop;
 	{
 		int res;
 		get(ec);
-		res=expr2(ec);
+		res=expr2(ec, 0);
 		newop->value=ec->ei->value;
 		newop->type = ec->ei->type;
 		if(get(ec)!=')') {ec->exprflag|=1;back(ec);}
@@ -666,7 +668,7 @@ ee tempop={0}, *newop = &tempop;
 					dims[i] = v->dimensions[i];
 				for(i=0;i<rank;++i)
 				{
-					res = expr2(ec);
+					res = expr2(ec, 0);
 					if(ec->ei->type != OT_DOUBLE)
 					{
 						expr_error(ec, EXPR_ERR_BAD_INDEX);
