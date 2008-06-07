@@ -139,6 +139,7 @@
 1470 GOSUB 2500
 1480 GOTO 1030
 1490 PRINT " "
+1495 gosub 3000
 1500 PRINT "DO YOU WANT TO TRY ANOTHER GAME";
 1510 INPUT X$
 1520 IF X$="YES" THEN 400
@@ -261,6 +262,6 @@
 3095 return
 3100 for k=1 to 4
 3110 v=x(t+t2+k);
-3111 if v=0 then print " . "; else if v=1 then print " X "; else print " O ";
+3111 if v=1 then print " X "; else if v=5 then print " O "; else print " . ";
 3120 next k
 3130 return
