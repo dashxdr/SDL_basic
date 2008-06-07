@@ -365,6 +365,8 @@ struct cmd *cmd;
 #define NEXT_WITHOUT_FOR      "Next without for"
 #define OUT_OF_DATA           "Out of data"
 #define INVALID_DATA          "Invalid data"
+#define STACK_OVERFLOW        "Stack overflow"
+#define BAD_RETURN            "Return without gosub"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -493,16 +495,6 @@ int res;
 		if(sscanf(bc->debline, "%lf", (double *)ei->indirect) != 1)
 			*(double *)ei->indirect = 0;
 	} else run_error(bc, SYNTAX_ERROR);
-}
-
-void dogoto(bc *bc, char **take)
-{
-int newline;
-	newline = findrunline(bc, atoi(*take));
-	if(newline<0)
-		run_error(bc, NO_SUCH_LINE);
-	else
-		bc->nextline = newline;
 }
 
 void doif(bc *bc, char **take)
@@ -874,16 +866,42 @@ int pos;
 
 }
 
+void dogoto(bc *bc, char **take)
+{
+int newline;
+int linewant;
+	linewant = atoi(*take);
+	newline = findrunline(bc, linewant);
+	if(newline<0)
+		run_error(bc, NO_SUCH_LINE);
+	else
+		bc->nextline = newline;
+}
+
 void dogosub(bc *bc, char **take)
 {
+	if(bc->gosubsp == GOSUBMAX)
+	{
+		run_error(bc, STACK_OVERFLOW);
+		return;
+	}
+	bc->gosubstack[bc->gosubsp++] = bc->nextline;
+	dogoto(bc, take);
 }
 
 void doreturn(bc *bc, char **take)
 {
+	if(!bc->gosubsp)
+	{
+		run_error(bc, BAD_RETURN);
+		return;
+	}
+	bc->nextline = bc->gosubstack[--bc->gosubsp];
 }
 
 void doend(bc *bc, char **take)
 {
+	bc->flags |= BF_ENDHIT;
 }
 
 void dodata(bc *bc, char **take)
@@ -934,8 +952,8 @@ struct stmt statements[]={
 {"next", donext, TOKEN_STATEMENT},
 {"if", doif, TOKEN_STATEMENT, &token_if},
 {"else", doelse, 0, &token_else},
-//{"gosub", dogosub, TOKEN_STATEMENT, 0},
-//{"return", doreturn, TOKEN_STATEMENT, 0},
+{"gosub", dogosub, TOKEN_STATEMENT, 0},
+{"return", doreturn, TOKEN_STATEMENT, 0},
 {"end", doend, TOKEN_STATEMENT, 0},
 {"data", dodata, TOKEN_STATEMENT, &token_data},
 {"int", doint, TOKEN_FUNCTION, 0},
@@ -1118,14 +1136,17 @@ close(fd);
 	bc->nextline = 0;
 	bc->execute_count = 0;
 	free_variables(bc);
-	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR)))
+	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT)))
 	{
 		char *p;
 		updatef(bc);
 		scaninput(bc);
 		bc->online = bc->nextline;
 		if(bc->online >= bc->numlines)
-			break; // out of lines
+		{
+			bc->flags |= BF_ENDHIT; // fake an end
+			continue;
+		}
 		p=bc->lps[bc->online].line;
 		++bc->nextline;
 		execute(bc, &p);
@@ -1143,6 +1164,11 @@ close(fd);
 	{
 		error(bc, "Error on line %d: %s", currentline(bc), bc->lineerror);
 		bc->flags &= ~BF_RUNERROR;
+	}
+	if(bc->flags & BF_ENDHIT)
+	{
+		tprintf(bc, "\nProgram terminated normally\n");
+		bc->flags &= ~BF_ENDHIT;
 	}
 
 
