@@ -1,7 +1,7 @@
 DBG =  -g
 CC	= gcc
 CFLAGS = -O2 -Wall $(shell sdl-config --cflags) $(DBG)
-LDFLAGS = $(shell sdl-config --libs) $(DBG)
+LDFLAGS = $(shell sdl-config --libs) $(DBG) -lm
 
 all: basic
 basic: main.o basic.o font.o render.o keyboard.o expr.o

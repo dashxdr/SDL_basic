@@ -99,6 +99,7 @@ typedef struct basic_context {
 	char *datatake;
 	int gosubsp;
 	int gosubstack[GOSUBMAX];
+	int numstatements;
 } bc;
 
 #define MYF1 0x180
@@ -161,6 +162,10 @@ void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
 int token_flags(bc *bc, unsigned char val);
 void execute(bc *bc, char **p);
+int is_function(bc *bc, int token);
+int function_parameter_count(bc *bc, int token);
+void (*statement_handler(bc *bc, int token))();
+
 
 extern int token_then;
 extern int token_to;
@@ -169,9 +174,6 @@ extern int token_if;
 extern int token_to;
 extern int token_step;
 extern int token_data;
-
-#define TOKEN_FUNCTION        0x1 // flag
-#define TOKEN_STATEMENT       0x2 // can execute it
 
 // expr.c
 
@@ -196,6 +198,9 @@ extern int token_data;
 #define EXPR_ERR_NO_ARRAY   "Array must be declared first"
 #define EXPR_ERR_MISSING    "Missing operand in expression"
 #define EXPR_ERR_NOOP       "Expression has no effect"
+#define EXPR_ERR_OPENPAR    "Missing '('"
+#define EXPR_ERR_CLOSEPAR   "Missing ')'"
+#define EXPR_ERR_PAR_COUNT  "Incorrect number of parameters to function"
 
 typedef struct expr_info {
 	int flags_in;

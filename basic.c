@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "misc.h"
 
@@ -377,13 +378,6 @@ va_list ap;
 	bc->flags |= BF_RUNERROR;
 }
 
-
-struct stmt {
-	char *name;
-	void (*func)(bc *, char **take);
-	int token_flags;
-	int *token_code;
-};
 
 int findrunline(bc *bc, int num)
 {
@@ -908,24 +902,44 @@ void dodata(bc *bc, char **take)
 {
 }
 
-void doint(bc *bc, char **take)
+void doint(bc *bc, double *p)
 {
+	*p=(int)*p;
 }
 
-void dosgn(bc *bc, char **take)
+void dosgn(bc *bc, double *p)
 {
+	*p = *p<0.0 ? -1 : (*p>0.0 ? 1 : 0.0);
 }
 
-void dosin(bc *bc, char **take)
+void dosin(bc *bc, double *p)
 {
+	*p = sin(*p);
 }
 
-void docos(bc *bc, char **take)
+void docos(bc *bc, double *p)
 {
+	*p = cos(*p);
 }
 
-void dornd(bc *bc, char **take)
+void dornd(bc *bc, double *p)
 {
+	*p = rand()%((int)*p);
+}
+
+void dopow(bc *bc, double *p)
+{
+	*p = pow(p[0], p[1]);
+}
+
+void dolog(bc *bc, double *p)
+{
+	*p = log(*p);
+}
+
+void doexp(bc *bc, double *p)
+{
+	*p = exp(*p);
 }
 
 int token_then;
@@ -936,6 +950,16 @@ int token_to;
 int token_step;
 int token_data;
 
+struct stmt {
+	char *name;
+	void (*func)();
+	int token_flags;
+	int *token_code;
+};
+
+#define TOKEN_FUNCTION        0x1 // flag
+#define TOKEN_STATEMENT       0x2 // can execute it
+#define TOKEN_2PARS           0x4 // function has 2 parameters
 
 struct stmt statements[]={
 {"rem", dorem, TOKEN_STATEMENT, 0},
@@ -961,8 +985,39 @@ struct stmt statements[]={
 {"sin", dosin, TOKEN_FUNCTION, 0},
 {"cos", docos, TOKEN_FUNCTION, 0},
 {"rnd", dornd, TOKEN_FUNCTION, 0},
+{"pow", dopow, TOKEN_FUNCTION | TOKEN_2PARS, 0},
+{"log", dornd, TOKEN_FUNCTION, 0},
+{"exp", dornd, TOKEN_FUNCTION, 0},
 {0,0}};
 
+struct stmt *to_statement(bc *bc, int token)
+{
+	token = 255-token;
+	return (token>=0 && token<bc->numstatements) ? statements+token : 0;
+}
+
+int is_function(bc *bc, int token)
+{
+struct stmt *s;
+	s=to_statement(bc, token);
+	return s && (s->token_flags&TOKEN_FUNCTION);
+}
+
+int function_parameter_count(bc *bc, int token)
+{
+struct stmt *s;
+	s=to_statement(bc, token);
+	if(!s || !(s->token_flags & TOKEN_FUNCTION)) return 0;
+	return (s->token_flags &  TOKEN_2PARS) ? 2 : 1;
+}
+
+void (*statement_handler(bc *bc, int token))()
+{
+struct stmt *s;
+	s=to_statement(bc, token);
+	return s ? s->func : 0;
+
+}
 
 int convertline(bc *bc, char *put, char *take)
 {
@@ -1095,12 +1150,14 @@ struct stmt *st;
 
 	memset(bc->tokenmap, 0, sizeof(bc->tokenmap));
 	st=statements;
+	bc->numstatements=0;
 	while(st->name)
 	{
 		bc->tokenmap[255-(st-statements)] = st->token_flags;
 		if(st->token_code)
 			*st->token_code = 255-(st-statements);
 		++st;
+		++bc->numstatements;
 	}
 
 	put=bc->runnable;
