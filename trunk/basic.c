@@ -842,7 +842,19 @@ void execute(bc *bc, char **p)
 {
 unsigned char f;
 
-//printf("%d: %s\n", bc->lps[bc->online].linenum, *p);
+	if(0)
+	{
+		int i;
+		unsigned char c;
+		printf("%d ", bc->lps[bc->online].linenum);
+		for(i=0;(c=(*p)[i]);++i)
+		{
+			if(c<128) putchar(c);
+			else printf("%s", statements[255-c].name);
+		}
+		printf("\n");
+	}
+
 	if((f=*(*(unsigned char **)p)++)>=128)
 	{
 		struct stmt *s;
