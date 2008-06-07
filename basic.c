@@ -485,7 +485,8 @@ void doinput(bc *bc, char **take)
 {
 einfo einfo, *ei=&einfo;
 int res;
-	typeline(bc, "? ", 1);
+	tprintf(bc, "? ");
+	typeline(bc, "", 1);
 
 	ei->flags_in = EXPR_LVALUE;
 	res = expr(bc, take, ei);

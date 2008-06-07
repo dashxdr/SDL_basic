@@ -246,6 +246,11 @@ static int escapedata[20],ecount;
 					if(bc->txpos<=0) bc->txpos=0;
 					if(bc->txpos>=bc->txsize) bc->txpos=bc->txsize-1;
 					break;
+				case 'y':
+					bc->typos = escapedata[0];
+					if(bc->typos<0) bc->typos=0;
+					if(bc->typos>=bc->tysize) bc->typos=bc->tysize-1;
+					break;
 				}
 			}
 			continue;
