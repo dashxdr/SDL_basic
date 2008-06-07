@@ -18,6 +18,7 @@ extern int txsize, tysize;
 #define BF_RUNERROR     8 // Error on a line
 #define BF_CCHIT       16 // Hit control-c
 #define BF_ENDHIT      32 // End
+#define BF_STOPHIT     64 // Stop
 
 struct linepointer {
 int linenum;
