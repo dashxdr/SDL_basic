@@ -151,6 +151,8 @@ extern int token_else;
 extern int token_if;
 extern int token_to;
 
+#define TOKEN_FUNCTION        0x1 // flag
+#define TOKEN_STATEMENT       0x2 // can execute it
 
 // expr.c
 
@@ -195,5 +197,3 @@ bstring *make_bstring(char *string, int length);
 bstring *dup_bstring(bstring *bs);
 bstring *make_raw_bstring(int length);
 
-#define TOKEN_FUNCTION        0x1 // flag
-#define TOKEN_STATEMENT       0x2 // can execute it
