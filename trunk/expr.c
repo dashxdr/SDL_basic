@@ -53,11 +53,6 @@ typedef struct expr_context {
 	ee *exprsp;
 	int exprflag;
 	ee tos;
-//	int priority;
-//	int operation;
-//	int type;
-//	double operval;
-//	bstring *operstring;
 	int exprflags;
 	char *pnt;
 	einfo *ei;
@@ -152,6 +147,7 @@ int expr2(ec *ec)
 	for(;;)
 	{
 		operand(ec);
+		if(ec->ei->flags_in & EXPR_LVALUE) break; // just want an lvalue
 		operator(ec);
 		if(trytop(ec)) break;
 
@@ -159,10 +155,12 @@ int expr2(ec *ec)
 		*ec->exprsp = ec->tos;
 	}
 	--ec->exprsp;
-	trythunk(&ec->tos);
+	if(!(ec->ei->flags_in & EXPR_LVALUE))
+		trythunk(&ec->tos);
 	ec->ei->string = ec->tos.string;
 	ec->ei->value = ec->tos.value;
 	ec->ei->type = ec->tos.type;
+	ec->ei->indirect = ec->tos.indirect;
 	return 0;
 }
 

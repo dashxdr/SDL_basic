@@ -152,6 +152,7 @@ void execute(bc *bc, char **p);
 #define EXPR_ERROR         2 // an error occured
 #define EXPR_NOSTRING      4 // expression can't be a string
 #define EXPR_LET           8 // it's part of an assignment
+#define EXPR_LVALUE       16 // no operations, just an lvalue
 
 #define OT_DOUBLE   1
 #define OT_BSTRING  2
@@ -171,6 +172,7 @@ typedef struct expr_info {
 	int flags_out;
 // results
 	bstring *string;
+	void *indirect;
 	double value;
 	int type;
 	char *error;
