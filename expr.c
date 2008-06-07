@@ -51,7 +51,6 @@ typedef struct expr_context {
 	bc *bc;
 	ee exprstack[EXPRMAX];
 	ee *exprsp;
-	int exprflag;
 	ee tos;
 	int exprflags;
 	char *pnt;
@@ -70,17 +69,17 @@ void unbalancedq(ec *ec)
 
 
 
-int at(ec *ec)
+inline int at(ec *ec)
 {
 	return *ec->pnt;
 }
 
-int get(ec *ec)
+inline int get(ec *ec)
 {
 	return *ec->pnt++;
 }
 
-int back(ec *ec)
+inline int back(ec *ec)
 {
 	return *--ec->pnt;
 }
@@ -103,11 +102,8 @@ int res;
 	ec->bc = bc;
 	ec->pnt = *take;
 	ec->exprsp=ec->exprstack;
-	ec->exprflag=0;
 	ec->ei = ei;
 	res = expr2(ec, ei->flags_in);
-//	if(ec->exprflag & 1) unbalanced();
-//	if(ec->exprflag & 2) badoperation();
 	*take = ec->pnt;
 	if((ei->flags_in & EXPR_LET) && !(ei->flags_out & EXPR_DIDLET))
 		expr_error(ec, EXPR_ERR_NOOP);
@@ -164,6 +160,21 @@ int flag_save;
 	ec->ei->value = ec->tos.value;
 	ec->ei->type = ec->tos.type;
 	ec->ei->indirect = ec->tos.indirect;
+	if(ec->ei->flags_in & EXPR_NUMERIC)
+	{
+		if(ec->ei->type == OT_BSTRING || ec->ei->type == OT_PBSTRING)
+		{
+			expr_error(ec, EXPR_ERR_NUMERIC);
+			if(ec->ei->type == OT_BSTRING)
+			{
+				free_bstring(ec->ei->string);
+				ec->ei->value = 0.0;
+				ec->ei->type = OT_DOUBLE;
+			}
+		}
+	}
+
+
 	ec->ei->flags_in = flag_save;
 	return 0;
 }
@@ -633,7 +644,7 @@ int res;
 		if(get(ec)!=')')
 		{
 			expr_error(ec, EXPR_ERR_CLOSEPAR);
-			ec->exprflag|=1;back(ec);
+			back(ec);
 		}
 	} else if(ch=='"')
 	{
@@ -656,7 +667,7 @@ int res;
 		numpars = function_parameter_count(ec->bc, ch);
 		for(i=0;i<numpars;++i)
 		{
-			res=expr2(ec, 0);
+			res=expr2(ec, EXPR_NUMERIC);
 			pars[i] = ec->ei->value;
 #warning need some more error checks...free up string maybe
 			if(i+1<numpars)
@@ -672,7 +683,7 @@ int res;
 		if(get(ec)!=')')
 		{
 			expr_error(ec, EXPR_ERR_CLOSEPAR);
-			ec->exprflag|=1;back(ec);
+			back(ec);
 		}
 		func = statement_handler(ec->bc, ch);
 		func(ec->bc, pars);
@@ -712,7 +723,7 @@ int res;
 					dims[i] = v->dimensions[i];
 				for(i=0;i<rank;++i)
 				{
-					res = expr2(ec, 0);
+					res = expr2(ec, EXPR_NUMERIC);
 					if(ec->ei->type != OT_DOUBLE)
 					{
 						expr_error(ec, EXPR_ERR_BAD_INDEX);

@@ -184,6 +184,7 @@ extern int token_data;
 #define EXPR_LET           8 // it's part of an assignment
 #define EXPR_LVALUE       16 // no operations, just an lvalue
 #define EXPR_DIDLET       32 // actually did a let
+#define EXPR_NUMERIC      64 // need numeric expression
 
 #define OT_DOUBLE   1
 #define OT_BSTRING  2
@@ -202,6 +203,7 @@ extern int token_data;
 #define EXPR_ERR_OPENPAR    "Missing '('"
 #define EXPR_ERR_CLOSEPAR   "Missing ')'"
 #define EXPR_ERR_PAR_COUNT  "Incorrect number of parameters to function"
+#define EXPR_ERR_NUMERIC    "String expression not allowed"
 
 typedef struct expr_info {
 	int flags_in;

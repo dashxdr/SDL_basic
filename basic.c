@@ -9,6 +9,8 @@
 
 #include "misc.h"
 
+void runinit(bc *bc);
+
 struct cmd {
 	char *name;
 	void (*func)(bc *, char *line);
@@ -306,6 +308,7 @@ void donew(bc *bc, char *text)
 	bc->program[0]=0;
 	bc->filename[0]=0;
 	tprintf(bc, "Program erased.\n");
+	runinit(bc);
 }
 
 void dorun(bc *bc, char *text);
@@ -317,6 +320,7 @@ struct cmd commandlist[]={
 {"load", doload},
 {"info", doinfo},
 {"new", donew},
+{"scr", donew},
 {"exit", doexit},
 {"run", dorun},
 {0, 0}};
@@ -1148,6 +1152,18 @@ unsigned char f;
 	}
 }
 
+void runinit(bc *bc)
+{
+	bc->numlines=0;
+	bc->flags = 0;
+	bc->dataline = 0;
+	bc->datatake = 0;
+	bc->gosubsp = 0;
+	bc->numfors = 0;
+	bc->nextline = 0;
+	bc->execute_count = 0;
+	free_variables(bc);
+}
 
 void dorun(bc *bc, char *line)
 {
@@ -1170,15 +1186,7 @@ struct stmt *st;
 	}
 
 // ************************ SET UP FOR RUN
-	bc->numlines=0;
-	bc->flags = 0;
-	bc->dataline = 0;
-	bc->datatake = 0;
-	bc->gosubsp = 0;
-	bc->numfors = 0;
-	bc->nextline = 0;
-	bc->execute_count = 0;
-	free_variables(bc);
+	runinit(bc);
 
 	put=bc->runnable;
 	take=bc->program;
