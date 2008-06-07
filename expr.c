@@ -107,7 +107,7 @@ int res;
 	*take = ec->pnt;
 	if((ei->flags_in & EXPR_LET) && !(ei->flags_out & EXPR_DIDLET))
 		expr_error(ec, EXPR_ERR_NOOP);
-	return ei->flags_out;
+	return ei->flags_out & EXPR_ERROR;
 }
 /*uchar opchars[]={'+','-','/','*','|','&','<<','>>','!'};*/
 
@@ -311,7 +311,7 @@ ee *left, *right;
 				case oper_assign: // =
 					ec->ei->flags_out |= EXPR_DIDLET;
 					if(left->type != OT_PBSTRING)
-						expr_error(ec, EXPR_ERR_BAD_LVALUE "xx");
+						expr_error(ec, EXPR_ERR_BAD_LVALUE);
 					else
 					{
 						bstring *bs;

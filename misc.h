@@ -101,6 +101,12 @@ typedef struct basic_context {
 	int gosubsp;
 	int gosubstack[GOSUBMAX];
 	int numstatements;
+// graphics rendering state
+	double gx, gy; // position
+	int gred, ggreen, gblue, galpha;
+	double pen; // pen size
+
+
 } bc;
 
 #define MYF1 0x180
@@ -137,6 +143,7 @@ typedef struct basic_context {
 // main.c
 void colordot(bc *bc, unsigned int x,unsigned int y,int c);
 void update(bc *bc);
+Uint32 maprgb(bc *bc, int r,int g,int b);
 
 
 // font.c
@@ -148,6 +155,9 @@ void tprintf(bc *bc, char *s, ...);
 void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 
 // render.c
+
+void stroke(bc *bc, double x, double y);
+void fillscreen(bc *bc, int r, int g, int b);
 
 // keyboard.c
 
