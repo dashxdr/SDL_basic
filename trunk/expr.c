@@ -587,6 +587,8 @@ void operand(ec *ec)
 {
 uchar ch;
 ee tempop={0}, *newop = &tempop;
+int i;
+int res;
 
 	ch=at(ec);
 	if((ch>='0' && ch<='9') || ch=='.')
@@ -623,17 +625,59 @@ ee tempop={0}, *newop = &tempop;
 		newop->type = OT_DOUBLE;
 	} else if(ch=='(')
 	{
-		int res;
 		get(ec);
 		res=expr2(ec, 0);
+#warning need some more error checks...free up string maybe
 		newop->value=ec->ei->value;
 		newop->type = ec->ei->type;
-		if(get(ec)!=')') {ec->exprflag|=1;back(ec);}
+		if(get(ec)!=')')
+		{
+			expr_error(ec, EXPR_ERR_CLOSEPAR);
+			ec->exprflag|=1;back(ec);
+		}
 	} else if(ch=='"')
 	{
 		get(ec);
 		newop->string = gather_bstring(ec);
 		newop->type = OT_BSTRING;
+	} else if(is_function(ec->bc, ch))
+	{
+		int numpars;
+		double pars[8];
+		void (*func)();
+
+		get(ec);
+		if(get(ec) != '(')
+		{
+			expr_error(ec, EXPR_ERR_NO_ARRAY);
+			back(ec);
+			goto crapout;
+		}
+		numpars = function_parameter_count(ec->bc, ch);
+		for(i=0;i<numpars;++i)
+		{
+			res=expr2(ec, 0);
+			pars[i] = ec->ei->value;
+#warning need some more error checks...free up string maybe
+			if(i+1<numpars)
+			{
+				if(get(ec)!=',')
+				{
+					back(ec);
+					expr_error(ec, EXPR_ERR_PAR_COUNT);
+					break;
+				}
+			}
+		}
+		if(get(ec)!=')')
+		{
+			expr_error(ec, EXPR_ERR_CLOSEPAR);
+			ec->exprflag|=1;back(ec);
+		}
+		func = statement_handler(ec->bc, ch);
+		func(ec->bc, pars);
+		newop->value = pars[0];
+		newop->type = OT_DOUBLE;
 	} else
 	{
 		char name[16];
