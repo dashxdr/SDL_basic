@@ -1053,6 +1053,19 @@ int got=2;
 	}
 }
 
+void docircle(bc *bc, char **take)
+{
+double list[3];
+int res;
+int got=3;
+
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		circle(bc, list[0], list[1], list[2]);
+	}
+}
+
 void docolor(bc *bc, char **take)
 {
 double list[4];
@@ -1145,6 +1158,7 @@ struct stmt statements[]={
 {"clear", doclear, TOKEN_STATEMENT, 0},
 {"fill", dofill, TOKEN_STATEMENT, 0},
 {"home", dohome, TOKEN_STATEMENT, 0},
+{"circle", docircle, TOKEN_STATEMENT, 0},
 
 {0,0}};
 
