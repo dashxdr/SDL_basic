@@ -483,7 +483,24 @@ int newline=1;
 
 void doinput(bc *bc, char **take)
 {
+einfo einfo, *ei=&einfo;
+int res;
 	typeline(bc, "? ", 1);
+
+	ei->flags_in = EXPR_LVALUE;
+	res = expr(bc, take, ei);
+	if(ei->type == OT_PBSTRING)
+	{
+		bstring *bs;
+		bs = *(bstring **)ei->indirect;
+		free_bstring(bs);
+		bs = make_bstring(bc->debline, strlen(bc->debline));
+		*(bstring **)ei->indirect = bs;
+	} else if(ei->type == OT_PDOUBLE)
+	{
+		if(sscanf(bc->debline, "%lf", (double *)ei->indirect) != 1)
+			*(double *)ei->indirect = 0;
+	} else run_error(bc, SYNTAX_ERROR);
 }
 
 void dogoto(bc *bc, char **take)
@@ -749,6 +766,7 @@ int i;
 					++take;
 					*put++ = c;
 					c=*take++;
+					if(c) {*put++ = c;continue;}
 				}
 				if(!c || c=='\n')
 				{
