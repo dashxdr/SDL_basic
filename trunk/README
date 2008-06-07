@@ -48,7 +48,7 @@ circle <x1>,<y1>,<radius>
 disc <x1>,<y1>,<radius>
 text <x1>,<y1>,<string>
 randomize
-cls   ; clear screen
+clear   ; clear screen
 input variable|string
 wait <time>  ; in seconds
 if ifexpr then statement|#

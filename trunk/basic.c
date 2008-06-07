@@ -361,6 +361,14 @@ struct cmd *cmd;
 	return;
 }
 
+/***********************************************************************
+************************************************************************
+************************************************************************
+      Stuff for running program
+************************************************************************
+************************************************************************
+************************************************************************/
+
 #define SYNTAX_ERROR          "Syntax error"
 #define NON_TERMINATED_STRING "Nonterminated string"
 #define NO_SUCH_LINE          "Invalid line number"
@@ -372,6 +380,7 @@ struct cmd *cmd;
 #define INVALID_DATA          "Invalid data"
 #define STACK_OVERFLOW        "Stack overflow"
 #define BAD_RETURN            "Return without gosub"
+#define WRONG_NUMBER          "Wrong number of parameters"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -415,6 +424,57 @@ int t;
 		t=-1;
 	return t;
 }
+
+int comma(bc *bc, char **take)
+{
+int res=0;
+	if(**take==',')
+		++*take;
+	else
+	{
+		res=-1;
+		run_error(bc, SYNTAX_ERROR);
+	}
+	return res;
+}
+
+#define EXACT_NUM 1
+// gather a comma separated list of expressions, store in put
+// maxgot = how many we can gather (max), gets filled in with
+// how many we got
+int comma_list(bc *bc, char **take, double *put, int *maxgot, int flag)
+{
+int max=*maxgot;
+einfo einfo, *ei=&einfo;
+int res=0;
+	*maxgot = 0;
+	while(*maxgot < max)
+	{
+		ei->flags_in = EXPR_NUMERIC;
+		res = expr(bc, take, ei);
+		if(res) break;
+
+		put[(*maxgot)++] = ei->value;
+		if(**take!=',') break;
+		++*take;
+	}
+	if((flag&EXACT_NUM) && *maxgot != max)
+	{
+		run_error(bc, WRONG_NUMBER);
+		res=-1;
+	}
+	return res;
+}
+
+
+/***********************************************************************
+************************************************************************
+************************************************************************
+      Statements
+************************************************************************
+************************************************************************
+************************************************************************/
+
 
 void dorem(bc *bc, char **take)
 {
@@ -954,6 +1014,83 @@ void doexp(bc *bc, double *p)
 	*p = exp(*p);
 }
 
+void domove(bc *bc, char **take)
+{
+double list[2];
+int res;
+int got=2;
+
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		bc->gx = list[0];
+		bc->gy = list[1];
+	}
+}
+
+void dopen(bc *bc, char **take)
+{
+double list[1];
+int res;
+int got=1;
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		bc->pen = list[0];
+	}
+}
+
+void doline(bc *bc, char **take)
+{
+double list[2];
+int res;
+int got=2;
+
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		stroke(bc, list[0], list[1]);
+	}
+}
+
+void docolor(bc *bc, char **take)
+{
+double list[4];
+int res;
+int got=4;
+
+	res=comma_list(bc, take, list, &got, 0);
+	if(!res)
+	{
+		if(got<3)
+			run_error(bc, "Command requires 3 or 4 parameters");
+		else
+		{
+			bc->gred = list[0];
+			bc->ggreen = list[1];
+			bc->gblue = list[2];
+			if(got==4)
+				bc->galpha = list[3];
+		}
+	}
+}
+
+void doclear(bc *bc, char **take)
+{
+	fillscreen(bc, 0, 0, 0);
+}
+
+void dofill(bc *bc, char **take)
+{
+	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue);
+}
+
+void dohome(bc *bc)
+{
+	tprintf(bc, "\0330x\0330y");
+}
+
+
 int token_then;
 int token_to;
 int token_else;
@@ -1001,6 +1138,14 @@ struct stmt statements[]={
 {"pow", dopow, TOKEN_FUNCTION | TOKEN_2PARS, 0},
 {"log", dornd, TOKEN_FUNCTION, 0},
 {"exp", dornd, TOKEN_FUNCTION, 0},
+{"move", domove, TOKEN_STATEMENT, 0},
+{"pen", dopen, TOKEN_STATEMENT, 0},
+{"line", doline, TOKEN_STATEMENT, 0},
+{"color", docolor, TOKEN_STATEMENT, 0},
+{"clear", doclear, TOKEN_STATEMENT, 0},
+{"fill", dofill, TOKEN_STATEMENT, 0},
+{"home", dohome, TOKEN_STATEMENT, 0},
+
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
@@ -1162,6 +1307,12 @@ void runinit(bc *bc)
 	bc->numfors = 0;
 	bc->nextline = 0;
 	bc->execute_count = 0;
+	bc->gx=0;
+	bc->gy=0;
+	bc->gred=255;
+	bc->ggreen=255;
+	bc->gblue=255;
+	bc->galpha=255;
 	free_variables(bc);
 }
 

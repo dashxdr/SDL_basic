@@ -56,9 +56,9 @@ void scrunlock(void)
 	SDL_UpdateRect(thescreen, 0, 0, 0, 0);
 }
 
-Uint32 maprgb(int r,int g,int b)
+Uint32 maprgb(bc *bc, int r,int g,int b)
 {
-	return SDL_MapRGB(thescreen->format,r,g,b);
+	return SDL_MapRGB(bc->thescreen->format,r,g,b);
 }
 
 
