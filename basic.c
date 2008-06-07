@@ -426,26 +426,10 @@ int res;
 //struct variable *v;
 einfo einfo, *ei=&einfo;
 
-//	type = gather_variable_name(bc, name, take);
-//	if(type==RANK_INVALID)
-//	{
-//		run_error(bc, SYNTAX_ERROR);
-//		return;
-//	}
-//	if(**take!='=')
-//	{
-//		run_error(bc, SYNTAX_ERROR);
-//		return;
-//	}
-//	++*take;
 	ei->flags_in = EXPR_LET;
 	res = expr(bc, take, ei);
 	if(ei->type == OT_BSTRING)
 		free_bstring(ei->string);
-//	v=find_variable(bc, name);
-//	if(!v)
-//		v=add_variable(bc, name, type);
-//	v->value = ei->value;
 }
 
 void doprint(bc *bc, char **take)
@@ -864,7 +848,7 @@ struct stmt statements[]={
 {"input", doinput, TOKEN_STATEMENT, 0},
 {"print", doprint, TOKEN_STATEMENT, 0},
 {"goto", dogoto, TOKEN_STATEMENT, 0},
-{"read", doread, TOKEN_STATEMENT, 0},
+//{"read", doread, TOKEN_STATEMENT, 0},
 {"dim", dodim, TOKEN_STATEMENT, 0},
 {"then", 0, 0, &token_then},
 {"for", dofor, TOKEN_STATEMENT},
@@ -873,8 +857,8 @@ struct stmt statements[]={
 {"next", donext, TOKEN_STATEMENT},
 {"if", doif, TOKEN_STATEMENT, &token_if},
 {"else", doelse, 0, &token_else},
-{"gosub", dogosub, TOKEN_STATEMENT, 0},
-{"return", doreturn, TOKEN_STATEMENT, 0},
+//{"gosub", dogosub, TOKEN_STATEMENT, 0},
+//{"return", doreturn, TOKEN_STATEMENT, 0},
 {"end", doend, TOKEN_STATEMENT, 0},
 {"data", dodata, TOKEN_STATEMENT, 0},
 {"int", doint, TOKEN_FUNCTION, 0},
