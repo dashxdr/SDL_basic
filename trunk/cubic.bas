@@ -39,6 +39,7 @@
 480 PRINT "INCORRECT ANSWER.  PLEASE TYPE 'YES' OR 'NO'.";
 490 GOTO 450
 500 PRINT " "
+505 gosub 3000
 510 PRINT "YOUR MOVE";
 520INPUTJ1
 530 GOSUB 2500
@@ -244,3 +245,22 @@
 2530 NEXT I
 2540 RETURN
 2550 END
+3000 t=0
+3010 gosub 3040
+3020 print
+3030 t=32
+3040 for j=0 to 3
+3050 t2 = j*4
+3060 gosub 3100
+3070 t2 = 16+j*4
+3075 print "  ";
+3080 gosub 3100
+3085 print
+3090 next j
+3092 print
+3095 return
+3100 for k=1 to 4
+3110 v=x(t+t2+k);
+3111 if v=0 then print " . "; else if v=1 then print " X "; else print " O ";
+3120 next k
+3130 return

@@ -436,7 +436,7 @@ einfo einfo, *ei=&einfo;
 int res;
 int newline=1;
 
-	while(**take && **take != '\n')
+	while(**take && **take != '\n' && *(unsigned char *)*take!=token_else)
 	{
 		newline=1;
 		ei->flags_in = 0;
@@ -444,9 +444,9 @@ int newline=1;
 		if(ei->type == OT_DOUBLE)
 		{
 			if((long)ei->value == ei->value)
-				tprintf(bc, "%ld ", (long)ei->value);
+				tprintf(bc, " %ld", (long)ei->value);
 			else
-				tprintf(bc, "%.16f ", ei->value);
+				tprintf(bc, " %.16f", ei->value);
 		} else if(ei->type == OT_BSTRING)
 		{
 			bstring *bs = ei->string;
@@ -457,7 +457,7 @@ int newline=1;
 		if(!**take) break;
 		if(**take != ';')
 		{
-			if(*(unsigned char *)*take!=token_else);
+			if(*(unsigned char *)*take!=token_else)
 				run_error(bc, SYNTAX_ERROR);
 			break;
 		}
@@ -849,7 +849,10 @@ int pos;
 	pos=fi->step>=0.0;
 
 	if((pos && v->value >= fi->end) || (!pos && v->value <= fi->end))
-		bc->numfors = fi - bc->fors; // done, toss this and all inner fors...
+	{
+		--bc->numfors;
+		memcpy(fi, bc->fors + bc->numfors, sizeof(*fi));
+	}
 	else
 	{
 		set_variable(bc, fi->name, v->value + fi->step);
@@ -896,6 +899,11 @@ void doreturn(bc *bc, char **take)
 void doend(bc *bc, char **take)
 {
 	bc->flags |= BF_ENDHIT;
+}
+
+void dostop(bc *bc, char **take)
+{
+	bc->flags |= BF_STOPHIT;
 }
 
 void dodata(bc *bc, char **take)
@@ -979,6 +987,7 @@ struct stmt statements[]={
 {"gosub", dogosub, TOKEN_STATEMENT, 0},
 {"return", doreturn, TOKEN_STATEMENT, 0},
 {"end", doend, TOKEN_STATEMENT, 0},
+{"stop", dostop, TOKEN_STATEMENT, 0},
 {"data", dodata, TOKEN_STATEMENT, &token_data},
 {"int", doint, TOKEN_FUNCTION, 0},
 {"sgn", dosgn, TOKEN_FUNCTION, 0},
@@ -1160,12 +1169,19 @@ struct stmt *st;
 		++bc->numstatements;
 	}
 
-	put=bc->runnable;
-	take=bc->program;
+// ************************ SET UP FOR RUN
 	bc->numlines=0;
 	bc->flags = 0;
 	bc->dataline = 0;
 	bc->datatake = 0;
+	bc->gosubsp = 0;
+	bc->numfors = 0;
+	bc->nextline = 0;
+	bc->execute_count = 0;
+	free_variables(bc);
+
+	put=bc->runnable;
+	take=bc->program;
 	while(*take)
 	{
 		linenum=atoi(take);
@@ -1190,10 +1206,7 @@ write(fd, bc->runnable, put-bc->runnable);
 close(fd);
 }
 
-	bc->nextline = 0;
-	bc->execute_count = 0;
-	free_variables(bc);
-	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT)))
+	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT | BF_STOPHIT)))
 	{
 		char *p;
 		updatef(bc);
@@ -1226,6 +1239,11 @@ close(fd);
 	{
 		tprintf(bc, "\nProgram terminated normally\n");
 		bc->flags &= ~BF_ENDHIT;
+	}
+	if(bc->flags & BF_STOPHIT)
+	{
+		tprintf(bc, "\nStop on line %d\n", currentline(bc));
+		bc->flags &= ~BF_STOPHIT;
 	}
 
 
