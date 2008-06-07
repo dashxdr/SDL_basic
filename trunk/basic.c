@@ -363,6 +363,8 @@ struct cmd *cmd;
 #define INVALID_VARIABLE      "Invalid variable"
 #define TOO_MANY_FORS         "Too many nested for loops"
 #define NEXT_WITHOUT_FOR      "Next without for"
+#define OUT_OF_DATA           "Out of data"
+#define INVALID_DATA          "Invalid data"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -747,8 +749,82 @@ void doto(bc *bc, char **take)
 {
 }
 
+void find_data_line(bc *bc)
+{
+char *p;
+	bc->datatake = 0;
+	while(bc->dataline < bc->numlines)
+	{
+		p=bc->lps[bc->dataline].line;
+		while(*p && *(unsigned char *)p != token_data)
+			++p;
+		if(!*p) // no data on this line
+		{
+			++bc->dataline;
+			continue;
+		}
+		++p;
+		bc->datatake = p;
+		break;
+	}
+}
+
+double get_data_double(bc *bc)
+{
+einfo einfo, *ei=&einfo;
+int res;
+
+	if(!bc->datatake)
+		find_data_line(bc);
+	if(!bc->datatake)
+	{
+		run_error(bc, OUT_OF_DATA);
+		return 0.0;
+	}
+	ei->flags_in = 0;
+	res = expr(bc, &bc->datatake, ei);
+	if(ei->type != OT_DOUBLE)
+	{
+		run_error(bc, INVALID_DATA "(line %d)",
+			bc->lps[bc->dataline].linenum);
+		if(ei->type == OT_BSTRING)
+			free_bstring(ei->string);
+		return 0.0;
+	}
+	if(*bc->datatake == ',')
+		++bc->datatake;
+	else
+	{
+		bc->datatake = 0;
+		++bc->dataline;
+	}
+
+	return ei->value;
+}
+
 void doread(bc *bc, char **take)
 {
+einfo einfo, *ei=&einfo;
+int res;
+
+	for(;;)
+	{
+		ei->flags_in = EXPR_LVALUE;
+		res = expr(bc, take, ei);
+		if(ei->type == OT_PBSTRING)
+		{
+			bstring *bs;
+			bs = *(bstring **)ei->indirect;
+			free_bstring(bs);
+			bs = make_bstring("foo", 3);
+			*(bstring **)ei->indirect = bs;
+		} else if(ei->type == OT_PDOUBLE)
+		{
+			*(double *)ei->indirect = get_data_double(bc);
+		} else run_error(bc, SYNTAX_ERROR);
+		break;
+	}
+
 }
 
 void donext(bc *bc, char **take)
@@ -840,6 +916,7 @@ int token_else;
 int token_if;
 int token_to;
 int token_step;
+int token_data;
 
 
 struct stmt statements[]={
@@ -848,7 +925,7 @@ struct stmt statements[]={
 {"input", doinput, TOKEN_STATEMENT, 0},
 {"print", doprint, TOKEN_STATEMENT, 0},
 {"goto", dogoto, TOKEN_STATEMENT, 0},
-//{"read", doread, TOKEN_STATEMENT, 0},
+{"read", doread, TOKEN_STATEMENT, 0},
 {"dim", dodim, TOKEN_STATEMENT, 0},
 {"then", 0, 0, &token_then},
 {"for", dofor, TOKEN_STATEMENT},
@@ -860,7 +937,7 @@ struct stmt statements[]={
 //{"gosub", dogosub, TOKEN_STATEMENT, 0},
 //{"return", doreturn, TOKEN_STATEMENT, 0},
 {"end", doend, TOKEN_STATEMENT, 0},
-{"data", dodata, TOKEN_STATEMENT, 0},
+{"data", dodata, TOKEN_STATEMENT, &token_data},
 {"int", doint, TOKEN_FUNCTION, 0},
 {"sgn", dosgn, TOKEN_FUNCTION, 0},
 {"sin", dosin, TOKEN_FUNCTION, 0},
@@ -1012,6 +1089,8 @@ struct stmt *st;
 	take=bc->program;
 	bc->numlines=0;
 	bc->flags = 0;
+	bc->dataline = 0;
+	bc->datatake = 0;
 	while(*take)
 	{
 		linenum=atoi(take);

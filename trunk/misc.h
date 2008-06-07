@@ -92,6 +92,8 @@ typedef struct basic_context {
 	int tokenmap[256];
 	int numfors;
 	struct forinfo fors[MAX_FORS];
+	int dataline;
+	char *datatake;
 } bc;
 
 #define MYF1 0x180
@@ -161,6 +163,7 @@ extern int token_else;
 extern int token_if;
 extern int token_to;
 extern int token_step;
+extern int token_data;
 
 #define TOKEN_FUNCTION        0x1 // flag
 #define TOKEN_STATEMENT       0x2 // can execute it
