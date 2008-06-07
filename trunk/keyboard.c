@@ -323,7 +323,10 @@ char *p1,*p2;
 char token[128];
 char *fake;
 int scrollback;
+int startx, starty;
 
+	startx = bc->txpos;
+	starty = bc->typos;
 	xdelta=0;
 	linesin=bc->hcount>HISTSIZE ? HISTSIZE : bc->hcount;
 	strcpy(bc->debline, preload);
@@ -332,7 +335,7 @@ int scrollback;
 	ref=0;
 	fake=0;
 	scrollback=0;
-	for(;;)
+	while(!(bc->flags & (BF_CCHIT)))
 	{
 		if(!fake)
 		{
@@ -454,7 +457,8 @@ if(code==0x1b) exit(0);
 			if(scrollback)
 				scrollback=showhistory(bc, 0);
 			i=strlen(bc->debline);
-			tprintf(bc, "\r%s\033k\033%dx",bc->debline,i+xdelta);
+			tprintf(bc, "\033%dx\033%dy%s\033k\033%dx\033%dy",
+				startx, starty, bc->debline,i+xdelta+startx, starty);
 			ref=0;
 		}
 
