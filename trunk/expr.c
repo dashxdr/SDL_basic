@@ -568,7 +568,7 @@ char ch;
 void operand(ec *ec)
 {
 uchar ch;
-ee *newop = &ec->tos;
+ee tempop={0}, *newop = &tempop;
 
 	ch=at(ec);
 	if((ch>='0' && ch<='9') || ch=='.')
@@ -651,9 +651,9 @@ ee *newop = &ec->tos;
 						expr_error(ec, EXPR_ERR_BAD_INDEX);
 						indexes[i]=0;
 					} else
-						indexes[i] = ec->ei->value;
+						indexes[i] = ec->ei->value - 1.0;
 					if(indexes[i]<0 ||
-						 indexes[i]*v->dimensions[i+1] > v->dimensions[i])
+						 indexes[i]*v->dimensions[i+1] >= v->dimensions[i])
 					{
 						expr_error(ec, EXPR_ERR_RANGE_ERROR);
 						indexes[i]=0;
@@ -672,6 +672,8 @@ ee *newop = &ec->tos;
 							expr_error(ec, EXPR_ERR_MISCOUNT "2");
 					}
 				}
+// have to redefine v because we called expr, maybe v has shifted around...
+				v=find_variable(ec->bc, name);
 				j=0;
 				for(i=0;i<rank;++i)
 					j+=indexes[i]*v->dimensions[i+1];
@@ -704,4 +706,5 @@ ee *newop = &ec->tos;
 			}
 		}
 	}
+	ec->tos = tempop;
 }

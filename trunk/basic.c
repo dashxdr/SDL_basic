@@ -842,6 +842,7 @@ void execute(bc *bc, char **p)
 {
 unsigned char f;
 
+//printf("%d: %s\n", bc->lps[bc->online].linenum, *p);
 	if((f=*(*(unsigned char **)p)++)>=128)
 	{
 		struct stmt *s;
