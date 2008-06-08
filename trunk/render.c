@@ -1,5 +1,8 @@
 #include <SDL.h>
+#include <math.h>
+
 #include "misc.h"
+#include "ftgrays.h"
 
 
 void vector(bc *bc, int sx,int sy,int dx,int dy,int c)
@@ -116,4 +119,113 @@ Uint32 color;
 	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
 	drawcircle(bc, cx, cy, radius, color);
 
+}
+
+static void colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
+{
+Uint32 a;
+//printf("%d, %d\n", x, y);
+if(x>=1024 || y>=768) return;
+	a=((f2+1) * (c>>24))>>8;
+	if(a==0xff)
+		*((Uint32 *)(surf->pixels)+y * surf->pitch/4+x)=c;
+	else
+	{
+		Uint32 *p, t;
+		Uint32 ai;
+		
+		p=(Uint32 *)(surf->pixels)+y * (surf->pitch>>2)+x;
+
+		ai=a^255;
+		t=*p;
+
+		*p = ((a*(c&0xff) + ai*(t&0xff))>>8) |
+			(((a*(c&0xff00) + ai*(t&0xff00))&0xff0000)>>8) |
+			(((a*(c&0xff0000) + ai*(t&0xff0000))&0xff000000)>>8);
+	}
+}
+
+
+static void solidstrip(bc *bc, void *_span, int y)
+{
+int x, w, coverage;
+SDL_Surface *s = bc->thescreen;
+
+	x=((FT_Span *)_span)->x;
+	w=((FT_Span *)_span)->len;
+	coverage=((FT_Span *)_span)->coverage;
+	while(w--)
+		colordot_32(s, x++, y, ~0, coverage); //c->solidcolor, coverage);
+}
+
+void myspanner(int y, int count, FT_Span *spans, void *user)
+{
+bc *bc=user;
+
+// renders spans in reverse order, but why not? They don't overlap
+	while(count--)
+	{
+		solidstrip(bc, spans+count, y);
+		
+	}
+}
+
+
+#define TAG_ONPATH    1 // on the path
+#define TAG_CONTROL2  0 // quadratic bezier control point
+#define TAG_CONTROL3  2 // cubic bezier control point
+
+#define IFACTOR 64  // used to fix coords to the grays rendering engine 
+
+void rendertest(bc *bc)
+{
+	printf("render test!\n");
+FT_Vector points[1024];
+char tags[1024];
+short pathstops[100];
+int res;
+FT_Raster myraster;
+FT_Raster_Params myparams;
+FT_Outline myoutline;
+int i;
+float a;
+
+	for(i=0;i<100;++i)
+	{
+		a=i*3.1415928*2/100;
+		points[i].x = IFACTOR*(512+200*cos(a));
+		points[i].y = IFACTOR*(384+200*sin(a));
+		tags[i] = TAG_ONPATH;
+	}
+	pathstops[0] = i-1;
+
+	myoutline.n_contours = 1;
+	myoutline.n_points = 100;
+	myoutline.points = points;
+	myoutline.tags = tags;
+	myoutline.contours = pathstops;
+	myoutline.flags = FT_OUTLINE_IGNORE_DROPOUTS |
+			FT_OUTLINE_EVEN_ODD_FILL;
+
+	myparams.target = 0;
+	myparams.source = &myoutline;
+	myparams.flags = FT_RASTER_FLAG_DIRECT | FT_RASTER_FLAG_AA |
+		FT_RASTER_FLAG_CLIP;
+	myparams.gray_spans = myspanner;
+	myparams.user = bc;
+	myparams.clip_box.xMin = 0;
+	myparams.clip_box.xMax = bc->xsize-1;
+	myparams.clip_box.yMin = 0;
+	myparams.clip_box.yMax = bc->ysize-1;
+	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);
+
+	SDL_basic_ft_grays_raster.raster_reset(myraster, bc->pool, sizeof(bc->pool));
+
+	res=SDL_basic_ft_grays_raster.raster_render(myraster, &myparams);
+
+	SDL_basic_ft_grays_raster.raster_done(myraster);
+
+
+
+	bc->tainted = 1;
 }

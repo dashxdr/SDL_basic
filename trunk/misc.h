@@ -105,7 +105,7 @@ typedef struct basic_context {
 	double gx, gy; // position
 	int gred, ggreen, gblue, galpha;
 	double pen; // pen size
-
+	unsigned char pool[65536];
 
 } bc;
 
@@ -159,6 +159,8 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 void stroke(bc *bc, double x, double y);
 void fillscreen(bc *bc, int r, int g, int b);
 void circle(bc *bc, double cx, double cy, double radius);
+void rendertest(bc *bc);
+
 
 // keyboard.c
 
