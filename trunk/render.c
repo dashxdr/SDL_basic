@@ -2,7 +2,6 @@
 #include <math.h>
 
 #include "misc.h"
-#include "ftgrays.h"
 
 
 void vector(bc *bc, int sx,int sy,int dx,int dy,int c)
@@ -172,10 +171,6 @@ bc *bc=user;
 }
 
 
-#define TAG_ONPATH    1 // on the path
-#define TAG_CONTROL2  0 // quadratic bezier control point
-#define TAG_CONTROL3  2 // cubic bezier control point
-
 #define IFACTOR 64  // used to fix coords to the grays rendering engine 
 
 void rendertest(bc *bc)
@@ -231,6 +226,76 @@ float a,r;
 	SDL_basic_ft_grays_raster.raster_done(myraster);
 
 
-
 	bc->tainted = 1;
 }
+
+void shape_init(bc *bc)
+{
+	bc->shape_numpoints = 0;
+	bc->shape_numcontours = 0;
+}
+
+void shape_add(bc *bc, double x, double y, int tag)
+{
+	if(bc->shape_numpoints < MAX_SHAPE_POINTS)
+	{
+		bc->shape_points[bc->shape_numpoints].x = IFACTOR *x;
+		bc->shape_points[bc->shape_numpoints].y = IFACTOR *y;
+		bc->shape_tags[bc->shape_numpoints] = tag;
+		++bc->shape_numpoints;
+	}
+}
+void shape_end(bc *bc)
+{
+	if(bc->shape_numcontours < MAX_SHAPE_CONTOURS &&
+		bc->shape_numpoints &&
+		(!bc->shape_numcontours || 
+		bc->shape_numpoints > bc->shape_pathstops[bc->shape_numcontours-1]+1))
+	{
+		bc->shape_pathstops[bc->shape_numcontours++] = bc->shape_numpoints-1;
+	}
+}
+void shape_done(bc *bc)
+{
+int res;
+FT_Raster myraster;
+FT_Raster_Params myparams;
+FT_Outline myoutline;
+
+	shape_end(bc);
+
+	myoutline.n_contours = bc->shape_numcontours;;
+	myoutline.n_points = bc->shape_numpoints;
+	myoutline.points = bc->shape_points;
+	myoutline.tags = bc->shape_tags;;
+	myoutline.contours = bc->shape_pathstops;
+	myoutline.flags = FT_OUTLINE_IGNORE_DROPOUTS |
+			FT_OUTLINE_EVEN_ODD_FILL;
+
+	myparams.target = 0;
+	myparams.source = &myoutline;
+	myparams.flags = FT_RASTER_FLAG_DIRECT | FT_RASTER_FLAG_AA |
+		FT_RASTER_FLAG_CLIP;
+	myparams.gray_spans = myspanner;
+	myparams.user = bc;
+	myparams.clip_box.xMin = 0;
+	myparams.clip_box.xMax = bc->xsize;
+	myparams.clip_box.yMin = 0;
+	myparams.clip_box.yMax = bc->ysize;
+	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);
+
+	bc->temp = maprgb(bc, bc->gred, bc->ggreen, bc->gblue) |
+		(bc->galpha<<24);
+
+	SDL_basic_ft_grays_raster.raster_reset(myraster, bc->pool, sizeof(bc->pool));
+
+	res=SDL_basic_ft_grays_raster.raster_render(myraster, &myparams);
+
+	SDL_basic_ft_grays_raster.raster_done(myraster);
+
+
+	bc->tainted = 1;
+
+}
+
+

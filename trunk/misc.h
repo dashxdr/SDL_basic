@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include "ftgrays.h"
 
 extern SDL_Surface *thescreen;
 extern int xsize,ysize;
@@ -57,6 +58,9 @@ struct variable {
 	bstring *string;
 };
 
+#define MAX_SHAPE_POINTS 1024
+#define MAX_SHAPE_CONTOURS 64
+
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
@@ -107,7 +111,12 @@ typedef struct basic_context {
 	int gred, ggreen, gblue, galpha;
 	double pen; // pen size
 	unsigned char pool[65536];
-
+// shape state
+	int shape_numpoints;
+	int shape_numcontours;
+	short shape_pathstops[MAX_SHAPE_CONTOURS];
+	FT_Vector  shape_points[MAX_SHAPE_POINTS];
+	char shape_tags[MAX_SHAPE_POINTS];
 } bc;
 
 #define MYF1 0x180
@@ -157,10 +166,18 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 
 // render.c
 
+#define TAG_ONPATH    1 // on the path
+#define TAG_CONTROL2  0 // quadratic bezier control point
+#define TAG_CONTROL3  2 // cubic bezier control point
+
 void stroke(bc *bc, double x, double y);
 void fillscreen(bc *bc, int r, int g, int b);
 void circle(bc *bc, double cx, double cy, double radius);
 void rendertest(bc *bc);
+void shape_init(bc *bc);
+void shape_add(bc *bc, double x, double y, int tag);
+void shape_end(bc *bc);
+void shape_done(bc *bc);
 
 
 // keyboard.c

@@ -1091,6 +1091,50 @@ int got=4;
 	}
 }
 
+// x,y,  width, height
+void dobox(bc *bc, char **take)
+{
+double list[4];
+int res;
+int got=4;
+
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		shape_init(bc);
+		shape_add(bc, list[0]-list[2], list[1]-list[3], TAG_ONPATH);
+		shape_add(bc, list[0]+list[2], list[1]-list[3], TAG_ONPATH);
+		shape_add(bc, list[0]+list[2], list[1]+list[3], TAG_ONPATH);
+		shape_add(bc, list[0]-list[2], list[1]+list[3], TAG_ONPATH);
+		shape_done(bc);
+	}
+}
+
+// x,y,  width, height
+void dorect(bc *bc, char **take)
+{
+double list[4];
+int res;
+int got=4;
+double pen2=bc->pen/2.0;
+
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		shape_init(bc);
+		shape_add(bc, list[0]-list[2]-pen2, list[1]-list[3]-pen2, TAG_ONPATH);
+		shape_add(bc, list[0]+list[2]+pen2, list[1]-list[3]-pen2, TAG_ONPATH);
+		shape_add(bc, list[0]+list[2]+pen2, list[1]+list[3]+pen2, TAG_ONPATH);
+		shape_add(bc, list[0]-list[2]-pen2, list[1]+list[3]+pen2, TAG_ONPATH);
+		shape_end(bc);
+		shape_add(bc, list[0]-list[2]+pen2, list[1]-list[3]+pen2, TAG_ONPATH);
+		shape_add(bc, list[0]+list[2]-pen2, list[1]-list[3]+pen2, TAG_ONPATH);
+		shape_add(bc, list[0]+list[2]-pen2, list[1]+list[3]-pen2, TAG_ONPATH);
+		shape_add(bc, list[0]-list[2]+pen2, list[1]+list[3]-pen2, TAG_ONPATH);
+		shape_done(bc);
+	}
+}
+
 void doclear(bc *bc, char **take)
 {
 	fillscreen(bc, 0, 0, 0);
@@ -1110,7 +1154,6 @@ void dotest(bc *bc)
 {
 	rendertest(bc);
 }
-
 
 
 int token_then;
@@ -1169,6 +1212,8 @@ struct stmt statements[]={
 {"home", dohome, TOKEN_STATEMENT, 0},
 {"circle", docircle, TOKEN_STATEMENT, 0},
 {"test", dotest, TOKEN_STATEMENT, 0},
+{"box", dobox, TOKEN_STATEMENT, 0},
+{"rect", dorect, TOKEN_STATEMENT, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
@@ -1336,6 +1381,7 @@ void runinit(bc *bc)
 	bc->ggreen=255;
 	bc->gblue=255;
 	bc->galpha=255;
+	bc->pen = 1.0;
 	free_variables(bc);
 }
 
