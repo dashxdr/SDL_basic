@@ -193,9 +193,9 @@ float a,r;
 	for(i=0;i<100;++i)
 	{
 		a=i*3.1415928*2/100;
-		r=220.0*(1.0+sin(a*10));
+		r=220.0*(1.0+sin(a*6));
 		points[i].x = IFACTOR*(512+r*cos(a));
-		points[i].y = IFACTOR*(384+r*sin(a));
+		points[i].y = IFACTOR*(384-r*sin(a));
 		tags[i] = TAG_CONTROL2; // (i&1) ? TAG_ONPATH: TAG_CONTROL2;
 	}
 	pathstops[0] = i-1;
