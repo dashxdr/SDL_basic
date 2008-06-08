@@ -96,16 +96,6 @@ int i;
 }
 
 
-void drawcircle(bc *bc, int cx,int cy,int radius,int c)
-{
-	shape_init(bc);
-#define T1 0
-#define T2 360
-	arc_piece(bc, cx, cy, radius+bc->pen/2.0, T1,T2);
-	arc_piece(bc, cx, cy, radius-bc->pen/2.0, T1+T2, -T2);
-	shape_done(bc);
-}
-
 
 void stroke(bc *bc, double x, double y)
 {
@@ -157,12 +147,23 @@ int w;
 
 void circle(bc *bc, double cx, double cy, double radius)
 {
-Uint32 color;
 	bc->tainted = 1;
-	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
-	drawcircle(bc, cx, cy, radius, color);
-
+	shape_init(bc);
+#define T1 0
+#define T2 360
+	arc_piece(bc, cx, cy, radius+bc->pen/2.0, T1,T2);
+	arc_piece(bc, cx, cy, radius-bc->pen/2.0, T1+T2, -T2);
+	shape_done(bc);
 }
+
+void disc(bc *bc, double cx, double cy, double radius)
+{
+	bc->tainted = 1;
+	shape_init(bc);
+	arc_piece(bc, cx, cy, radius, 0, 360);
+	shape_done(bc);
+}
+
 
 static void colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
 {

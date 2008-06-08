@@ -173,6 +173,7 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
 void stroke(bc *bc, double x, double y);
 void fillscreen(bc *bc, int r, int g, int b);
 void circle(bc *bc, double cx, double cy, double radius);
+void disc(bc *bc, double cx, double cy, double radius);
 void rendertest(bc *bc);
 void shape_init(bc *bc);
 void shape_add(bc *bc, double x, double y, int tag);
