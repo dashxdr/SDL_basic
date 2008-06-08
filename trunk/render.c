@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include "misc.h"
+#define M_PI2 (M_PI*2.0)
 
 
 void vector(bc *bc, int sx,int sy,int dx,int dy,int c)
@@ -51,33 +52,58 @@ float val,delta;
 		}
 }
 
+void arc_piece(bc *bc, double xc, double yc, double r, double a, double da)
+{
+double x1,y1,x2,y2,x3,y3,x4,y4;
+double q1,q2,k2,ax,ay,bx,by;
+#define AP_STEPS 3
+int i;
+
+	a*=M_PI/180;
+	da*=M_PI/180;
+
+	if(da>M_PI2) da=M_PI2;
+	if(da<-M_PI2) da=-M_PI2;
+	da/=AP_STEPS;
+	for(i=0;i<AP_STEPS;++i)
+	{
+
+		ax=r*cos(a);
+		ay=-r*sin(a);
+		a+=da;
+		bx=r*cos(a);
+		by=-r*sin(a);
+
+		x1=xc+ax;
+		y1=yc+ay;
+		x4=xc+bx;
+		y4=yc+by;
+
+		q1=ax*ax + ay*ay;
+		q2=q1 + ax*bx + ay*by;
+		k2 = 4.0/3.0*((sqrt(2.0*q1*q2)-q2)/(ax*by-ay*bx));
+		x2=x1 - k2*ay;
+		y2=y1 + k2*ax;
+		x3=x4 + k2*by;
+		y3=y4 - k2*bx;
+
+		shape_add(bc, x1, y1, TAG_ONPATH);
+		shape_add(bc, x2, y2, TAG_CONTROL3);
+		shape_add(bc, x3, y3, TAG_CONTROL3);
+		if(i+1==AP_STEPS)
+			shape_add(bc, x4, y4, TAG_ONPATH);
+	}
+}
+
 
 void drawcircle(bc *bc, int cx,int cy,int radius,int c)
 {
-int x,y,e;
-
-	x=0;
-	y=radius;
-	e=3-(radius<<1);
-	while(x<=y)
-	{
-		colordot(bc, cx+x,cy+y,c);
-		colordot(bc, cx-x,cy+y,c);
-		colordot(bc, cx+x,cy-y,c);
-		colordot(bc, cx-x,cy-y,c);
-		colordot(bc, cx+y,cy+x,c);
-		colordot(bc, cx-y,cy+x,c);
-		colordot(bc, cx+y,cy-x,c);
-		colordot(bc, cx-y,cy-x,c);
-		if(e<0)
-			e+=(x<<2)+6;
-		else
-		{
-			e+=((x-y)<<2)+10;
-			--y;
-		}
-		++x;
-	}
+	shape_init(bc);
+#define T1 0
+#define T2 360
+	arc_piece(bc, cx, cy, radius+bc->pen/2.0, T1,T2);
+	arc_piece(bc, cx, cy, radius-bc->pen/2.0, T1+T2, -T2);
+	shape_done(bc);
 }
 
 
