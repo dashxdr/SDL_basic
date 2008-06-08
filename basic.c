@@ -1135,6 +1135,22 @@ double pen2=bc->pen/2.0;
 	}
 }
 
+void dosleep(bc *bc, char **take)
+{
+double list[1];
+int res;
+int got=1;
+
+	res=comma_list(bc, take, list, &got, EXACT_NUM);
+	if(!res)
+	{
+		if(list[0]<0) return;
+		if(list[0]>2.0) list[0]=2.0;
+		usleep(list[0]*1000000);
+	}
+}
+
+
 void doclear(bc *bc, char **take)
 {
 	fillscreen(bc, 0, 0, 0);
@@ -1154,6 +1170,7 @@ void dotest(bc *bc)
 {
 	rendertest(bc);
 }
+
 
 
 int token_then;
@@ -1214,6 +1231,7 @@ struct stmt statements[]={
 {"test", dotest, TOKEN_STATEMENT, 0},
 {"box", dobox, TOKEN_STATEMENT, 0},
 {"rect", dorect, TOKEN_STATEMENT, 0},
+{"sleep", dosleep, TOKEN_STATEMENT, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
