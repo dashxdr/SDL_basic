@@ -125,7 +125,7 @@ static void colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint3
 {
 Uint32 a;
 //printf("%d, %d\n", x, y);
-if(x>=1024 || y>=768) return;
+if(x>=1024 || y>=768) {printf("WTF!\n");return;}
 	a=((f2+1) * (c>>24))>>8;
 	if(a==0xff)
 		*((Uint32 *)(surf->pixels)+y * surf->pitch/4+x)=c;
@@ -155,7 +155,7 @@ SDL_Surface *s = bc->thescreen;
 	w=((FT_Span *)_span)->len;
 	coverage=((FT_Span *)_span)->coverage;
 	while(w--)
-		colordot_32(s, x++, y, ~0, coverage); //c->solidcolor, coverage);
+		colordot_32(s, x++, y, ~0, coverage);
 }
 
 void myspanner(int y, int count, FT_Span *spans, void *user)
@@ -188,14 +188,15 @@ FT_Raster myraster;
 FT_Raster_Params myparams;
 FT_Outline myoutline;
 int i;
-float a;
+float a,r;
 
 	for(i=0;i<100;++i)
 	{
 		a=i*3.1415928*2/100;
-		points[i].x = IFACTOR*(512+200*cos(a));
-		points[i].y = IFACTOR*(384+200*sin(a));
-		tags[i] = TAG_ONPATH;
+		r=220.0*(1.0+sin(a*10));
+		points[i].x = IFACTOR*(512+r*cos(a));
+		points[i].y = IFACTOR*(384+r*sin(a));
+		tags[i] = TAG_CONTROL2; // (i&1) ? TAG_ONPATH: TAG_CONTROL2;
 	}
 	pathstops[0] = i-1;
 
@@ -214,9 +215,9 @@ float a;
 	myparams.gray_spans = myspanner;
 	myparams.user = bc;
 	myparams.clip_box.xMin = 0;
-	myparams.clip_box.xMax = bc->xsize-1;
+	myparams.clip_box.xMax = bc->xsize;
 	myparams.clip_box.yMin = 0;
-	myparams.clip_box.yMax = bc->ysize-1;
+	myparams.clip_box.yMax = bc->ysize;
 	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);
 
 	SDL_basic_ft_grays_raster.raster_reset(myraster, bc->pool, sizeof(bc->pool));
