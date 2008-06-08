@@ -101,6 +101,7 @@ typedef struct basic_context {
 	int gosubsp;
 	int gosubstack[GOSUBMAX];
 	int numstatements;
+	Uint32 temp;
 // graphics rendering state
 	double gx, gy; // position
 	int gred, ggreen, gblue, galpha;

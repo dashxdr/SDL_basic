@@ -1085,6 +1085,8 @@ int got=4;
 			bc->gblue = list[2];
 			if(got==4)
 				bc->galpha = list[3];
+			else
+				bc->galpha = 255;
 		}
 	}
 }

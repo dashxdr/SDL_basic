@@ -150,12 +150,14 @@ static void solidstrip(bc *bc, void *_span, int y)
 {
 int x, w, coverage;
 SDL_Surface *s = bc->thescreen;
+Uint32 color;
 
 	x=((FT_Span *)_span)->x;
 	w=((FT_Span *)_span)->len;
 	coverage=((FT_Span *)_span)->coverage;
+	color = bc->temp;
 	while(w--)
-		colordot_32(s, x++, y, ~0, coverage);
+		colordot_32(s, x++, y, color, coverage);
 }
 
 void myspanner(int y, int count, FT_Span *spans, void *user)
@@ -166,7 +168,6 @@ bc *bc=user;
 	while(count--)
 	{
 		solidstrip(bc, spans+count, y);
-		
 	}
 }
 
@@ -219,6 +220,9 @@ float a,r;
 	myparams.clip_box.yMin = 0;
 	myparams.clip_box.yMax = bc->ysize;
 	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);
+
+	bc->temp = maprgb(bc, bc->gred, bc->ggreen, bc->gblue) |
+		(bc->galpha<<24);
 
 	SDL_basic_ft_grays_raster.raster_reset(myraster, bc->pool, sizeof(bc->pool));
 
