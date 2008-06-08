@@ -354,8 +354,9 @@ struct cmd *cmd;
 		else
 			deleteline(bc, atoi(line));
 	} else if(*line)
+	{
 		unknown_command(bc, line);
-	else
+	} else
 		bc->flags |= BF_NOPROMPT;
 
 	return;
@@ -1103,6 +1104,12 @@ void dohome(bc *bc)
 	tprintf(bc, "\0330x\0330y");
 }
 
+void dotest(bc *bc)
+{
+	rendertest(bc);
+}
+
+
 
 int token_then;
 int token_to;
@@ -1159,7 +1166,7 @@ struct stmt statements[]={
 {"fill", dofill, TOKEN_STATEMENT, 0},
 {"home", dohome, TOKEN_STATEMENT, 0},
 {"circle", docircle, TOKEN_STATEMENT, 0},
-
+{"test", dotest, TOKEN_STATEMENT, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
