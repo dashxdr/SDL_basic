@@ -49,14 +49,17 @@ struct forinfo {
 };
 #define MAX_FORS 100
 
-struct variable {
+struct var {
 	char name[16];
+	struct var **backp;
 	int rank; // RANK_*
 	int dimensions[20];
 	void *array; // pointer to doubles or bstrings
 	double value;
 	bstring *string;
 };
+
+
 
 #define MAX_SHAPE_POINTS 1024
 #define MAX_SHAPE_CONTOURS 64
@@ -96,7 +99,9 @@ typedef struct basic_context {
 	int online, nextline;
 	int execute_count;
 	int numvariables;
-	struct variable vars[MAX_VARIABLES];
+	struct var bvars[MAX_VARIABLES];
+	struct var *pvars[MAX_VARIABLES];
+
 	int tokenmap[256];
 	int numfors;
 	struct forinfo fors[MAX_FORS];
@@ -252,8 +257,8 @@ typedef struct expr_info {
 
 int expr(bc *bc, char **take, einfo *ei);
 int gather_variable_name(bc *bc, char *put, char **take);
-struct variable *find_variable(bc *bc, char *name);
-struct variable *add_variable(bc *bc, char *name, int type);
+struct var **find_variable(bc *bc, char *name);
+struct var **add_variable(bc *bc, char *name, int type);
 void free_bstring(bstring *bs);
 bstring *make_bstring(char *string, int length);
 bstring *dup_bstring(bstring *bs);
