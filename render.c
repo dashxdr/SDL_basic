@@ -83,10 +83,28 @@ int x,y,e;
 
 void stroke(bc *bc, double x, double y)
 {
-Uint32 color;
+//Uint32 color;
+double dx,dy, r, pen2;
 	bc->tainted = 1;
-	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
-	vector(bc, bc->gx, bc->gy, x, y, color);
+//	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
+//	vector(bc, bc->gx, bc->gy, x, y, color);
+
+	dx=bc->gx - x;
+	dy=bc->gy - y;
+	if(dx || dy)
+	{
+		pen2=bc->pen/2.0;
+		r=sqrt(dx*dx+dy*dy);
+		dx=dx*pen2/r;
+		dy=dy*pen2/r;
+		shape_init(bc);
+		shape_add(bc, bc->gx-dy, bc->gy+dx, TAG_ONPATH);
+		shape_add(bc, x-dy, y+dx, TAG_ONPATH);
+		shape_add(bc, x+dy, y-dx, TAG_ONPATH);
+		shape_add(bc, bc->gx+dy, bc->gy-dx, TAG_ONPATH);
+		shape_done(bc);
+	}
+
 
 	bc->gx = x;
 	bc->gy = y;
