@@ -1185,6 +1185,10 @@ void dotest(bc *bc)
 	rendertest(bc);
 }
 
+void dospot(bc *bc)
+{
+	spot(bc);
+}
 
 
 int token_then;
@@ -1247,6 +1251,7 @@ struct stmt statements[]={
 {"box", dobox, TOKEN_STATEMENT, 0},
 {"rect", dorect, TOKEN_STATEMENT, 0},
 {"sleep", dosleep, TOKEN_STATEMENT, 0},
+{"spot", dospot, TOKEN_STATEMENT, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
