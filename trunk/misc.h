@@ -193,7 +193,6 @@ void spot(bc *bc);
 
 void markkey(bc *bc, int code, int mod, int downup);
 void typeline(bc *bc, char *prompt,int echocr);
-void updatef(bc *bc);
 void scaninput(bc *bc);
 void flushinput(bc *bc);
 

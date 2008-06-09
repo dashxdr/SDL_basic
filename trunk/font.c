@@ -281,7 +281,7 @@ static int escapedata[20],ecount;
 		}
 	}
 	cursor(bc, 1);
-	updatef(bc);
+	update(bc);
 }
 
 void tprintf(bc *bc, char *s, ...)

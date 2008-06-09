@@ -219,7 +219,7 @@ void scaninput(bc *bc)
 SDL_Event event;
 int key,mod;
 
-	updatef(bc);
+	update(bc);
 	bc->numdown=0;
 	while(SDL_PollEvent(&event))
 	{
@@ -275,7 +275,7 @@ int i,j,k;
 			drawcharxy(bc, i,j,*p++);
 	}
 
-	updatef(bc);
+	update(bc);
 	memcpy(bc->textstate, bc->textbak, bc->textsize);
 	return back;
 
