@@ -37,6 +37,9 @@ oper_ge,
 #define PRI_0a    0x0a // oror
 #define PRI_0b    0x0b // andand
 #define PRI_0c    0x0c // =, <>, >=, <=, >, <
+#define PRI_0d    0x0e // ^, |
+#define PRI_0e    0x0f // &
+#define PRI_0f    0x0d // <<, >>
 #define PRI_10    0x10 // +, -
 #define PRI_18    0x18 // *, /
 #define PRI_20    0x20
@@ -121,7 +124,6 @@ int res;
 
 	return ei->flags_out & EXPR_ERROR;
 }
-/*uchar opchars[]={'+','-','/','*','|','&','<<','>>','!'};*/
 
 void trythunk(ee *thing)
 {
@@ -322,18 +324,21 @@ double t;
 				case oper_oror: // OR
 					right->value = left->value !=0 || right->value != 0;
 					break;
-//				case oper_or: /* | */
-//					right->value=(int)left->value | (int)right->value;
-//					break;
-//				case oper_and: /* & */
-//					right->value=(int)left->value | (int)right->value;
-//					break;
-//				case oper_lshift: /* << */
-//					right->value=(int)left->value << (int)right->value;
-//					break;
-//				case oper_rshift: /* >> */
-//					right->value=(int)left->value >> (int)ec->value;
-//					break;
+				case oper_or: /* | */
+					right->value=(int)left->value | (int)right->value;
+					break;
+				case oper_and: /* & */
+					right->value=(int)left->value & (int)right->value;
+					break;
+				case oper_xor: /* ^ */
+					right->value=(int)left->value ^ (int)right->value;
+					break;
+				case oper_lshift: /* << */
+					right->value=(int)left->value << (int)right->value;
+					break;
+				case oper_rshift: /* >> */
+					right->value=(int)left->value >> (int)right->value;
+					break;
 				case oper_end: return 1;
 		} else if(right->type == OT_BSTRING)
 			switch(left->operation)
@@ -432,24 +437,23 @@ int backup=0;
 				{ec->tos.priority=PRI_0c;ec->tos.operation=oper_le;}
 			else if(ch=='>')
 				{ec->tos.priority=PRI_0c;ec->tos.operation=oper_ne;}
+			else if(ch=='<')
+				{ec->tos.priority=PRI_0f;ec->tos.operation=oper_lshift;}
 			else
 				{back(ec);ec->tos.priority=PRI_0c;ec->tos.operation=oper_lt;}
 			break;
 		case '>':
 			if((ch=get(ec))=='=')
 				{ec->tos.priority=PRI_0c;ec->tos.operation=oper_ge;}
+			else if(ch=='>')
+				{ec->tos.priority=PRI_0f;ec->tos.operation=oper_rshift;}
 			else
 				{back(ec);ec->tos.priority=PRI_0c;ec->tos.operation=oper_gt;}
 			break;
 
-//		case '|': ec->tos.priority=PRI_20;ec->tos.operation=oper_or;break;
-//		case '&': ec->tos.priority=PRI_28;ec->tos.operation=oper_and;break;
-//		case '<':
-//			if(get(ec)!='<') back(ec);
-//			ec->tos.priority=PRI_30;ec->tos.operation=6;break;
-//		case '>':
-//			if(get(ec)!='>') back(ec);
-//			ec->tos.priority=PRI_20;ec->tos.operation=7;break;
+		case '|': ec->tos.priority=PRI_0d;ec->tos.operation=oper_or;break;
+		case '^': ec->tos.priority=PRI_0d;ec->tos.operation=oper_xor;break;
+		case '&': ec->tos.priority=PRI_0e;ec->tos.operation=oper_and;break;
 		default:
 			backup=1;break;
 	}
