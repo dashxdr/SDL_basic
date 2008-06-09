@@ -1380,6 +1380,17 @@ void domouseb(bc *bc, struct gen_func_ret *gfr)
 	gfr->value = bc->mouseb;
 }
 
+void doxsize(bc *bc, struct gen_func_ret *gfr)
+{
+	gfr->value = bc->xsize;
+}
+
+void doysize(bc *bc, struct gen_func_ret *gfr)
+{
+	gfr->value = bc->ysize;
+}
+
+
 void doupdate(bc *bc, char **take)
 {
 	forceupdate(bc);
@@ -1428,7 +1439,7 @@ struct stmt statements[]={
 {"end", doend, TOKEN_STATEMENT, 0},
 {"stop", dostop, TOKEN_STATEMENT, 0},
 {"data", dodata, TOKEN_STATEMENT, &token_data},
-{"int", doint, TOKEN_FUNCTION, 0},
+{"int", doint, TOKEN_FUNCTION, 0},  // 20
 {"sgn", dosgn, TOKEN_FUNCTION, 0},
 {"sin", dosin, TOKEN_FUNCTION, 0},
 {"cos", docos, TOKEN_FUNCTION, 0},
@@ -1448,12 +1459,14 @@ struct stmt statements[]={
 {"test", dotest, TOKEN_STATEMENT, 0},
 {"box", dobox, TOKEN_STATEMENT, 0},
 {"rect", dorect, TOKEN_STATEMENT, 0},
-{"sleep", dosleep, TOKEN_STATEMENT, 0},
+{"sleep", dosleep, TOKEN_STATEMENT, 0}, // 40
 {"spot", dospot, TOKEN_STATEMENT, 0},
 {"len", dolen, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"mousex", domousex, TOKEN_STATUS, 0},
 {"mousey", domousey, TOKEN_STATUS, 0},
 {"mouseb", domouseb, TOKEN_STATUS, 0},
+{"xsize", doxsize, TOKEN_STATUS, 0},
+{"ysize", doysize, TOKEN_STATUS, 0},
 {"update", doupdate, TOKEN_STATEMENT, 0},
 
 {0,0}};
