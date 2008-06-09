@@ -111,6 +111,11 @@ int now;
 	bc->nextupdate = now+250; // 1/4 second later since we're taking control
 }
 
+void resetupdate(bc *bc)
+{
+	bc->nextupdate = SDL_GetTicks();
+}
+
 void lock(bc *bc)
 {
 	if(SDL_MUSTLOCK(bc->thescreen))
