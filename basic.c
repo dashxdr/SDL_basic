@@ -1596,4 +1596,5 @@ close(fd);
 */
 	tprintf(bc, "Elapsed time %.3f seconds.\n",
 		(SDL_GetTicks()-bc->starttime)/1000.0);
+	resetupdate(bc);
 }

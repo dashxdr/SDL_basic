@@ -178,6 +178,7 @@ void cleartext(bc *bc);
 
 void update(bc *bc);
 void forceupdate(bc *bc);
+void resetupdate(bc *bc);
 void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg);
 void taint(bc *bc);
 void stroke(bc *bc, double x, double y);
