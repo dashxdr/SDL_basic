@@ -235,24 +235,20 @@ int key,mod;
 			mod=event.key.keysym.mod;
 			markkey(bc, key,mod,0);
 			break;
-/*
 		case SDL_MOUSEBUTTONUP:
-			bs&=~(1<<event.button.button-1);
-			mousex=event.button.x>>1;
-			mousey=event.button.y>>1;
-			mouseb=bs;
+			bc->mouseb&=~(1<<(event.button.button-1));
+			bc->mousex=event.button.x;
+			bc->mousey=event.button.y;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			bs|=1<<event.button.button-1;
-			mousex=event.button.x>>1;
-			mousey=event.button.y>>1;
-			mouseb=bs;
+			bc->mouseb|=1<<(event.button.button-1);
+			bc->mousex=event.button.x;
+			bc->mousey=event.button.y;
 			break;
 		case SDL_MOUSEMOTION:
-			mousex=event.motion.x>>1;
-			mousey=event.motion.y>>1;
+			bc->mousex=event.motion.x;
+			bc->mousey=event.motion.y;
 			break;
-*/
 		}
 	}
 }

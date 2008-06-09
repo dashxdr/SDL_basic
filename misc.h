@@ -68,6 +68,7 @@ struct varname {
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
+	int mousex, mousey, mouseb;
 	int xsize, ysize;
 	int txsize, tysize; // screen dimensions in characters
 	Uint32 fgcolor, bgcolor, cursorcolor, black, white;
@@ -207,6 +208,7 @@ int is_numeric_function(bc *bc, int token); // all parameters #'s, returns #
 int is_general_function(bc *bc, int token); // anything goes
 int function_parameter_count(bc *bc, int token);
 void (*statement_handler(bc *bc, int token))();
+int is_status(bc *bc, int token);
 
 
 extern int token_then;

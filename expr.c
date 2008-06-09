@@ -737,6 +737,16 @@ int res;
 			newop->string = gfr.string;
 			newop->type = OT_BSTRING;
 		}
+	} else if(is_status(ec->bc, ch))
+	{
+		void (*func)();
+		struct gen_func_ret gfr={0};
+
+		get(ec);
+		func=statement_handler(ec->bc, ch);
+		func(ec->bc, &gfr);
+		newop->value = gfr.value;
+		newop->type = OT_DOUBLE;
 	} else
 	{
 		char name[16];
