@@ -99,6 +99,16 @@ int diff;
 #warning must lock
 	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
 	bc->tainted=0;
+	scaninput(bc);
+}
+
+void forceupdate(bc *bc)
+{
+int now;
+	now = SDL_GetTicks();
+	bc->nextupdate = now;
+	update(bc);
+	bc->nextupdate = now+250; // 1/4 second later since we're taking control
 }
 
 void lock(bc *bc)
