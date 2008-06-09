@@ -119,7 +119,7 @@ int mapped[2];
 	if(code<0) return;
 	if(status)
 	{
-		if(*mapped==3) bc->flags |= BF_CCHIT;
+		if(*mapped==3 || *mapped == 0x1b) bc->flags |= BF_CCHIT;
 		if(bc->numdown<KEYMAX)
 			bc->downcodes[bc->numdown++]=code;
 		ip=bc->pressedcodes;
@@ -325,6 +325,7 @@ char *fake;
 int scrollback;
 int startx, starty;
 
+top:
 	startx = bc->txpos;
 	starty = bc->typos;
 	xdelta=0;
@@ -467,7 +468,12 @@ int startx, starty;
 	{
 		flushinput(bc);
 		if(!(bc->flags & BF_RUNNING))
+		{
 			bc->flags &= ~BF_CCHIT;
+			preload="";
+			tprintf(bc, "\n");
+			goto top;
+		}
 	}
 	if(i)
 	{
