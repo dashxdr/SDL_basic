@@ -1409,6 +1409,8 @@ int token_if;
 int token_to;
 int token_step;
 int token_data;
+int token_and;
+int token_or;
 
 struct stmt {
 	char *name;
@@ -1474,6 +1476,8 @@ struct stmt statements[]={
 {"ysize", doysize, TOKEN_STATUS, 0},
 {"ticks", doticks, TOKEN_STATUS, 0},
 {"update", doupdate, TOKEN_STATEMENT, 0},
+{"and", 0, 0, &token_and},
+{"or", 0, 0, &token_or},
 
 {0,0}};
 

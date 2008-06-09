@@ -223,6 +223,8 @@ extern int token_if;
 extern int token_to;
 extern int token_step;
 extern int token_data;
+extern int token_and;
+extern int token_or;
 
 // expr.c
 
