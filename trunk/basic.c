@@ -414,6 +414,7 @@ int thisline;
 		if(put<e)
 			*put++ = '\n';
 	}
+	*put = 0;
 	strcpy(bc->program, bc->runnable);
 }
 
