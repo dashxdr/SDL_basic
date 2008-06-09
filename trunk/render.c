@@ -59,8 +59,8 @@ double q1,q2,k2,ax,ay,bx,by;
 #define AP_STEPS 3
 int i;
 
-	a*=M_PI/180;
-	da*=M_PI/180;
+	a*=M_PI/180.0;
+	da*=M_PI/180.0;
 
 	if(da>M_PI2) da=M_PI2;
 	if(da<-M_PI2) da=-M_PI2;
@@ -101,6 +101,8 @@ void stroke(bc *bc, double x, double y)
 {
 //Uint32 color;
 double dx,dy, r, pen2;
+double a;
+
 	bc->tainted = 1;
 //	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
 //	vector(bc, bc->gx, bc->gy, x, y, color);
@@ -109,6 +111,7 @@ double dx,dy, r, pen2;
 	dy=bc->gy - y;
 	if(dx || dy)
 	{
+		a=atan2(-dy, dx)*180.0/M_PI;
 		pen2=bc->pen/2.0;
 		r=sqrt(dx*dx+dy*dy);
 		dx=dx*pen2/r;
@@ -116,8 +119,11 @@ double dx,dy, r, pen2;
 		shape_init(bc);
 		shape_add(bc, bc->gx-dy, bc->gy+dx, TAG_ONPATH);
 		shape_add(bc, x-dy, y+dx, TAG_ONPATH);
+// endcap
+		arc_piece(bc, x, y, pen2, a-90, -180);
 		shape_add(bc, x+dy, y-dx, TAG_ONPATH);
 		shape_add(bc, bc->gx+dy, bc->gy-dx, TAG_ONPATH);
+		arc_piece(bc, bc->gx, bc->gy, pen2, a+90, -180);
 		shape_done(bc);
 	}
 
