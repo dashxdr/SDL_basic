@@ -1196,8 +1196,24 @@ void dospot(bc *bc)
 	spot(bc);
 }
 
-void dolen(bc *bc, char **take)
+void dolen(bc *bc, struct gen_func_ret *gfr)
 {
+einfo einfo, *ei=&einfo;
+int res;
+
+	ei->flags_in = EXPR_STRING;
+	res = expr(bc, gfr->take, ei);
+
+	gfr->type = OT_DOUBLE;
+
+	if(ei->type == OT_BSTRING)
+	{
+		gfr->value = ei->string->length;
+			free_bstring(ei->string);
+	}
+	else
+		gfr->value = 0.0;
+
 }
 
 
@@ -1279,6 +1295,14 @@ struct stmt *s;
 	s=to_statement(bc, token);
 	return s && (s->token_flags&TOKEN_FUNCTION) &&
 		(~s->token_flags&TOKEN_GENERAL);
+}
+
+int is_general_function(bc *bc, int token)
+{
+struct stmt *s;
+	s=to_statement(bc, token);
+	return s && (s->token_flags&TOKEN_FUNCTION) &&
+		(s->token_flags&TOKEN_GENERAL);
 }
 
 int function_parameter_count(bc *bc, int token)

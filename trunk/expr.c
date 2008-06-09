@@ -110,6 +110,9 @@ int res;
 	*take = ec->pnt;
 	if((ei->flags_in & EXPR_LET) && !(ei->flags_out & EXPR_DIDLET))
 		expr_error(ec, EXPR_ERR_NOOP);
+	if((ei->flags_in & EXPR_STRING) && ei->type != OT_BSTRING)
+		expr_error(ec, EXPR_ERR_STRING);
+
 	return ei->flags_out & EXPR_ERROR;
 }
 /*uchar opchars[]={'+','-','/','*','|','&','<<','>>','!'};*/
@@ -700,6 +703,40 @@ int res;
 		func(ec->bc, pars);
 		newop->value = pars[0];
 		newop->type = OT_DOUBLE;
+	} else if(is_general_function(ec->bc, ch))
+	{
+		void (*func)();
+		struct gen_func_ret gfr={0};
+
+		get(ec);
+		if(get(ec) != '(')
+		{
+			expr_error(ec, EXPR_ERR_NO_ARRAY);
+			back(ec);
+			goto crapout;
+		}
+		func = statement_handler(ec->bc, ch);
+		gfr.take = &ec->pnt;
+		func(ec->bc, &gfr);
+		if(gfr.error[0])
+		{
+			expr_error(ec, gfr.error);
+			goto crapout;
+		}
+		if(get(ec) != ')')
+		{
+			expr_error(ec, EXPR_ERR_CLOSEPAR);
+			goto crapout;
+		}
+		if(gfr.type == OT_DOUBLE)
+		{
+			newop->value = gfr.value;
+			newop->type = OT_DOUBLE;
+		} else
+		{
+			newop->string = gfr.string;
+			newop->type = OT_BSTRING;
+		}
 	} else
 	{
 		char name[16];
