@@ -1172,13 +1172,13 @@ int got=1;
 void doclear(bc *bc, char **take)
 {
 	cleartext(bc);
-	fillscreen(bc, 0, 0, 0);
+	fillscreen(bc, 0, 0, 0, 255);
 }
 
 void dofill(bc *bc, char **take)
 {
 	cleartext(bc);
-	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue);
+	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue, bc->galpha);
 }
 
 void dohome(bc *bc)
@@ -1557,6 +1557,8 @@ close(fd);
 		tprintf(bc, "\nStop on line %d\n", currentline(bc));
 		bc->flags &= ~BF_STOPHIT;
 	}
+	printf("Elapsed time %.3f seconds.\n",
+		(SDL_GetTicks()-bc->starttime)/1000.0);
 	tprintf(bc, "Elapsed time %.3f seconds.\n",
 		(SDL_GetTicks()-bc->starttime)/1000.0);
 }

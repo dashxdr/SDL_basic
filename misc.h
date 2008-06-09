@@ -68,7 +68,6 @@ struct varname {
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
-	unsigned char dirty[1024];
 	int xsize, ysize;
 	int txsize, tysize; // screen dimensions in characters
 	Uint32 fgcolor, bgcolor, cursorcolor, black, white;
@@ -159,9 +158,6 @@ typedef struct basic_context {
 
 
 // main.c
-void colordot(bc *bc, unsigned int x,unsigned int y,int c);
-void update(bc *bc);
-Uint32 maprgb(bc *bc, int r,int g,int b);
 
 
 // font.c
@@ -179,8 +175,11 @@ void cleartext(bc *bc);
 #define TAG_CONTROL2  0 // quadratic bezier control point
 #define TAG_CONTROL3  2 // cubic bezier control point
 
+void update(bc *bc);
+void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg);
+void taint(bc *bc);
 void stroke(bc *bc, double x, double y);
-void fillscreen(bc *bc, int r, int g, int b);
+void fillscreen(bc *bc, int r, int g, int b, int a);
 void circle(bc *bc, double cx, double cy, double radius);
 void disc(bc *bc, double cx, double cy, double radius);
 void rendertest(bc *bc);
