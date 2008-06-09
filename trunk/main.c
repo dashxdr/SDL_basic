@@ -144,6 +144,7 @@ bc mybc, *bc;
 	cursor(bc, 1);
 	unlock(bc);
 	update(bc);
+	runinit(bc);
 
 	for(;;)
 	{

@@ -201,6 +201,7 @@ void flushinput(bc *bc);
 
 // basic.c
 
+void runinit(bc *bc);
 void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
 int token_flags(bc *bc, unsigned char val);
