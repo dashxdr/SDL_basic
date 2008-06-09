@@ -172,6 +172,7 @@ void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str);
 void cursor(bc *bc, int onoff);
 void tprintf(bc *bc, char *s, ...);
 void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
+void cleartext(bc *bc);
 
 // render.c
 

@@ -102,6 +102,11 @@ unsigned char fontdata[96][13]={
 #define FONTW 6
 #define FONTH 13
 
+void cleartext(bc *bc)
+{
+	memset(bc->textstate, ' ', bc->txsize * bc->tysize);
+}
+
 void inittext(bc *bc)
 {
 	bc->txsize = bc->xsize/FONTW;
@@ -113,7 +118,7 @@ void inittext(bc *bc)
 	bc->textstate = malloc(bc->textsize);
 	bc->textbak = malloc(bc->textsize);
 	bc->scrollhistory = malloc(bc->txsize * SCROLLHISTORYSIZE);
-	memset(bc->textstate, ' ', bc->txsize * bc->tysize);
+	cleartext(bc);
 	bc->debhist=malloc(LINESIZE*HISTSIZE);
 }
 

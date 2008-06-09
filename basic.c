@@ -1165,11 +1165,13 @@ int got=1;
 
 void doclear(bc *bc, char **take)
 {
+	cleartext(bc);
 	fillscreen(bc, 0, 0, 0);
 }
 
 void dofill(bc *bc, char **take)
 {
+	cleartext(bc);
 	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue);
 }
 
