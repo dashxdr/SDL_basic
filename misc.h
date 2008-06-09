@@ -127,6 +127,7 @@ typedef struct basic_context {
 	FT_Vector  shape_points[MAX_SHAPE_POINTS];
 	char shape_tags[MAX_SHAPE_POINTS];
 	int starttime;
+	int waitbase;
 } bc;
 
 #define MYF1 0x180

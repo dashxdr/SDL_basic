@@ -672,12 +672,18 @@ int newline=1;
 		tprintf(bc, "\n");
 }
 
+void reset_waitbase(bc *bc)
+{
+	bc->waitbase = SDL_GetTicks();
+}
+
 void doinput(bc *bc, char **take)
 {
 einfo einfo, *ei=&einfo;
 int res;
 	tprintf(bc, "? ");
 	typeline(bc, "", 1);
+	reset_waitbase(bc);
 
 	ei->flags_in = EXPR_LVALUE;
 	res = expr(bc, take, ei);
@@ -1287,14 +1293,27 @@ void dosleep(bc *bc, char **take)
 double list[1];
 int res;
 int got=1;
+int until, diff;
 
 	res=comma_list(bc, take, list, &got, EXACT_NUM);
 	if(!res)
 	{
 		if(list[0]<0) return;
 		if(list[0]>2.0) list[0]=2.0;
-		usleep(list[0]*1000000);
-		scaninput(bc);
+		until=bc->waitbase + list[0]*1000;
+
+		for(;;)
+		{
+			diff = until - SDL_GetTicks();
+			if(diff<0 || diff>2000)
+			{
+//printf("%s: diff out of range! %d\n", __FUNCTION__, diff);
+				reset_waitbase(bc);
+				break;
+			}
+			SDL_Delay(1);
+			scaninput(bc);
+		}
 	}
 }
 
@@ -1637,7 +1656,7 @@ struct stmt *st;
 		++bc->numstatements;
 	}
 	bc->starttime = SDL_GetTicks();
-
+	reset_waitbase(bc);
 }
 
 void dorun(bc *bc, char *line)
