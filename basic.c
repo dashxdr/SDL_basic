@@ -630,7 +630,7 @@ int value;
 int rank;
 int fail=0;
 int dimensions[128];
-struct var **v;
+struct variable *v;
 int i,j;
 
 	while(!fail)
@@ -678,17 +678,17 @@ int i,j;
 		}
 		v=add_variable(bc, name, type);
 #warning check for out of variables needed
-		(*v)->rank = (type & ~RANK_MASK) | rank;
+		v->rank = (type & ~RANK_MASK) | rank;
 		for(i=0;i<=rank;++i)
 		{
-			(*v)->dimensions[i]=1;
+			v->dimensions[i]=1;
 			for(j=i;j<rank;++j)
-				(*v)->dimensions[i] *= dimensions[j];
+				v->dimensions[i] *= dimensions[j];
 		}
 		if(type & RANK_STRING) // array of strings
-			(*v)->array = calloc((*v)->dimensions[0], sizeof(bstring *));
+			v->array = calloc(v->dimensions[0], sizeof(bstring *));
 		else
-			(*v)->array = calloc((*v)->dimensions[0], sizeof(double));
+			v->array = calloc(v->dimensions[0], sizeof(double));
 #warning check for out of memory
 		if(**take == ',')
 		{
@@ -883,7 +883,7 @@ void donext(bc *bc, char **take)
 struct forinfo *fi;
 char name[16];
 int type;
-struct var **v;
+struct variable *v;
 int pos;
 
 	if(!bc->numfors)
@@ -912,15 +912,14 @@ int pos;
 #warning check for zero return, but can't really ever happen...
 
 	pos=fi->step>=0.0;
-
-	if((pos && (*v)->value >= fi->end) || (!pos && (*v)->value <= fi->end))
+	if((pos && v->value >= fi->end) || (!pos && v->value <= fi->end))
 	{
 		--bc->numfors;
 		memcpy(fi, bc->fors + bc->numfors, sizeof(*fi));
 	}
 	else
 	{
-		set_variable(bc, fi->name, (*v)->value + fi->step);
+		set_variable(bc, fi->name, v->value + fi->step);
 		bc->nextline = fi->nextline;
 	}
 
@@ -1344,10 +1343,10 @@ int i;
 void free_variables(bc *bc)
 {
 int i;
-struct var *v;
+struct variable *v;
 	for(i=0;i>bc->numvariables;++i)
 	{
-		v=bc->bvars+i;
+		v=bc->vars+i;
 		if((v->rank&RANK_MASK) != RANK_VARIABLE && v->array)
 		{
 			free(v->array);

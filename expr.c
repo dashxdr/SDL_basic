@@ -441,53 +441,49 @@ int backup=0;
 . , ( ) white ; 008
 */
 
-static struct var *find_v_low(bc *bc, char *name)
+static struct varname *find_v_low(bc *bc, char *name)
 {
-struct var *v;
+struct varname *vn;
 int low, mid, high;
-	v=bc->bvars;
+	vn=bc->varnames;
 	low=0;
 	high=bc->numvariables;
 	for(;;)
 	{
 		mid=(low + high) >> 1;
 		if(mid==low) break;
-		if(strcmp(name, v[mid].name)<0)
+		if(strcmp(name, vn[mid].name)<0)
 			high=mid;
 		else
 			low=mid;
 	}
-
-	return v+mid;
+	return vn+mid;
 }
 
-struct var **find_variable(bc *bc, char *name)
+struct variable *find_variable(bc *bc, char *name)
 {
-struct var *v;
-	v=find_v_low(bc, name);
-	if(bc->numvariables && !strcmp(name, v->name))
-		return v->backp;
+struct varname *vn;
+	vn=find_v_low(bc, name);
+	if(bc->numvariables && !strcmp(name, vn->name))
+		return vn->var;
 	return 0;
 }
 
-struct var **add_variable(bc *bc, char *name, int type)
+struct variable *add_variable(bc *bc, char *name, int type)
 {
-struct var *v,*tv;
+struct variable *v;
+struct varname *vn;
 int which;
-int i;
-	v=find_v_low(bc, name);
-	which=v-bc->bvars;
+	vn=find_v_low(bc, name);
+	which=vn-bc->varnames;
 	if(bc->numvariables)
 	{
-		if(strcmp(name, v->name)>0)
-			++v,++which;
-		memmove(v+1, v, sizeof(*v)*(bc->numvariables - which));
-// fixup all the indirects that moved...
-		for(i=which+1,tv=bc->bvars+i;i<=bc->numvariables;++i,++tv)
-			*tv->backp = tv;
+		if(strcmp(name, vn->name)>0)
+			++vn,++which;
+		memmove(vn+1, vn, sizeof(*vn)*(bc->numvariables - which));
 	}
-	v->backp = bc->pvars + bc->numvariables;
-	*v->backp = v;
+	strcpy(vn->name, name);
+	vn->var = v = bc->vars + bc->numvariables;
 
 	v->rank = RANK_VARIABLE;
 	strcpy(v->name, name);
@@ -496,7 +492,7 @@ int i;
 	v->array = 0;
 	++ bc->numvariables;
 #warning check for out of variables needed
-	return v->backp;
+	return v;
 }
 
 /*
@@ -561,12 +557,12 @@ bstring *bs;
 
 void set_variable(bc *bc, char *name, double value)
 {
-struct var **v;
+struct variable *v;
 	v=find_variable(bc, name);
 	if(!v)
 		v=add_variable(bc, name, RANK_VARIABLE);
 	if(v)
-		(*v)->value = value;
+		v->value = value;
 #warning check if out of variables...
 }
 
@@ -703,7 +699,7 @@ int res;
 	} else
 	{
 		char name[16];
-		struct var **v;
+		struct variable *v;
 		int type;
 
 		type=gather_variable_name(ec->bc, name, &ec->pnt);
@@ -729,9 +725,9 @@ int res;
 				int rank;
 				int res;
 
-				rank = (*v)->rank & RANK_MASK;
+				rank = v->rank & RANK_MASK;
 				for(i=0;i<rank+1;++i)
-					dims[i] = (*v)->dimensions[i];
+					dims[i] = v->dimensions[i];
 				for(i=0;i<rank;++i)
 				{
 					res = expr2(ec, EXPR_NUMERIC);
@@ -765,31 +761,31 @@ int res;
 				v=find_variable(ec->bc, name);
 				j=0;
 				for(i=0;i<rank;++i)
-					j+=indexes[i]*(*v)->dimensions[i+1];
+					j+=indexes[i]*v->dimensions[i+1];
 				if(type & RANK_STRING)
 				{
 					bstring **ind;
-					ind = (bstring **)(*v)->array + j;
+					ind = (bstring **)v->array + j;
 					newop->indirect = ind;
 					if(!*ind)
 						*ind = make_bstring("",0);
 					newop->type = OT_PBSTRING;
 				} else
 				{
-					newop->indirect = (double *)(*v)->array + j;
+					newop->indirect = (double *)v->array + j;
 					newop->type = OT_PDOUBLE;
 				}
 			} else
 			{
 				if(type & RANK_STRING)
 				{
-					if(!(*v)->string)
-						(*v)->string = make_bstring("", 0);
-					newop->indirect = &(*v)->string;
+					if(!v->string)
+						v->string = make_bstring("", 0);
+					newop->indirect = &v->string;
 					newop->type = OT_PBSTRING;
 				} else
 				{
-					newop->indirect = &(*v)->value;
+					newop->indirect = &v->value;
 					newop->type = OT_PDOUBLE;
 				}
 			}
