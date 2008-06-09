@@ -230,6 +230,7 @@ extern int token_data;
 #define EXPR_LVALUE       16 // no operations, just an lvalue
 #define EXPR_DIDLET       32 // actually did a let
 #define EXPR_NUMERIC      64 // need numeric expression
+#define EXPR_STRING      128 // expression must be a string
 
 #define OT_DOUBLE   1
 #define OT_BSTRING  2
@@ -249,6 +250,7 @@ extern int token_data;
 #define EXPR_ERR_CLOSEPAR   "Missing ')'"
 #define EXPR_ERR_PAR_COUNT  "Incorrect number of parameters to function"
 #define EXPR_ERR_NUMERIC    "String expression not allowed"
+#define EXPR_ERR_STRING     "String expression required"
 
 typedef struct expr_info {
 	int flags_in;
@@ -261,6 +263,13 @@ typedef struct expr_info {
 	char *error;
 } einfo;
 
+struct gen_func_ret {
+	char **take;
+	bstring *string;
+	double value;
+	int type;
+	char error[128];
+};
 
 
 int expr(bc *bc, char **take, einfo *ei);
