@@ -1,37 +1,38 @@
 10 home
-20 dim r(200),g(200),b(200)
-30 dim x(1000),y(1000)
-40 gosub 160
-50 gosub 330
-60 i=1
-70 clear
-80 x(i)=mousex
-90 y(i)=mousey
-100 gosub 220
-110 i=i+1
-120 if i>1000 then i=i-1000
-130 update
-140 sleep .02
-150 goto 70
-160 for i=1 to 200
-170 r(i) = rnd(256)
-180 g(i) = rnd(256)
-190 b(i) = rnd(256)
-200 next i
-210 return
-220 k=i
-230 for j=60 to 1 step -1
-240 k=i-(j-1)*5
-250 if k<1 then k=k+1000
-260 color r(j),g(j),b(j)
-270 disc x(k),y(k),20
-280 color 0,0,0
-290 pen 2
-300 circle x(k),y(k),20
-310 next j
-320 return
-330 for i=1 to 1000
-340 x(i) = mousex
-350 y(i) = mousey
-360 next i
-370 return
+20 rr=40 rem radius of disc
+30 dim r(200),g(200),b(200)
+40 dim x(1000),y(1000)
+50 gosub 170
+60 gosub 340
+70 i=1
+80 clear
+90 x(i)=mousex
+100 y(i)=mousey
+110 gosub 230
+120 i=i+1
+130 if i>1000 then i=i-1000
+140 update
+150 sleep .02
+160 goto 80
+170 for i=1 to 200
+180 r(i) = rnd(256)
+190 g(i) = rnd(256)
+200 b(i) = rnd(256)
+210 next i
+220 return
+230 k=i
+240 for j=60 to 1 step -1
+250 k=i-(j-1)*5
+260 if k<1 then k=k+1000
+270 color r(j),g(j),b(j)
+280 disc x(k),y(k),rr
+290 color 0,0,0
+300 pen 2
+310 circle x(k),y(k),rr
+320 next j
+330 return
+340 for i=1 to 1000
+350 x(i) = mousex
+360 y(i) = mousey
+370 next i
+380 return
