@@ -84,7 +84,7 @@ typedef struct basic_context {
 	char *debhist;
 	int hcount;
 	int fwidth, fheight;
-	int lastupdate;
+	int nextupdate;
 	int tainted;
 	int textsize;
 	char *textstate, *textbak;
