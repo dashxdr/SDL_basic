@@ -95,6 +95,11 @@ int i;
 	}
 }
 
+void spot(bc *bc)
+{
+	bc->tainted = 1;
+	disc(bc, bc->gx, bc->gy, bc->pen/2.0);	
+}
 
 
 void stroke(bc *bc, double x, double y)
@@ -104,8 +109,6 @@ double dx,dy, r, pen2;
 double a;
 
 	bc->tainted = 1;
-//	color = maprgb(bc, bc->gred, bc->ggreen, bc->gblue);
-//	vector(bc, bc->gx, bc->gy, x, y, color);
 
 	dx=bc->gx - x;
 	dy=bc->gy - y;
@@ -119,7 +122,6 @@ double a;
 		shape_init(bc);
 		shape_add(bc, bc->gx-dy, bc->gy+dx, TAG_ONPATH);
 		shape_add(bc, x-dy, y+dx, TAG_ONPATH);
-// endcap
 		arc_piece(bc, x, y, pen2, a-90, -180);
 		shape_add(bc, x+dy, y-dx, TAG_ONPATH);
 		shape_add(bc, bc->gx+dy, bc->gy-dx, TAG_ONPATH);
