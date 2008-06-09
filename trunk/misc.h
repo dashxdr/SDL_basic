@@ -207,7 +207,8 @@ void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
 int token_flags(bc *bc, unsigned char val);
 void execute(bc *bc, char **p);
-int is_function(bc *bc, int token);
+int is_numeric_function(bc *bc, int token); // all parameters #'s, returns #
+int is_general_function(bc *bc, int token); // anything goes
 int function_parameter_count(bc *bc, int token);
 void (*statement_handler(bc *bc, int token))();
 
@@ -265,7 +266,7 @@ typedef struct expr_info {
 int expr(bc *bc, char **take, einfo *ei);
 int gather_variable_name(bc *bc, char *put, char **take);
 struct variable *find_variable(bc *bc, char *name);
-struct variable *add_variable(bc *bc, char *name, int type);
+struct variable *add_variable(bc *bc, char *name);
 void free_bstring(bstring *bs);
 bstring *make_bstring(char *string, int length);
 bstring *dup_bstring(bstring *bs);

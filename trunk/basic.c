@@ -393,10 +393,13 @@ struct cmd *cmd;
 void run_error(bc *bc, char *s, ...)
 {
 va_list ap;
-	va_start(ap, s);
-	vsnprintf(bc->lineerror, sizeof(bc->lineerror), s, ap);
-	va_end(ap);
-	bc->flags |= BF_RUNERROR;
+	if(!(bc->flags&BF_RUNERROR))
+	{
+		va_start(ap, s);
+		vsnprintf(bc->lineerror, sizeof(bc->lineerror), s, ap);
+		va_end(ap);
+		bc->flags |= BF_RUNERROR;
+	}
 }
 
 
@@ -679,7 +682,7 @@ int i,j;
 			run_error(bc, DUPLICATE_ARRAY);
 			break;
 		}
-		v=add_variable(bc, name, type);
+		v=add_variable(bc, name);
 #warning check for out of variables needed
 		v->rank = (type & ~RANK_MASK) | rank;
 		for(i=0;i<=rank;++i)
@@ -911,8 +914,8 @@ int pos;
 	}
 	else
 		fi=bc->fors+bc->numfors-1;
-	v=find_variable(bc, fi->name);
-#warning check for zero return, but can't really ever happen...
+	v=add_variable(bc, fi->name);
+#warning check for zero return
 
 	pos=fi->step>=0.0;
 	if((pos && v->value >= fi->end) || (!pos && v->value <= fi->end))
@@ -1193,6 +1196,10 @@ void dospot(bc *bc)
 	spot(bc);
 }
 
+void dolen(bc *bc, char **take)
+{
+}
+
 
 int token_then;
 int token_to;
@@ -1212,6 +1219,8 @@ struct stmt {
 #define TOKEN_FUNCTION        0x1 // flag
 #define TOKEN_STATEMENT       0x2 // can execute it
 #define TOKEN_2PARS           0x4 // function has 2 parameters
+#define TOKEN_3PARS           0x8 // function has 3 parameters
+#define TOKEN_GENERAL        0x10 // not numbers only for return + parameters
 
 struct stmt statements[]={
 {"rem", dorem, TOKEN_STATEMENT, 0},
@@ -1255,6 +1264,7 @@ struct stmt statements[]={
 {"rect", dorect, TOKEN_STATEMENT, 0},
 {"sleep", dosleep, TOKEN_STATEMENT, 0},
 {"spot", dospot, TOKEN_STATEMENT, 0},
+{"len", dolen, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
@@ -1263,11 +1273,12 @@ struct stmt *to_statement(bc *bc, int token)
 	return (token>=0 && token<bc->numstatements) ? statements+token : 0;
 }
 
-int is_function(bc *bc, int token)
+int is_numeric_function(bc *bc, int token)
 {
 struct stmt *s;
 	s=to_statement(bc, token);
-	return s && (s->token_flags&TOKEN_FUNCTION);
+	return s && (s->token_flags&TOKEN_FUNCTION) &&
+		(~s->token_flags&TOKEN_GENERAL);
 }
 
 int function_parameter_count(bc *bc, int token)
@@ -1275,7 +1286,8 @@ int function_parameter_count(bc *bc, int token)
 struct stmt *s;
 	s=to_statement(bc, token);
 	if(!s || !(s->token_flags & TOKEN_FUNCTION)) return 0;
-	return (s->token_flags &  TOKEN_2PARS) ? 2 : 1;
+	return (s->token_flags & TOKEN_3PARS) ? 3 :
+		(s->token_flags & TOKEN_2PARS) ? 2 : 1;
 }
 
 void (*statement_handler(bc *bc, int token))()

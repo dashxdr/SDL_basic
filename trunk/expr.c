@@ -86,9 +86,12 @@ inline int back(ec *ec)
 
 void expr_error(ec *ec, char *msg)
 {
-	ec->ei->error = msg;
-	ec->ei->flags_out |= EXPR_ERROR;
-	run_error(ec->bc, "%s", msg);
+	if(!(ec->ei->flags_out & EXPR_ERROR))
+	{
+		ec->ei->error = msg;
+		ec->ei->flags_out |= EXPR_ERROR;
+		run_error(ec->bc, "%s", msg);
+	}
 }
 
 int expr(bc *bc, char **take, einfo *ei)
@@ -469,16 +472,20 @@ struct varname *vn;
 	return 0;
 }
 
-struct variable *add_variable(bc *bc, char *name, int type)
+// can call this, and if the variable doesn't exist it'll be created
+struct variable *add_variable(bc *bc, char *name)
 {
 struct variable *v;
 struct varname *vn;
 int which;
+int t;
 	vn=find_v_low(bc, name);
 	which=vn-bc->varnames;
 	if(bc->numvariables)
 	{
-		if(strcmp(name, vn->name)>0)
+		if(!(t=strcmp(name, vn->name)))
+			return vn->var;
+		if(t>0)
 			++vn,++which;
 		memmove(vn+1, vn, sizeof(*vn)*(bc->numvariables - which));
 	}
@@ -558,12 +565,9 @@ bstring *bs;
 void set_variable(bc *bc, char *name, double value)
 {
 struct variable *v;
-	v=find_variable(bc, name);
-	if(!v)
-		v=add_variable(bc, name, RANK_VARIABLE);
+	v=add_variable(bc, name);
 	if(v)
 		v->value = value;
-#warning check if out of variables...
 }
 
 
@@ -658,7 +662,7 @@ int res;
 		get(ec);
 		newop->string = gather_bstring(ec);
 		newop->type = OT_BSTRING;
-	} else if(is_function(ec->bc, ch))
+	} else if(is_numeric_function(ec->bc, ch))
 	{
 		int numpars;
 		double pars[8];
@@ -705,16 +709,11 @@ int res;
 		type=gather_variable_name(ec->bc, name, &ec->pnt);
 		if(type != RANK_INVALID)
 		{
-			v=find_variable(ec->bc, name);
-			if(!v)
+			v=add_variable(ec->bc, name);
+			if(v && type==RANK_ARRAY && !(v->rank&RANK_MASK))
 			{
-				if(type&RANK_MASK) // error, we can't make this on the fly
-				{
-					expr_error(ec, EXPR_ERR_NO_ARRAY);
-					goto crapout;
-				}
-				else
-					v=add_variable(ec->bc, name, type);
+				expr_error(ec, EXPR_ERR_NO_ARRAY);
+				goto crapout;
 			}
 #warning check for ran out of variables
 			if(type&RANK_MASK)
@@ -757,8 +756,6 @@ int res;
 							expr_error(ec, EXPR_ERR_MISCOUNT "2");
 					}
 				}
-// have to redefine v because we called expr, maybe v has shifted around...
-				v=find_variable(ec->bc, name);
 				j=0;
 				for(i=0;i<rank;++i)
 					j+=indexes[i]*v->dimensions[i+1];
