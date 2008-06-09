@@ -458,7 +458,7 @@ top:
 			if(scrollback)
 				scrollback=showhistory(bc, 0);
 			i=strlen(bc->debline);
-			tprintf(bc, "\033%dx\033%dy%s\033k\033%dx\033%dy",
+			tprintf(bc, "\033%dx\033%dy%s \033%dx\033%dy",
 				startx, starty, bc->debline,i+xdelta+startx, starty);
 			ref=0;
 		}
