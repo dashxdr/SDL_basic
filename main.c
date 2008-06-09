@@ -10,6 +10,10 @@
 #define IXSIZE 1024
 #define IYSIZE 768
 
+#define MINXSIZE 256
+#define MINYSIZE 256
+#define MAXXSIZE 2048
+#define MAXYSIZE 2048
 
 int main(int argc,char **argv)
 {
@@ -17,9 +21,31 @@ int videoflags;
 bc mybc, *bc;
 SDL_Surface *thescreen;
 int xsize, ysize;
-
+int i;
+int v1,v2;
 	xsize=IXSIZE;
 	ysize=IYSIZE;
+
+	for(i=1;i<argc;++i)
+	{
+		if(sscanf(argv[i], "%dx%d", &v1, &v2) == 2)
+		{
+			if(v1<MINXSIZE || v1>MAXXSIZE || v2<MINYSIZE || v2>MAXYSIZE)
+			{
+				fprintf(stderr, "Dimensions are out of range. Must be (%d,%d) to (%d,%d)\n",
+					MINXSIZE, MINYSIZE, MAXXSIZE, MAXYSIZE);
+				exit(0);
+			}
+			if(v1&15 || v2&15)
+			{
+				fprintf(stderr, "Dimensions must be a multiple of 16\n");
+				exit(0);
+			}
+			xsize = v1;
+			ysize = v2;
+			continue;
+		}
+	}
 
 	if ( SDL_Init(SDL_INIT_VIDEO) < 0 )
 	{
