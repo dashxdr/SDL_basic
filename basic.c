@@ -1165,6 +1165,7 @@ int got=1;
 		if(list[0]<0) return;
 		if(list[0]>2.0) list[0]=2.0;
 		usleep(list[0]*1000000);
+		scaninput(bc);
 	}
 }
 
