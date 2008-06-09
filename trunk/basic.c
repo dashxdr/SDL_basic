@@ -311,6 +311,133 @@ void donew(bc *bc, char *text)
 	runinit(bc);
 }
 
+struct inout {
+int in;
+int out;
+};
+
+struct inout *find_io(struct inout *io, int ionum, int want)
+{
+int low, high, mid;
+	if(ionum<1) return 0;
+	low = 0;
+	high =ionum;
+	for(;;)
+	{
+		mid = (low+high) >> 1;
+		if(mid==low) break;
+		if(want < io[mid].in)
+			high=mid;
+		else
+			low=mid;
+	}
+	if(want == io[mid].in)
+		return io+mid;
+	else
+		return 0;
+
+}
+
+int backstr(char *at, char *comp)
+{
+	at -= strlen(comp);
+	while(*comp)
+	{
+		if(tolower(*at++) != *comp++)
+			return -1;
+	}
+	return 0;
+}
+
+void renumber_lines(bc *bc, struct inout *io, int ionum)
+{
+char *p1, *take, *put, *e;
+#define LN (LINESIZE+20)
+char temp[LN], *line;
+int ln;
+struct inout *iof;
+int thisline;
+
+	if(!ionum) return;
+	memset(temp, 0, sizeof(temp));
+	line=temp+10;
+	take=bc->program;
+	put=bc->runnable;
+	while(*take)
+	{
+		p1=line;
+		e=line+LINESIZE;
+		while(*take && *take++ != '\n')
+		{
+			if(p1<e)
+				*p1++ = take[-1];
+		}
+		*p1 = 0;
+		e=bc->runnable+sizeof(bc->runnable)-5;
+		thisline=atoi(line);
+		iof=find_io(io, ionum, thisline);
+		if(!iof) // we're not renumbering this line
+		{
+			put += snprintf(put, e-put, "%s\n", line);
+			continue;
+		}
+		p1=line;
+		while(isdigit(*p1)) ++p1;
+		put += snprintf(put, e-put, "%d", iof->out);
+		while(*p1)
+		{
+			if(backstr(p1, "then") && backstr(p1, "goto") &&
+				backstr(p1, "gosub"))
+			{
+				if(put<e)
+					*put++ = *p1++;
+				continue;
+			}
+			while(iswhite(*p1))
+				if(put<e)
+					*put++ = *p1++;
+				else
+					++p1;
+			if(!isdigit(*p1))
+				continue;
+			ln=atoi(p1);
+			while(isdigit(*p1)) ++p1;
+			iof = find_io(io, ionum, ln);
+			if(!iof)
+			{
+				error(bc, "Can't renumber line %d, reference to line %d invalid",
+					thisline, ln);
+				return;
+			}
+			put+=snprintf(put, e-put, "%d", iof->out);
+		}
+		if(put<e)
+			*put++ = '\n';
+	}
+	strcpy(bc->program, bc->runnable);
+}
+
+void doren(bc *bc, char *text)
+{
+struct inout io[MAX_PROGRAM_LINES];
+int i;
+char *p;
+int lc,delta;
+
+	p=bc->program;
+	delta=10;
+	lc=delta;
+	for(i=0;*p && i<MAX_PROGRAM_LINES-1;++i)
+	{
+		io[i].in = atoi(p);
+		io[i].out = lc;
+		lc += delta;
+		while(*p && *p++ != '\n');
+	}
+	if(i)
+		renumber_lines(bc, io, i);
+}
+
 void dorun(bc *bc, char *text);
 
 struct cmd commandlist[]={
@@ -323,6 +450,7 @@ struct cmd commandlist[]={
 {"scr", donew},
 {"exit", doexit},
 {"run", dorun},
+{"ren", doren},
 {0, 0}};
 
 void processline(bc *bc, char *line)

@@ -6,6 +6,8 @@
 
 #define SCROLLHISTORYSIZE 8192
 
+#define MAX_PROGRAM_LINES 100000
+
 #define HISTSIZE 512
 #define LINESIZE 128
 
@@ -97,7 +99,7 @@ typedef struct basic_context {
 	char program[1000000]; // 1M ought to be big enough...
 	char runnable[1000000];
 	int numlines;
-	struct linepointer lps[100000]; // 100K lines
+	struct linepointer lps[MAX_PROGRAM_LINES]; // 100K lines
 	int online, nextline;
 	int execute_count;
 	int numvariables;
