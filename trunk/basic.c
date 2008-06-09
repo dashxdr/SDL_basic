@@ -1217,6 +1217,21 @@ int res;
 
 }
 
+void domousex(bc *bc, struct gen_func_ret *gfr)
+{
+	gfr->value = bc->mousex;
+}
+
+void domousey(bc *bc, struct gen_func_ret *gfr)
+{
+	gfr->value = bc->mousey;
+}
+
+void domouseb(bc *bc, struct gen_func_ret *gfr)
+{
+	gfr->value = bc->mouseb;
+}
+
 
 int token_then;
 int token_to;
@@ -1238,6 +1253,7 @@ struct stmt {
 #define TOKEN_2PARS           0x4 // function has 2 parameters
 #define TOKEN_3PARS           0x8 // function has 3 parameters
 #define TOKEN_GENERAL        0x10 // not numbers only for return + parameters
+#define TOKEN_STATUS         0x20 // one of the special symbols
 
 struct stmt statements[]={
 {"rem", dorem, TOKEN_STATEMENT, 0},
@@ -1282,6 +1298,10 @@ struct stmt statements[]={
 {"sleep", dosleep, TOKEN_STATEMENT, 0},
 {"spot", dospot, TOKEN_STATEMENT, 0},
 {"len", dolen, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"mousex", domousex, TOKEN_STATUS, 0},
+{"mousey", domousey, TOKEN_STATUS, 0},
+{"mouseb", domouseb, TOKEN_STATUS, 0},
+
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
@@ -1313,6 +1333,13 @@ struct stmt *s;
 	if(!s || !(s->token_flags & TOKEN_FUNCTION)) return 0;
 	return (s->token_flags & TOKEN_3PARS) ? 3 :
 		(s->token_flags & TOKEN_2PARS) ? 2 : 1;
+}
+
+int is_status(bc *bc, int token)
+{
+struct stmt *s;
+	s=to_statement(bc, token);
+	return s && (s->token_flags & TOKEN_STATUS);
 }
 
 void (*statement_handler(bc *bc, int token))()
