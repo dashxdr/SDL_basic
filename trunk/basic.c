@@ -1390,6 +1390,11 @@ void doysize(bc *bc, struct gen_func_ret *gfr)
 	gfr->value = bc->ysize;
 }
 
+void doticks(bc *bc, struct gen_func_ret *gfr)
+{
+	gfr->value = SDL_GetTicks() - bc->starttime;
+}
+
 
 void doupdate(bc *bc, char **take)
 {
@@ -1467,6 +1472,7 @@ struct stmt statements[]={
 {"mouseb", domouseb, TOKEN_STATUS, 0},
 {"xsize", doxsize, TOKEN_STATUS, 0},
 {"ysize", doysize, TOKEN_STATUS, 0},
+{"ticks", doticks, TOKEN_STATUS, 0},
 {"update", doupdate, TOKEN_STATEMENT, 0},
 
 {0,0}};
