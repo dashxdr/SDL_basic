@@ -1411,6 +1411,7 @@ int token_step;
 int token_data;
 int token_and;
 int token_or;
+int token_mod;
 
 struct stmt {
 	char *name;
@@ -1478,6 +1479,7 @@ struct stmt statements[]={
 {"update", doupdate, TOKEN_STATEMENT, 0},
 {"and", 0, 0, &token_and},
 {"or", 0, 0, &token_or},
+{"mod", 0, 0, &token_mod},
 
 {0,0}};
 

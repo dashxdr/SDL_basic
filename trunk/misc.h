@@ -225,6 +225,7 @@ extern int token_step;
 extern int token_data;
 extern int token_and;
 extern int token_or;
+extern int token_mod;
 
 // expr.c
 
@@ -256,6 +257,7 @@ extern int token_or;
 #define EXPR_ERR_PAR_COUNT  "Incorrect number of parameters to function"
 #define EXPR_ERR_NUMERIC    "String expression not allowed"
 #define EXPR_ERR_STRING     "String expression required"
+#define EXPR_ERR_DIVIDE0    "Divide by zero"
 
 typedef struct expr_info {
 	int flags_in;

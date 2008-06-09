@@ -13,6 +13,7 @@ oper_minus,
 oper_plus,
 oper_multiply,
 oper_divide,
+oper_mod,
 oper_and,
 oper_or,
 oper_xor,
@@ -243,6 +244,7 @@ int res=0;
 int trytop(ec *ec)
 {
 ee *left, *right;
+double t;
 
 	right = & ec->tos;
 	for(;;)
@@ -269,10 +271,22 @@ ee *left, *right;
 					right->value=left->value - right->value;
 					break;
 				case oper_divide: /* / */
-					right->value=left->value/right->value;
+					if(right->value == 0.0)
+						expr_error(ec, EXPR_ERR_DIVIDE0);
+					else
+						right->value=left->value/right->value;
 					break;
 				case oper_multiply: /* * */
 					right->value*=left->value;
+					break;
+				case oper_mod: // MOD
+					if(right->value == 0.0)
+						expr_error(ec, EXPR_ERR_DIVIDE0);
+					else
+					{
+						t=left->value/right->value;
+						right->value=left->value-right->value*(int)t;
+					}
 					break;
 				case oper_assign: // =
 					ec->ei->flags_out |= EXPR_DIDLET;
@@ -321,8 +335,7 @@ ee *left, *right;
 //					right->value=(int)left->value >> (int)ec->value;
 //					break;
 				case oper_end: return 1;
-			}
-		else if(right->type == OT_BSTRING)
+		} else if(right->type == OT_BSTRING)
 			switch(left->operation)
 			{
 				case oper_assign: // =
@@ -450,6 +463,10 @@ int backup=0;
 		{
 			ec->tos.priority = PRI_0a;
 			ec->tos.operation=oper_oror;
+		} else if(ch==token_mod)
+		{
+			ec->tos.priority = PRI_18;
+			ec->tos.operation=oper_mod;
 		} else
 		{
 			back(ec);
