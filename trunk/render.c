@@ -4,6 +4,79 @@
 #include "misc.h"
 #define M_PI2 (M_PI*2.0)
 
+void colordot(bc *bc, unsigned int x,unsigned int y,int c)
+{
+	if(x<bc->xsize && y<bc->ysize)
+		*((Uint32 *)(bc->thescreen->pixels+y*bc->thescreen->pitch)+x)=c;
+}
+
+static void colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
+{
+Uint32 a;
+//printf("%d, %d\n", x, y);
+//if(x>=1024 || y>=768) {printf("WTF!\n");return;}
+	a=((f2+1) * (c>>24))>>8;
+	if(a==0xff)
+		*((Uint32 *)(surf->pixels)+y * surf->pitch/4+x)=c;
+	else
+	{
+		Uint32 *p, t;
+		Uint32 ai;
+		
+		p=(Uint32 *)(surf->pixels)+y * (surf->pitch>>2)+x;
+
+		ai=a^255;
+		t=*p;
+
+		*p = ((a*(c&0xff) + ai*(t&0xff))>>8) |
+			(((a*(c&0xff00) + ai*(t&0xff00))&0xff0000)>>8) |
+			(((a*(c&0xff0000) + ai*(t&0xff0000))&0xff000000)>>8);
+	}
+}
+
+
+void update(bc *bc)
+{
+	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
+}
+
+void updatef(bc *bc)
+{
+int new;
+
+	if(!bc->tainted) return;
+	new=SDL_GetTicks();
+	if(new-bc->lastupdate<20) return;
+	bc->lastupdate=new;
+	bc->tainted=0;
+#warning must lock
+	update(bc);
+}
+
+
+Uint32 maprgb(bc *bc, int r,int g,int b)
+{
+	return SDL_MapRGB(bc->thescreen->format,r,g,b);
+}
+
+void lock(bc *bc)
+{
+	if(SDL_MUSTLOCK(bc->thescreen))
+	{
+		if ( SDL_LockSurface(bc->thescreen) < 0 )
+		{
+			fprintf(stderr, "Couldn't lock display surface: %s\n",
+								SDL_GetError());
+		}
+	}
+}
+void unlock(bc *bc)
+{
+	if(SDL_MUSTLOCK(bc->thescreen))
+		SDL_UnlockSurface(bc->thescreen);
+}
+
+
 
 void vector(bc *bc, int sx,int sy,int dx,int dy,int c)
 {
@@ -139,6 +212,7 @@ void fillscreen(bc *bc, int r, int g, int b)
 int i;
 Uint32 color;
 int w;
+SDL_Surface *scr = bc->thescreen;
 
 	bc->tainted = 1;
 	color = maprgb(bc, r, g, b);
@@ -147,10 +221,9 @@ int w;
 	w=bc->xsize * 4;
 	for(i=1;i<bc->ysize;++i)
 	{
-		memcpy(thescreen->pixels + i*thescreen->pitch,
-				thescreen->pixels, w);
+		memcpy(scr->pixels + i*scr->pitch,
+				scr->pixels, w);
 	}
-
 }
 
 void circle(bc *bc, double cx, double cy, double radius)
@@ -171,32 +244,6 @@ void disc(bc *bc, double cx, double cy, double radius)
 	arc_piece(bc, cx, cy, radius, 0, 360);
 	shape_done(bc);
 }
-
-
-static void colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
-{
-Uint32 a;
-//printf("%d, %d\n", x, y);
-if(x>=1024 || y>=768) {printf("WTF!\n");return;}
-	a=((f2+1) * (c>>24))>>8;
-	if(a==0xff)
-		*((Uint32 *)(surf->pixels)+y * surf->pitch/4+x)=c;
-	else
-	{
-		Uint32 *p, t;
-		Uint32 ai;
-		
-		p=(Uint32 *)(surf->pixels)+y * (surf->pitch>>2)+x;
-
-		ai=a^255;
-		t=*p;
-
-		*p = ((a*(c&0xff) + ai*(t&0xff))>>8) |
-			(((a*(c&0xff00) + ai*(t&0xff00))&0xff0000)>>8) |
-			(((a*(c&0xff0000) + ai*(t&0xff0000))&0xff000000)>>8);
-	}
-}
-
 
 static void solidstrip(bc *bc, void *_span, int y)
 {

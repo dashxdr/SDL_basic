@@ -1473,6 +1473,7 @@ struct stmt *st;
 		++st;
 		++bc->numstatements;
 	}
+	bc->starttime = SDL_GetTicks();
 
 }
 
@@ -1556,5 +1557,6 @@ close(fd);
 		tprintf(bc, "\nStop on line %d\n", currentline(bc));
 		bc->flags &= ~BF_STOPHIT;
 	}
-
+	tprintf(bc, "Elapsed time %.3f seconds.\n",
+		(SDL_GetTicks()-bc->starttime)/1000.0);
 }

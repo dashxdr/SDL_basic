@@ -209,19 +209,6 @@ int *p,i;
 	return 0;
 }
 
-void updatef(bc *bc)
-{
-int new;
-
-	if(!bc->tainted) return;
-	new=SDL_GetTicks();
-	if(new-bc->lastupdate<20) return;
-	bc->lastupdate=new;
-	bc->tainted=0;
-#warning must lock
-	update(bc);
-}
-
 void flushinput(bc *bc)
 {
 	while(takedown(bc)>=0);

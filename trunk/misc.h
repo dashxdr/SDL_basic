@@ -1,10 +1,6 @@
 #include <SDL.h>
 #include "ftgrays.h"
 
-extern SDL_Surface *thescreen;
-extern int xsize,ysize;
-extern int txsize, tysize;
-
 #define KEYMAX 32
 #define KEYHISTSIZE 16
 
@@ -72,6 +68,7 @@ struct varname {
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
+	unsigned char dirty[1024];
 	int xsize, ysize;
 	int txsize, tysize; // screen dimensions in characters
 	Uint32 fgcolor, bgcolor, cursorcolor, black, white;
@@ -127,6 +124,7 @@ typedef struct basic_context {
 	short shape_pathstops[MAX_SHAPE_CONTOURS];
 	FT_Vector  shape_points[MAX_SHAPE_POINTS];
 	char shape_tags[MAX_SHAPE_POINTS];
+	int starttime;
 } bc;
 
 #define MYF1 0x180
