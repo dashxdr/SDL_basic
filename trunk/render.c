@@ -4,17 +4,15 @@
 #include "misc.h"
 #define M_PI2 (M_PI*2.0)
 
-void colordot(bc *bc, unsigned int x,unsigned int y,int c)
+Uint32 maprgb(bc *bc, int r,int g,int b)
 {
-	if(x<bc->xsize && y<bc->ysize)
-		*((Uint32 *)(bc->thescreen->pixels+y*bc->thescreen->pitch)+x)=c;
+	return SDL_MapRGB(bc->thescreen->format,r,g,b);
 }
 
-static void colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
+static inline void
+colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
 {
 Uint32 a;
-//printf("%d, %d\n", x, y);
-//if(x>=1024 || y>=768) {printf("WTF!\n");return;}
 	a=((f2+1) * (c>>24))>>8;
 	if(a==0xff)
 		*((Uint32 *)(surf->pixels)+y * surf->pitch/4+x)=c;
@@ -34,10 +32,62 @@ Uint32 a;
 	}
 }
 
+void fillscreen(bc *bc, int r, int g, int b, int a)
+{
+int i;
+Uint32 color;
+int w;
+SDL_Surface *scr = bc->thescreen;
+
+	taint(bc);
+	color = maprgb(bc, r, g, b);
+	if(a==255)
+	{
+		for(i=0;i<bc->xsize;++i)
+			colordot_32(scr, i, 0, color, 255);
+		w=bc->xsize * 4;
+		for(i=1;i<bc->ysize;++i)
+		{
+			memcpy(scr->pixels + i*scr->pitch,
+					scr->pixels, w);
+		}
+	} else
+	{
+		int x,y;
+		for(y=0;y<bc->ysize;++y)
+			for(x=0;x<bc->xsize;++x)
+				colordot_32(scr, x, y, color, a);
+	}
+}
+
+void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg)
+{
+Uint32 *p2 = (void *)( bc->thescreen->pixels + y*bc->thescreen->pitch + x*4);
+int v;
+unsigned char c;
+int step = bc->thescreen->pitch >> 2;
+
+	for(v=0;v<13;++v)
+	{
+		c=*p++;
+		p2[0]= (c&0x01) ? fg : bg;
+		p2[1]= (c&0x02) ? fg : bg;
+		p2[2]= (c&0x04) ? fg : bg;
+		p2[3]= (c&0x08) ? fg : bg;
+		p2[4]= (c&0x10) ? fg : bg;
+		p2[5]= (c&0x20) ? fg : bg;
+		p2 += step;
+	}
+}
 
 void update(bc *bc)
 {
 	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
+}
+
+void taint(bc *bc)
+{
+	bc->tainted = 1;
 }
 
 void updatef(bc *bc)
@@ -51,12 +101,6 @@ int new;
 	bc->tainted=0;
 #warning must lock
 	update(bc);
-}
-
-
-Uint32 maprgb(bc *bc, int r,int g,int b)
-{
-	return SDL_MapRGB(bc->thescreen->format,r,g,b);
 }
 
 void lock(bc *bc)
@@ -76,54 +120,6 @@ void unlock(bc *bc)
 		SDL_UnlockSurface(bc->thescreen);
 }
 
-
-
-void vector(bc *bc, int sx,int sy,int dx,int dy,int c)
-{
-int diffx,diffy;
-int stepx,stepy;
-float val,delta;
-
-	stepx=stepy=0;
-	diffx=dx-sx;
-	if(diffx<0) {diffx=-diffx;stepx=-1;}
-	else if(diffx>0) stepx=1;
-	diffy=dy-sy;
-	if(diffy<0) {diffy=-diffy;stepy=-1;}
-	else if(diffy>0) stepy=1;
-
-	colordot(bc, sx,sy,c);
-
-	if(diffx>diffy)
-	{
-		val=sy;
-		delta=(dy-val)/diffx;
-		val+=0.5;
-		while(diffx--)
-		{
-			sx+=stepx;
-			val+=delta;
-			colordot(bc, sx,(int)val,c);
-		}
-	} else if(diffx<diffy)
-	{
-		val=sx;
-		delta=(dx-val)/diffy;
-		val+=0.5;
-		while(diffy--)
-		{
-			sy+=stepy;
-			val+=delta;
-			colordot(bc, (int)val,sy,c);
-		}
-	} else
-		while(diffx--)
-		{
-			sx+=stepx;
-			sy+=stepy;
-			colordot(bc, sx,sy,c);
-		}
-}
 
 void arc_piece(bc *bc, double xc, double yc, double r, double a, double da)
 {
@@ -170,7 +166,7 @@ int i;
 
 void spot(bc *bc)
 {
-	bc->tainted = 1;
+	taint(bc);
 	disc(bc, bc->gx, bc->gy, bc->pen/2.0);	
 }
 
@@ -181,7 +177,7 @@ void stroke(bc *bc, double x, double y)
 double dx,dy, r, pen2;
 double a;
 
-	bc->tainted = 1;
+	taint(bc);
 
 	dx=bc->gx - x;
 	dy=bc->gy - y;
@@ -207,28 +203,9 @@ double a;
 	bc->gy = y;
 }
 
-void fillscreen(bc *bc, int r, int g, int b)
-{
-int i;
-Uint32 color;
-int w;
-SDL_Surface *scr = bc->thescreen;
-
-	bc->tainted = 1;
-	color = maprgb(bc, r, g, b);
-	for(i=0;i<bc->xsize;++i)
-		colordot(bc, i, 0, color);
-	w=bc->xsize * 4;
-	for(i=1;i<bc->ysize;++i)
-	{
-		memcpy(scr->pixels + i*scr->pitch,
-				scr->pixels, w);
-	}
-}
-
 void circle(bc *bc, double cx, double cy, double radius)
 {
-	bc->tainted = 1;
+	taint(bc);
 	shape_init(bc);
 #define T1 0
 #define T2 360
@@ -239,34 +216,30 @@ void circle(bc *bc, double cx, double cy, double radius)
 
 void disc(bc *bc, double cx, double cy, double radius)
 {
-	bc->tainted = 1;
+	taint(bc);
 	shape_init(bc);
 	arc_piece(bc, cx, cy, radius, 0, 360);
 	shape_done(bc);
 }
 
-static void solidstrip(bc *bc, void *_span, int y)
-{
-int x, w, coverage;
-SDL_Surface *s = bc->thescreen;
-Uint32 color;
-
-	x=((FT_Span *)_span)->x;
-	w=((FT_Span *)_span)->len;
-	coverage=((FT_Span *)_span)->coverage;
-	color = bc->temp;
-	while(w--)
-		colordot_32(s, x++, y, color, coverage);
-}
-
 void myspanner(int y, int count, FT_Span *spans, void *user)
 {
 bc *bc=user;
+int x, w, coverage;
+Uint32 color;
+SDL_Surface *surf = bc->thescreen;
 
 // renders spans in reverse order, but why not? They don't overlap
+	spans += count;
+	color = bc->temp;
 	while(count--)
 	{
-		solidstrip(bc, spans+count, y);
+		--spans;
+		x=spans->x;
+		w=spans->len;
+		coverage=spans->coverage;
+		while(w--)
+			colordot_32(surf, x++, y, color, coverage);
 	}
 }
 
@@ -325,8 +298,7 @@ float a,r;
 
 	SDL_basic_ft_grays_raster.raster_done(myraster);
 
-
-	bc->tainted = 1;
+	taint(bc);
 }
 
 void shape_init(bc *bc)
@@ -394,8 +366,7 @@ FT_Outline myoutline;
 	SDL_basic_ft_grays_raster.raster_done(myraster);
 
 
-	bc->tainted = 1;
-
+	taint(bc);
 }
 
 

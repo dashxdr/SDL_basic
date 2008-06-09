@@ -125,25 +125,14 @@ void inittext(bc *bc)
 
 void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str)
 {
-int v;
-unsigned char *p, c;
-	bc->tainted = 1;
+unsigned char c;
+	taint(bc);
 	while((c=*str++))
 	{
 		c-=' ';
 		if(c>=96)
 			c=0;
-		p=fontdata[c];
-		for(v=0;v<13;++v)
-		{
-			c=*p++;
-			colordot(bc, x+0,y+v,(c&0x01) ? fgcolor : bgcolor);
-			colordot(bc, x+1,y+v,(c&0x02) ? fgcolor : bgcolor);
-			colordot(bc, x+2,y+v,(c&0x04) ? fgcolor : bgcolor);
-			colordot(bc, x+3,y+v,(c&0x08) ? fgcolor : bgcolor);
-			colordot(bc, x+4,y+v,(c&0x10) ? fgcolor : bgcolor);
-			colordot(bc, x+5,y+v,(c&0x20) ? fgcolor : bgcolor);
-		}
+		drawchar(bc, x, y, fontdata[c], fgcolor, bgcolor);
 		x+=6;
 	}
 }
@@ -156,6 +145,7 @@ int h,w;
 unsigned char *p1, *p2;
 int pitch;
 
+	taint(bc);
 	w=bc->xsize*4;
 	h=bc->ysize-FONTH;
 	pitch = bc->thescreen->pitch;
@@ -184,7 +174,7 @@ void cursor(bc *bc, int onoff)
 char tt[2];
 
 	onoff = !!onoff;
-	bc->tainted = 1;
+	taint(bc);
 	tt[0] = bc->textstate[bc->typos*bc->txsize + bc->txpos];
 	tt[1] = 0;
 	drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
