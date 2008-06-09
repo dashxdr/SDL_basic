@@ -156,8 +156,8 @@ int h,w;
 unsigned char *p1, *p2;
 int pitch;
 
-	w=bc->txsize*FONTW*4;
-	h=(bc->tysize-1)*FONTH;
+	w=bc->xsize*4;
+	h=bc->ysize-FONTH;
 	pitch = bc->thescreen->pitch;
 	p1 = bc->thescreen->pixels;
 	p2 = p1 + pitch*FONTH;
