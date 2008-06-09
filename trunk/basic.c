@@ -146,6 +146,22 @@ void doexit(bc *bc, char *text)
 	bc->flags |= BF_QUIT;
 }
 
+void doinfo(bc *bc, char *text)
+{
+int t;
+char *p;
+	tprintf(bc, "Program name: '%s'\n", bc->filename);
+	t=0;
+	p=bc->program;
+	while(*p)
+	{
+		if(*p++ == '\n')
+			++t;
+	}
+	tprintf(bc, "Program size: %d bytes, %d line%s\n", strlen(bc->program),
+		t, t==1 ? "" : "s");
+}
+
 /*
    list
    list 10-50
@@ -160,6 +176,7 @@ char *p;
 int i;
 int min, max;
 int v1, v2;
+int wantinfo=1;
 	min=0;
 	max=0x7fffffff;
 
@@ -167,15 +184,20 @@ int v1, v2;
 	{
 		min=v1;
 		max=v2;
+		wantinfo=0;
 	} else if(*text=='-' && text[1]>='0' && text[1]<='9')
+	{
 		max=atoi(text+1);
-	else if(sscanf(text, "%d", &v1) == 1)
+		wantinfo=0;
+	} else if(sscanf(text, "%d", &v1) == 1)
 	{
 		min=v1;
 		while(*text>='0' && *text<='9') ++text;
 		if(*text != '-')
 			max=v1;
+		wantinfo=0;
 	}
+	if(wantinfo) doinfo(bc,"");
 
 	p=bc->program;
 	while(*p)
@@ -285,22 +307,6 @@ int len;
 		bc->program[len]=0;
 	tprintf(bc, "Loaded %d bytes from file '%s'\n", len, filename);
 	snprintf(bc->filename, sizeof(bc->filename), "%s", filename);
-}
-
-void doinfo(bc *bc, char *text)
-{
-int t;
-char *p;
-	tprintf(bc, "Program name: '%s'\n", bc->filename);
-	t=0;
-	p=bc->program;
-	while(*p)
-	{
-		if(*p++ == '\n')
-			++t;
-	}
-	tprintf(bc, "Program size: %d bytes, %d line%s\n", strlen(bc->program),
-		t, t==1 ? "" : "s");
 }
 
 void donew(bc *bc, char *text)
