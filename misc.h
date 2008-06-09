@@ -177,6 +177,7 @@ void cleartext(bc *bc);
 #define TAG_CONTROL3  2 // cubic bezier control point
 
 void update(bc *bc);
+void forceupdate(bc *bc);
 void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg);
 void taint(bc *bc);
 void stroke(bc *bc, double x, double y);

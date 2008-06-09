@@ -1232,6 +1232,11 @@ void domouseb(bc *bc, struct gen_func_ret *gfr)
 	gfr->value = bc->mouseb;
 }
 
+void doupdate(bc *bc, char **take)
+{
+	forceupdate(bc);
+}
+
 
 int token_then;
 int token_to;
@@ -1301,6 +1306,7 @@ struct stmt statements[]={
 {"mousex", domousex, TOKEN_STATUS, 0},
 {"mousey", domousey, TOKEN_STATUS, 0},
 {"mouseb", domouseb, TOKEN_STATUS, 0},
+{"update", doupdate, TOKEN_STATEMENT, 0},
 
 {0,0}};
 
