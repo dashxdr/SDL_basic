@@ -16,6 +16,8 @@ oper_divide,
 oper_and,
 oper_or,
 oper_xor,
+oper_andand,
+oper_oror,
 oper_lshift,
 oper_rshift,
 oper_end,
@@ -29,10 +31,13 @@ oper_ge,
 
 };
 
-#define PRI_08    0x08
-#define PRI_0c    0x0c
-#define PRI_10    0x10
-#define PRI_18    0x18
+#define PRI_08    0x08 // endmark
+#define PRI_09    0x09 // assignment
+#define PRI_0a    0x0a // oror
+#define PRI_0b    0x0b // andand
+#define PRI_0c    0x0c // =, <>, >=, <=, >, <
+#define PRI_10    0x10 // +, -
+#define PRI_18    0x18 // *, /
 #define PRI_20    0x20
 #define PRI_28    0x28
 #define PRI_30    0x30
@@ -297,6 +302,12 @@ ee *left, *right;
 				case oper_ne: // comparison <>
 					right->value = double_comps(left, right) ? 1.0 : 0;
 					break;
+				case oper_andand: // AND
+					right->value = left->value != 0 && right->value != 0;
+					break;
+				case oper_oror: // OR
+					right->value = left->value !=0 || right->value != 0;
+					break;
 //				case oper_or: /* | */
 //					right->value=(int)left->value | (int)right->value;
 //					break;
@@ -393,14 +404,15 @@ int backup=0;
 		case '/': ec->tos.priority=PRI_18;ec->tos.operation=oper_divide;break;
 		case '*': ec->tos.priority=PRI_18;ec->tos.operation=oper_multiply;break;
 		case '=':
-			if(ec->ei->flags_in & EXPR_LET)
+			if((ec->ei->flags_in & EXPR_LET) &&
+				!(ec->ei->flags_out & EXPR_DIDLET)) // only first is assign
 			{
-				ec->tos.priority=PRI_0c;ec->tos.operation=oper_assign;
-			} else if(ec->ei->flags_in & EXPR_IF)
+				ec->tos.priority=PRI_09;ec->tos.operation=oper_assign;
+				ec->ei->flags_out |= EXPR_DIDLET;
+			} else // if(ec->ei->flags_in & EXPR_IF)
 			{
 				ec->tos.priority=PRI_0c;ec->tos.operation=oper_eq;
-			} else
-				backup=1;
+			}
 			break;
 		case '<':
 			if((ch=get(ec))=='=')
@@ -416,6 +428,7 @@ int backup=0;
 			else
 				{back(ec);ec->tos.priority=PRI_0c;ec->tos.operation=oper_gt;}
 			break;
+
 //		case '|': ec->tos.priority=PRI_20;ec->tos.operation=oper_or;break;
 //		case '&': ec->tos.priority=PRI_28;ec->tos.operation=oper_and;break;
 //		case '<':
@@ -429,9 +442,20 @@ int backup=0;
 	}
 	if(backup)
 	{
-		back(ec);
-		ec->tos.priority=PRI_08;
-		ec->tos.operation=oper_end;
+		if(ch==token_and)
+		{
+			ec->tos.priority = PRI_0b;
+			ec->tos.operation=oper_andand;
+		} else if(ch==token_or)
+		{
+			ec->tos.priority = PRI_0a;
+			ec->tos.operation=oper_oror;
+		} else
+		{
+			back(ec);
+			ec->tos.priority=PRI_08;
+			ec->tos.operation=oper_end;
+		}
 	}
 }
 
