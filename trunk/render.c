@@ -88,12 +88,14 @@ void taint(bc *bc)
 
 void update(bc *bc)
 {
-int new;
+int now;
+int diff;
 
 	if(!bc->tainted) return;
-	new=SDL_GetTicks();
-	if(new-bc->lastupdate<20) return;
-	bc->lastupdate=new;
+	now=SDL_GetTicks();
+	diff = bc->nextupdate - now;
+	if(diff>0 && diff<250) return;
+	bc->nextupdate=now+20;
 #warning must lock
 	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
 	bc->tainted=0;

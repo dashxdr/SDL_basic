@@ -307,8 +307,15 @@ char token[128];
 char *fake;
 int scrollback;
 int startx, starty;
+char spaces[256], *zerospaces;
+char *tail;
+int oldlen;
 
+	memset(spaces, ' ', sizeof(spaces));
+	zerospaces = spaces + sizeof(spaces)-1;
+	*zerospaces = 0;
 top:
+	tail="";
 	startx = bc->txpos;
 	starty = bc->typos;
 	xdelta=0;
@@ -395,18 +402,24 @@ top:
 			if(!backcount)
 				memcpy(linesave,bc->debline,LINESIZE);
 			++backcount;
+			oldlen = strlen(bc->debline);
 			memcpy(bc->debline,
 				bc->debhist+LINESIZE*((bc->hcount-backcount) & (HISTSIZE-1)),
 				LINESIZE);
+			oldlen -= strlen(bc->debline);
+			if(oldlen>0) tail=zerospaces-oldlen;
 			xdelta=0;
 			++ref;
 		} else if(code==MYDOWN)
 		{
 			if(!backcount) continue;
 			--backcount;
+			oldlen = strlen(bc->debline);
 			if(!backcount) memcpy(bc->debline,linesave,LINESIZE);
 			else
 				memcpy(bc->debline,bc->debhist+LINESIZE*((bc->hcount-backcount) & (HISTSIZE-1)),LINESIZE);
+			oldlen -= strlen(bc->debline);
+			if(oldlen>0) tail=zerospaces-oldlen;
 			xdelta=0;
 			++ref;
 		} else if(code>=0 && code<128)
@@ -441,8 +454,9 @@ top:
 			if(scrollback)
 				scrollback=showhistory(bc, 0);
 			i=strlen(bc->debline);
-			tprintf(bc, "\033%dx\033%dy%s \033%dx\033%dy",
-				startx, starty, bc->debline,i+xdelta+startx, starty);
+			tprintf(bc, "\033%dx\033%dy%s %s\033%dx\033%dy",
+				startx, starty, bc->debline, tail, i+xdelta+startx, starty);
+			tail="";
 			ref=0;
 		}
 
