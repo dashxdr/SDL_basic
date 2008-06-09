@@ -20,6 +20,7 @@ extern int txsize, tysize;
 #define BF_CCHIT       16 // Hit control-c
 #define BF_ENDHIT      32 // End
 #define BF_STOPHIT     64 // Stop
+#define BF_RUNNING    128 // program is running
 
 struct linepointer {
 int linenum;

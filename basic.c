@@ -1476,7 +1476,10 @@ write(fd, bc->runnable, put-bc->runnable);
 close(fd);
 }
 
-	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT | BF_STOPHIT)))
+	bc->flags |= BF_RUNNING;
+
+	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
+		 BF_STOPHIT | BF_QUIT)))
 	{
 		char *p;
 		updatef(bc);
@@ -1494,6 +1497,8 @@ close(fd);
 //if(bc->execute_count%1000000 == 0) printf("%d\n", bc->execute_count);
 
 	}
+	bc->flags &= ~BF_RUNNING;
+
 	if(bc->flags & BF_CCHIT)
 	{
 		tprintf(bc, "\nControl-C stopped on line %d\n", currentline(bc));
@@ -1515,6 +1520,5 @@ close(fd);
 		tprintf(bc, "\nStop on line %d\n", currentline(bc));
 		bc->flags &= ~BF_STOPHIT;
 	}
-
 
 }

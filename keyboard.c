@@ -129,7 +129,7 @@ int mapped[2];
 			else i--;
 		if(!i && bc->numpressed<KEYMAX)
 			bc->pressedcodes[bc->numpressed++]=code;
-//		if(*mapped==(MYALTED | 'x')) {writebbram();exit(0);}
+		if(*mapped==(MYALTED | 'q')) bc->flags |= BF_QUIT; // alt-q exits
 		if(bc->keysin<KEYHISTSIZE)
 		{
 			bc->keyhist[bc->keyput++ & (KEYHISTSIZE-1)]=*mapped;
@@ -335,14 +335,14 @@ int startx, starty;
 	ref=0;
 	fake=0;
 	scrollback=0;
-	while(!(bc->flags & (BF_CCHIT)))
+	while(!(bc->flags & (BF_CCHIT | BF_QUIT)))
 	{
 		if(!fake)
 		{
 			SDL_Delay(10);
 			scaninput(bc);
 			code=takedown(bc);
-if(code=='q' + MYALTED) exit(0); // alt-q
+//if(code=='q' + MYALTED) exit(0); // alt-q
 		} else
 		{
 			code=*fake++;
@@ -465,8 +465,9 @@ if(code=='q' + MYALTED) exit(0); // alt-q
 	}
 	if(bc->flags & BF_CCHIT)
 	{
-		bc->flags &= ~BF_CCHIT;
 		flushinput(bc);
+		if(!(bc->flags & BF_RUNNING))
+			bc->flags &= ~BF_CCHIT;
 	}
 	if(i)
 	{
