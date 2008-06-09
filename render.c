@@ -43,6 +43,7 @@ SDL_Surface *scr = bc->thescreen;
 	color = maprgb(bc, r, g, b);
 	if(a==255)
 	{
+		color |= 0xff000000;
 		for(i=0;i<bc->xsize;++i)
 			colordot_32(scr, i, 0, color, 255);
 		w=bc->xsize * 4;
@@ -80,17 +81,12 @@ int step = bc->thescreen->pitch >> 2;
 	}
 }
 
-void update(bc *bc)
-{
-	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
-}
-
 void taint(bc *bc)
 {
 	bc->tainted = 1;
 }
 
-void updatef(bc *bc)
+void update(bc *bc)
 {
 int new;
 
@@ -98,9 +94,9 @@ int new;
 	new=SDL_GetTicks();
 	if(new-bc->lastupdate<20) return;
 	bc->lastupdate=new;
-	bc->tainted=0;
 #warning must lock
-	update(bc);
+	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
+	bc->tainted=0;
 }
 
 void lock(bc *bc)

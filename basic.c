@@ -1519,8 +1519,6 @@ close(fd);
 		 BF_STOPHIT | BF_QUIT)))
 	{
 		char *p;
-		updatef(bc);
-		scaninput(bc);
 		bc->online = bc->nextline;
 		if(bc->online >= bc->numlines)
 		{
@@ -1531,6 +1529,8 @@ close(fd);
 		++bc->nextline;
 		execute(bc, &p);
 		++bc->execute_count;
+		if(!(bc->execute_count & 1023))
+			scaninput(bc);
 //if(bc->execute_count%1000000 == 0) printf("%d\n", bc->execute_count);
 
 	}
