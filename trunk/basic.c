@@ -1137,7 +1137,10 @@ void docos(bc *bc, double *p)
 
 void dornd(bc *bc, double *p)
 {
-	*p = rand()%((int)*p);
+int r;
+	r=*p;
+	if(r)
+		*p = rand()%r;
 }
 
 void dopow(bc *bc, double *p)

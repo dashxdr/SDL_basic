@@ -1,20 +1,16 @@
-2 goto 50
-3 clear
-5 pen 5
-10 k=sin(a)*127+127;
-12 a=a+.001
-14 color rnd(256),0,0
-20 circle rnd(1024),rnd(768),rnd(50)
-30 goto 10
-50 clear
-60 w=rnd(50)
-70 s=3
-80 x=rnd(1024)
-90 y=rnd(768)
-95 color 0,0,0
-100 box x,y,w,w
-105 color rnd(128)+100,0,0
+10 t=0
+20 home
+30 clear
+40 w=rnd(50)
+50 s=3
+60 x=rnd(1024)
+70 y=rnd(768)
+80 color 0,0,0
+90 box x,y,w,w
+100 color rnd(128)+100,0,0
 110 box x-s,y-s,w,w
-115 for j=1 to 500
-116 next
-120 goto 60
+120 t=t+1
+130 if t<5 then 40
+140 t=0
+150 sleep .001
+160 goto 40
