@@ -2,8 +2,8 @@
 20 clear
 30 w=rnd(50)
 40 s=3
-50 x=rnd(1024)
-60 y=rnd(768)
+50 x=rnd(xsize)
+60 y=rnd(ysize)
 70 color 0,0,0
 80 disc x,y,w
 90 color rnd(128)+100,0,0
