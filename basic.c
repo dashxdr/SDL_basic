@@ -9,7 +9,7 @@
 
 #include "misc.h"
 
-void runinit(bc *bc);
+int convertline(bc *bc, char *put, char *take);
 
 struct cmd {
 	char *name;
@@ -355,11 +355,18 @@ struct cmd *cmd;
 			deleteline(bc, atoi(line));
 	} else if(*line)
 	{
-		unknown_command(bc, line);
+		char tokenized[1024], *p=tokenized;
+		convertline(bc, tokenized, line);
+
+		execute(bc,&p);
+		if(bc->flags & BF_RUNERROR)
+		{
+			bc->flags ^= BF_RUNERROR;
+			tprintf(bc, "%s\n", bc->lineerror);
+		}
+//		unknown_command(bc, line);
 	} else
 		bc->flags |= BF_NOPROMPT;
-
-	return;
 }
 
 /***********************************************************************
@@ -616,10 +623,6 @@ int res;
 		}
 	}
 
-}
-
-void doelse(bc *bc, char **take)
-{
 }
 
 void dodim(bc *bc, char **take)
@@ -1224,7 +1227,7 @@ struct stmt statements[]={
 {"step", 0, 0, &token_step},
 {"next", donext, TOKEN_STATEMENT},
 {"if", doif, TOKEN_STATEMENT, &token_if},
-{"else", doelse, 0, &token_else},
+{"else", 0, 0, &token_else},
 {"gosub", dogosub, TOKEN_STATEMENT, 0},
 {"return", doreturn, TOKEN_STATEMENT, 0},
 {"end", doend, TOKEN_STATEMENT, 0},
@@ -1405,6 +1408,7 @@ unsigned char f;
 
 void runinit(bc *bc)
 {
+struct stmt *st;
 	bc->numlines=0;
 	bc->flags = 0;
 	bc->dataline = 0;
@@ -1421,15 +1425,6 @@ void runinit(bc *bc)
 	bc->galpha=255;
 	bc->pen = 1.0;
 	free_variables(bc);
-}
-
-void dorun(bc *bc, char *line)
-{
-char *put;
-char *take;
-int linenum;
-int err;
-struct stmt *st;
 
 	memset(bc->tokenmap, 0, sizeof(bc->tokenmap));
 	st=statements;
@@ -1442,6 +1437,15 @@ struct stmt *st;
 		++st;
 		++bc->numstatements;
 	}
+
+}
+
+void dorun(bc *bc, char *line)
+{
+char *put;
+char *take;
+int linenum;
+int err;
 
 // ************************ SET UP FOR RUN
 	runinit(bc);

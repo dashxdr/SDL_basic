@@ -342,7 +342,7 @@ int startx, starty;
 			SDL_Delay(10);
 			scaninput(bc);
 			code=takedown(bc);
-if(code==0x1b) exit(0);
+if(code=='q' + MYALTED) exit(0); // alt-q
 		} else
 		{
 			code=*fake++;
