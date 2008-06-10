@@ -680,13 +680,16 @@ int newline=1;
 		newline=1;
 		if(**take == '@')
 		{
+			int v;
 			++*take;
 			ei->flags_in = EXPR_NUMERIC;
 			res = expr(bc, take, ei);
 			if(res) break;
 			if(comma(bc, take))
 				break;
-
+			v=ei->value;
+			v&=1023;
+			tprintf(bc, "\033%dx\033%dy", v&63, v>>6);
 		}
 
 		ei->flags_in = 0;
@@ -1327,7 +1330,7 @@ void dornd(bc *bc, double *p)
 int r;
 	r=*p;
 	if(r)
-		*p = rand()%r;
+		*p = 1 + rand()%r;
 	else
 		*p = (rand()&0x7fffffff)/(double)0x7fffffff;
 }
