@@ -1256,6 +1256,8 @@ int r;
 	r=*p;
 	if(r)
 		*p = rand()%r;
+	else
+		*p = (rand()&0x7fffffff)/(double)0x7fffffff;
 }
 
 void dopow(bc *bc, double *p)
