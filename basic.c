@@ -1123,6 +1123,14 @@ void dodata(bc *bc, char **take)
 
 void doint(bc *bc, double *p)
 {
+	if(*p<0.0)
+		*p=(int)*p - 1;
+	else
+		*p=(int)*p;
+}
+
+void dofix(bc *bc, double *p)
+{
 	*p=(int)*p;
 }
 
@@ -1462,6 +1470,7 @@ struct stmt statements[]={
 {"stop", dostop, TOKEN_STATEMENT, 0},
 {"data", dodata, TOKEN_STATEMENT, &token_data},
 {"int", doint, TOKEN_FUNCTION, 0},  // 20
+{"fix", dofix, TOKEN_FUNCTION, 0},  // 20
 {"sgn", dosgn, TOKEN_FUNCTION, 0},
 {"sin", dosin, TOKEN_FUNCTION, 0},
 {"cos", docos, TOKEN_FUNCTION, 0},
