@@ -1704,8 +1704,9 @@ void dostrstring(bc *bc, struct gen_func_ret *gfr)
 {
 	dochrstrstring(bc, gfr, TYPE_STR);
 }
-
-void doval(bc *bc, struct gen_func_ret *gfr)
+#define TYPE_VAL 0
+#define TYPE_ASC 1
+void dovalasc(bc *bc, struct gen_func_ret *gfr, int type)
 {
 int res;
 einfo einfo, *ei=&einfo;
@@ -1721,14 +1722,27 @@ int len;
 	gfr->value = 0.0;
 	len=s1->length;
 
-	if(len>sizeof(scopy)-1)
-		len=sizeof(scopy)-1;
-
-	strncpy(scopy, s1->string, len);
-	scopy[len]=0;
-	sscanf(scopy, "%lf", &gfr->value);
+	if(type==TYPE_VAL)
+	{
+		if(len>sizeof(scopy)-1)
+			len=sizeof(scopy)-1;
+		strncpy(scopy, s1->string, len);
+		scopy[len]=0;
+		sscanf(scopy, "%lf", &gfr->value);
+	} else if(len>0)
+		gfr->value = s1->string[0];
 err:
 	free_bstring(s1);
+}
+
+void doval(bc *bc, struct gen_func_ret *gfr)
+{
+	dovalasc(bc, gfr, TYPE_VAL);
+}
+
+void doasc(bc *bc, struct gen_func_ret *gfr)
+{
+	dovalasc(bc, gfr, TYPE_ASC);
 }
 
 
@@ -1864,6 +1878,7 @@ struct stmt statements[]={
 {"chr$", dochrstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"str$", dostrstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"val", doval, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"asc", doasc, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
