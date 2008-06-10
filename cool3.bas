@@ -1,5 +1,5 @@
 10 home
-20 clear
+20 cls
 30 pen 5
 40 k=sin(a)*127+127;
 50 a=a+.001
