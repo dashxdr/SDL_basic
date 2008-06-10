@@ -29,6 +29,7 @@ oper_lt,
 oper_le,
 oper_gt,
 oper_ge,
+oper_power,
 
 };
 
@@ -42,7 +43,7 @@ oper_ge,
 #define PRI_0f    0x0d // <<, >>
 #define PRI_10    0x10 // +, -
 #define PRI_18    0x18 // *, /
-#define PRI_20    0x20
+#define PRI_20    0x20 // ~  (exponent)
 #define PRI_28    0x28
 #define PRI_30    0x30
 
@@ -339,6 +340,9 @@ double t;
 				case oper_rshift: /* >> */
 					right->value=(int)left->value >> (int)right->value;
 					break;
+				case oper_power: // ~ as in X~2 = x squared
+					right->value = pow(left->value, right->value);
+					break;
 				case oper_end: return 1;
 		} else if(right->type == OT_BSTRING)
 			switch(left->operation)
@@ -454,6 +458,7 @@ int backup=0;
 		case '|': ec->tos.priority=PRI_0d;ec->tos.operation=oper_or;break;
 		case '^': ec->tos.priority=PRI_0d;ec->tos.operation=oper_xor;break;
 		case '&': ec->tos.priority=PRI_0e;ec->tos.operation=oper_and;break;
+		case '~': ec->tos.priority=PRI_20;ec->tos.operation=oper_power;break;
 		default:
 			backup=1;break;
 	}
