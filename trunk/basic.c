@@ -1951,22 +1951,16 @@ unsigned char f;
 		printf("\n");
 	}
 
-//	while(!(bc->flags & BF_RUNERROR))
-//	{
-		if((f=*(*(unsigned char **)p)++)>=128)
-		{
-			struct stmt *s;
-			s = statements + 255-f;
-			if(s->token_flags & TOKEN_STATEMENT)
-				s->func(bc, p);
-		} else
-		{
-			if(*--*p) dolet(bc, p);
-		}
-//		if(**p != ':')
-//			break;
-//		++*p;
-//	}
+	if((f=*(*(unsigned char **)p)++)>=128)
+	{
+		struct stmt *s;
+		s = statements + 255-f;
+		if(s->token_flags & TOKEN_STATEMENT)
+			s->func(bc, p);
+	} else
+	{
+		if(*--*p) dolet(bc, p);
+	}
 }
 
 void runinit(bc *bc)
