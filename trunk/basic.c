@@ -678,8 +678,20 @@ int newline=1;
 	while(**take && **take != '\n' && *(unsigned char *)*take!=token_else)
 	{
 		newline=1;
+		if(**take == '@')
+		{
+			++*take;
+			ei->flags_in = EXPR_NUMERIC;
+			res = expr(bc, take, ei);
+			if(res) break;
+			if(comma(bc, take))
+				break;
+
+		}
+
 		ei->flags_in = 0;
 		res = expr(bc, take, ei);
+		if(res) break;
 		if(ei->type == OT_DOUBLE)
 		{
 			if((long)ei->value == ei->value)
@@ -693,7 +705,9 @@ int newline=1;
 				tprintf(bc, "%s", bs->string);
 			free_bstring(bs);
 		}
-		if(!**take) break;
+		if(!**take || **take==':') break;
+		if(**take == '"')
+			continue;
 		if(**take != ';')
 		{
 			if(*(unsigned char *)*take!=token_else)
@@ -871,7 +885,7 @@ int i,j;
 			++*take;
 			continue;
 		}
-		if(**take)
+		if(**take && **take!=':')
 			run_error(bc, SYNTAX_ERROR);
 		break;
 	}
@@ -1445,7 +1459,12 @@ void docls(bc *bc, char **take)
 
 void doclear(bc *bc, char **take)
 {
-	run_error(bc, SYNTAX_ERROR);
+//	run_error(bc, SYNTAX_ERROR);
+}
+
+void dorandom(bc *bc, char **take)
+{
+#warning random doesn't really randomize...
 }
 
 void dofill(bc *bc, char **take)
@@ -1592,6 +1611,7 @@ struct stmt statements[]={
 {"line", doline, TOKEN_STATEMENT, 0},
 {"color", docolor, TOKEN_STATEMENT, 0},
 {"clear", doclear, TOKEN_STATEMENT, 0},
+{"random", dorandom, TOKEN_STATEMENT, 0},
 {"cls", docls, TOKEN_STATEMENT, 0},
 {"fill", dofill, TOKEN_STATEMENT, 0},
 {"home", dohome, TOKEN_STATEMENT, 0},
@@ -1770,15 +1790,21 @@ unsigned char f;
 		printf("\n");
 	}
 
-	if((f=*(*(unsigned char **)p)++)>=128)
+	while(!(bc->flags & BF_RUNERROR))
 	{
-		struct stmt *s;
-		s = statements + 255-f;
-		if(s->token_flags & TOKEN_STATEMENT)
-			s->func(bc, p);
-	} else
-	{
-		if(*--*p) dolet(bc, p);
+		if((f=*(*(unsigned char **)p)++)>=128)
+		{
+			struct stmt *s;
+			s = statements + 255-f;
+			if(s->token_flags & TOKEN_STATEMENT)
+				s->func(bc, p);
+		} else
+		{
+			if(*--*p) dolet(bc, p);
+		}
+		if(**p != ':')
+			break;
+		++*p;
 	}
 }
 
