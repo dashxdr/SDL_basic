@@ -1177,6 +1177,21 @@ void doexp(bc *bc, double *p)
 	*p = exp(*p);
 }
 
+void dotan(bc *bc, double *p)
+{
+	*p = tan(*p);
+}
+
+void doatn(bc *bc, double *p)
+{
+	*p = atan(*p);
+}
+
+void doatn2(bc *bc, double *p)
+{
+	*p = atan2(*p, p[1]);
+}
+
 void domove(bc *bc, char **take)
 {
 double list[2];
@@ -1476,8 +1491,11 @@ struct stmt statements[]={
 {"cos", docos, TOKEN_FUNCTION, 0},
 {"rnd", dornd, TOKEN_FUNCTION, 0},
 {"pow", dopow, TOKEN_FUNCTION | TOKEN_2PARS, 0},
-{"log", dornd, TOKEN_FUNCTION, 0},
-{"exp", dornd, TOKEN_FUNCTION, 0},
+{"log", dolog, TOKEN_FUNCTION, 0},
+{"exp", doexp, TOKEN_FUNCTION, 0},
+{"tan", dotan, TOKEN_FUNCTION, 0},
+{"atn2", doatn2, TOKEN_FUNCTION | TOKEN_2PARS, 0},
+{"atn", doatn, TOKEN_FUNCTION, 0},
 {"abs", doabs, TOKEN_FUNCTION, 0},
 {"move", domove, TOKEN_STATEMENT, 0},
 {"pen", dopen, TOKEN_STATEMENT, 0},
