@@ -675,7 +675,8 @@ einfo einfo, *ei=&einfo;
 int res;
 int newline=1;
 
-	while(**take && **take != '\n' && *(unsigned char *)*take!=token_else)
+	while(**take && **take != '\n' && **take!=':' &&
+		*(unsigned char *)*take!=token_else)
 	{
 		newline=1;
 		if(**take == '@')
