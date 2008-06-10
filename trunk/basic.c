@@ -1136,6 +1136,11 @@ void dosin(bc *bc, double *p)
 	*p = sin(*p);
 }
 
+void doabs(bc *bc, double *p)
+{
+	if(*p<0.0) *p = -*p;
+}
+
 void docos(bc *bc, double *p)
 {
 	*p = cos(*p);
@@ -1464,6 +1469,7 @@ struct stmt statements[]={
 {"pow", dopow, TOKEN_FUNCTION | TOKEN_2PARS, 0},
 {"log", dornd, TOKEN_FUNCTION, 0},
 {"exp", dornd, TOKEN_FUNCTION, 0},
+{"abs", doabs, TOKEN_FUNCTION, 0},
 {"move", domove, TOKEN_STATEMENT, 0},
 {"pen", dopen, TOKEN_STATEMENT, 0},
 {"line", doline, TOKEN_STATEMENT, 0},
