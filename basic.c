@@ -1550,8 +1550,55 @@ int res;
 	}
 	else
 		gfr->value = 0.0;
-
 }
+
+void doleftstring(bc *bc, struct gen_func_ret *gfr)
+{
+einfo einfo, *ei=&einfo;
+int res;
+bstring *s1=0, *s2;
+int len;
+
+	gfr->type = OT_DOUBLE;
+
+	ei->flags_in = EXPR_STRING;
+	res = expr(bc, gfr->take, ei);
+	if(ei->type == OT_BSTRING)
+		s1 = ei->string;
+	if(res)
+	{
+		free_bstring(s1);
+		return;
+	}
+
+	if(comma(bc, gfr->take))
+	{
+		free_bstring(s1);
+		return;
+	}
+
+	ei->flags_in = EXPR_NUMERIC;
+	res = expr(bc, gfr->take, ei);
+	if(res)
+	{
+		free_bstring(s1);
+		return;
+	}
+
+	len = ei->value;
+	if(len > s1->length)
+		len = s1->length;
+	if(len<0)
+		len = 0;
+	s2 = make_bstring(s1->string, len);
+#warning check if string was allocated
+
+	free_bstring(s1);
+	gfr->string = s2;
+	gfr->type = OT_BSTRING;
+}
+
+
 
 void domousex(bc *bc, struct gen_func_ret *gfr)
 {
@@ -1679,6 +1726,7 @@ struct stmt statements[]={
 {"or", 0, 0, &token_or},
 {"mod", 0, 0, &token_mod},
 {"on", doon, TOKEN_STATEMENT, 0},
+{"left$", doleftstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
