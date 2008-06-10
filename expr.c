@@ -564,7 +564,10 @@ int type=0;
 	n=0;
 	put[n] = tolower(*(*take));
 	if(!isalpha(put[0]))
+	{
+		put[0]=0;
 		return RANK_INVALID;
+	}
 	++*take;
 	++n;
 	put[n] = tolower(*(*take));

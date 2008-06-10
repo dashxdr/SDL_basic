@@ -1047,7 +1047,7 @@ struct forinfo *fi;
 void donext(bc *bc, char **take)
 {
 struct forinfo *fi;
-char name[16];
+char name[16]={0};
 int type;
 struct variable *v;
 int pos;
@@ -1058,7 +1058,7 @@ int pos;
 		return;
 	}
 	type=gather_variable_name(bc, name, take);
-	if(name[0] && type!=RANK_VARIABLE)
+	if(type!=RANK_VARIABLE && type!=RANK_INVALID && name[0])
 	{
 		run_error(bc, INVALID_VARIABLE);
 		return;
