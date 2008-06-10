@@ -553,6 +553,7 @@ struct cmd *cmd;
 #define WRONG_NUMBER          "Wrong number of parameters"
 #define SQRT_ERROR            "Can't take square root of negative number"
 #define ON_RANGE_ERROR        "'ON' index out of range"
+#define BADVALUE              "Illegal value"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -1709,6 +1710,44 @@ void dostrstring(bc *bc, struct gen_func_ret *gfr)
 {
 	dochrstrstring(bc, gfr, TYPE_STR);
 }
+
+void dostringstring(bc *bc, struct gen_func_ret *gfr)
+{
+int res;
+einfo einfo, *ei=&einfo;
+int len;
+
+	gfr->type = OT_DOUBLE;
+	gfr->value = 0.0;
+
+	ei->flags_in = EXPR_NUMERIC;
+	res = expr(bc, gfr->take, ei);
+	if(res)
+		return;
+	len=ei->value;
+	if(len<0)
+	{
+		error(bc, BADVALUE);
+		return;
+	}
+	if(comma(bc, gfr->take))
+		return;
+	ei->flags_in = EXPR_STRING;
+	res = expr(bc, gfr->take, ei);
+	if(res)
+		return;
+	if(ei->string->length<1)
+		error(bc, BADVALUE);
+	else
+	{
+		gfr->string = make_raw_bstring(len);
+		memset(gfr->string->string, ei->string->string[0], len);
+		gfr->type = OT_BSTRING;
+	}
+	free_bstring(ei->string);
+}
+
+
 #define TYPE_VAL 0
 #define TYPE_ASC 1
 void dovalasc(bc *bc, struct gen_func_ret *gfr, int type)
@@ -1882,6 +1921,7 @@ struct stmt statements[]={
 {"right$", dorightstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"chr$", dochrstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"str$", dostrstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"string$", dostringstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"val", doval, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"asc", doasc, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {0,0}};
