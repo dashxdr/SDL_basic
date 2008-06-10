@@ -726,10 +726,53 @@ void reset_waitbase(bc *bc)
 	bc->waitbase = SDL_GetTicks();
 }
 
+int gather_string(char *put, int putlen, char **take)
+{
+int in=0;
+char ch;
+int err=0;
+	for(;;)
+	{
+		ch=*(*take)++;
+		if(ch=='"')
+			break;
+		if(ch=='\\')
+			ch=*(*take)++;
+		if(!ch || ch=='\n')
+		{
+			--*take;
+			err = -1;
+			break;
+		}
+		if(in<putlen-1)
+			put[in++] = ch;
+	}
+	put[in]=0;
+	return err;
+}
+
 void doinput(bc *bc, char **take)
 {
 einfo einfo, *ei=&einfo;
 int res;
+
+	if(**take == '"')
+	{
+		char tmp[1024];
+		int res;
+		++*take;
+		res=gather_string(tmp, sizeof(tmp), take);
+		if(res<0)
+		{
+			run_error(bc, NON_TERMINATED_STRING);
+			return;
+		}
+		tprintf(bc, "%s", tmp);
+		if(**take == ';')
+			++*take;
+	}
+
+
 	tprintf(bc, "? ");
 	typeline(bc, "", 1);
 	reset_waitbase(bc);
