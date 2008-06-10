@@ -82,7 +82,7 @@ char *p=bc->program;
 	return p;
 }
 
-char *findnextline(bc *bc, int linenumber)
+char *findtextline(bc *bc, int linenumber)
 {
 char *p=bc->program;
 
@@ -133,7 +133,7 @@ int len;
 		return;
 	}
 	deleteline(bc, lnum);
-	p=findnextline(bc, lnum);
+	p=findtextline(bc, lnum);
 	len=strlen(line)+1;
 	memmove(p+len, p, strlen(p)+1);
 	memcpy(p, line, len-1);
@@ -819,7 +819,10 @@ int res;
 				if(newline<0)
 					run_error(bc, NO_SUCH_LINE);
 				else
+				{
 					bc->nextline = newline;
+					bc->nextbyte = 0;
+				}
 			} else
 				execute(bc, take);
 
@@ -1025,12 +1028,65 @@ struct forinfo *fi;
 	strcpy(fi->name, name);
 	fi->step = step_val;
 	fi->end = end_val;
-	fi->nextline = bc->nextline;
+	if(**take == ':')
+	{
+		fi->nextline = bc->online;
+		fi->nextbyte = *take + 1 - bc->lps[bc->online].line;
+	} else
+	{
+		fi->nextline = bc->online+1;
+		fi->nextbyte = 0;
+	}
 	set_variable(bc, name, start_val);
 }
 
-void doto(bc *bc, char **take)
+void donext(bc *bc, char **take)
 {
+struct forinfo *fi;
+char name[16];
+int type;
+struct variable *v;
+int pos;
+
+	if(!bc->numfors)
+	{
+		run_error(bc, NEXT_WITHOUT_FOR);
+		return;
+	}
+	type=gather_variable_name(bc, name, take);
+	if(name[0] && type!=RANK_VARIABLE)
+	{
+		run_error(bc, INVALID_VARIABLE);
+		return;
+	}
+	if(name[0])
+	{
+		fi=findfor(bc, name);
+		if(!fi)
+		{
+			run_error(bc, NEXT_WITHOUT_FOR);
+			return;
+		}
+	}
+	else
+		fi=bc->fors+bc->numfors-1;
+	v=add_variable(bc, fi->name);
+#warning check for zero return
+
+	pos=fi->step>=0.0;
+	if((pos && v->value >= fi->end) || (!pos && v->value <= fi->end))
+	{
+		--bc->numfors;
+		memcpy(fi, bc->fors + bc->numfors, sizeof(*fi));
+	}
+	else
+	{
+#warning for i=1 to 10:next i  what value does i end up with? 10 or 11?
+		set_variable(bc, fi->name, v->value + fi->step);
+		bc->nextline = fi->nextline;
+		bc->nextbyte = fi->nextbyte;
+	}
+
 }
 
 void find_data_line(bc *bc)
@@ -1111,73 +1167,45 @@ int res;
 
 }
 
-void donext(bc *bc, char **take)
+int getdecimal(char **take)
 {
-struct forinfo *fi;
-char name[16];
-int type;
-struct variable *v;
-int pos;
-
-	if(!bc->numfors)
-	{
-		run_error(bc, NEXT_WITHOUT_FOR);
-		return;
-	}
-	type=gather_variable_name(bc, name, take);
-	if(name[0] && type!=RANK_VARIABLE)
-	{
-		run_error(bc, INVALID_VARIABLE);
-		return;
-	}
-	if(name[0])
-	{
-		fi=findfor(bc, name);
-		if(!fi)
-		{
-			run_error(bc, NEXT_WITHOUT_FOR);
-			return;
-		}
-	}
-	else
-		fi=bc->fors+bc->numfors-1;
-	v=add_variable(bc, fi->name);
-#warning check for zero return
-
-	pos=fi->step>=0.0;
-	if((pos && v->value >= fi->end) || (!pos && v->value <= fi->end))
-	{
-		--bc->numfors;
-		memcpy(fi, bc->fors + bc->numfors, sizeof(*fi));
-	}
-	else
-	{
-		set_variable(bc, fi->name, v->value + fi->step);
-		bc->nextline = fi->nextline;
-	}
-
-
-
+int v=0;
+	while(isdigit(**take))
+		v=v*10 + *(*take)++ - '0';
+	return v;
 }
 
 void dogoto(bc *bc, char **take)
 {
 int newline;
-	newline = findrunline(bc, atoi(*take));
+	newline = findrunline(bc, getdecimal(take));
 	if(newline<0)
 		run_error(bc, NO_SUCH_LINE);
 	else
+	{
 		bc->nextline = newline;
+		bc->nextbyte = 0;
+	}
 }
 
-void gosub_push(bc *bc)
+void gosub_push(bc *bc, char **take)
 {
 	if(bc->gosubsp == GOSUBMAX)
 	{
 		run_error(bc, STACK_OVERFLOW);
 		return;
 	}
-	bc->gosubstack[bc->gosubsp++] = bc->nextline;
+	if(**take == ':')
+	{
+		++*take;
+		bc->gosubstack[bc->gosubsp].nextline = bc->online;
+		bc->gosubstack[bc->gosubsp++].nextbyte =
+			*take - bc->lps[bc->online].line;
+	} else
+	{
+		bc->gosubstack[bc->gosubsp].nextline = bc->online+1;
+		bc->gosubstack[bc->gosubsp++].nextbyte = 0;
+	}
 }
 
 void doon(bc *bc, char **take)
@@ -1218,15 +1246,15 @@ int type;
 		run_error(bc, ON_RANGE_ERROR);
 		return;
 	}
-	if(type == token_gosub)
-		gosub_push(bc);
 	dogoto(bc, take);
+	if(type == token_gosub)
+		gosub_push(bc, take);
 }
 
 void dogosub(bc *bc, char **take)
 {
-	gosub_push(bc);
 	dogoto(bc, take);
+	gosub_push(bc, take);
 }
 
 void doreturn(bc *bc, char **take)
@@ -1236,7 +1264,8 @@ void doreturn(bc *bc, char **take)
 		run_error(bc, BAD_RETURN);
 		return;
 	}
-	bc->nextline = bc->gosubstack[--bc->gosubsp];
+	bc->nextline = bc->gosubstack[--bc->gosubsp].nextline;
+	bc->nextbyte = bc->gosubstack[bc->gosubsp].nextbyte;
 }
 
 void doend(bc *bc, char **take)
@@ -1711,7 +1740,7 @@ struct stmt statements[]={
 {"dim", dodim, TOKEN_STATEMENT, 0},
 {"then", 0, 0, &token_then},
 {"for", dofor, TOKEN_STATEMENT},
-{"to", doto, 0, &token_to},
+{"to", 0, 0, &token_to},
 {"step", 0, 0, &token_step},
 {"next", donext, TOKEN_STATEMENT},
 {"if", doif, TOKEN_STATEMENT, &token_if},
@@ -1922,8 +1951,8 @@ unsigned char f;
 		printf("\n");
 	}
 
-	while(!(bc->flags & BF_RUNERROR))
-	{
+//	while(!(bc->flags & BF_RUNERROR))
+//	{
 		if((f=*(*(unsigned char **)p)++)>=128)
 		{
 			struct stmt *s;
@@ -1934,10 +1963,10 @@ unsigned char f;
 		{
 			if(*--*p) dolet(bc, p);
 		}
-		if(**p != ':')
-			break;
-		++*p;
-	}
+//		if(**p != ':')
+//			break;
+//		++*p;
+//	}
 }
 
 void runinit(bc *bc)
@@ -1949,7 +1978,9 @@ struct stmt *st;
 	bc->datatake = 0;
 	bc->gosubsp = 0;
 	bc->numfors = 0;
+	bc->online = 0;
 	bc->nextline = 0;
+	bc->nextbyte = 0;
 	bc->execute_count = 0;
 	bc->gx=0;
 	bc->gy=0;
@@ -2018,16 +2049,30 @@ close(fd);
 	while(!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
 		 BF_STOPHIT | BF_QUIT)))
 	{
-		char *p;
-		bc->online = bc->nextline;
-		if(bc->online >= bc->numlines)
+		if(bc->nextline<0)
 		{
-			bc->flags |= BF_ENDHIT; // fake an end
-			continue;
+			if(*take == ':')
+				++take;
+			else
+			{
+				bc->nextline = bc->online+1;
+				bc->nextbyte = 0;
+			}
 		}
-		p=bc->lps[bc->online].line;
-		++bc->nextline;
-		execute(bc, &p);
+		if(bc->nextline>=0)
+		{
+			bc->online = bc->nextline;
+			if(bc->online >= bc->numlines)
+			{
+				bc->flags |= BF_ENDHIT; // fake an end
+				continue;
+			}
+			take=bc->lps[bc->online].line + bc->nextbyte;
+			bc->nextline = -1;
+			bc->nextbyte = 0;
+		}
+		execute(bc, &take);
+
 		++bc->execute_count;
 		if(!(bc->execute_count & 1023))
 			scaninput(bc);
