@@ -45,6 +45,7 @@ struct forinfo {
 	double step;
 	double end;
 	int nextline;
+	int nextbyte;
 };
 #define MAX_FORS 100
 
@@ -62,6 +63,10 @@ struct varname {
 	struct variable *var;
 };
 
+struct gosubentry {
+	int nextline;
+	int nextbyte;
+};
 
 
 #define MAX_SHAPE_POINTS 1024
@@ -100,7 +105,7 @@ typedef struct basic_context {
 	char runnable[1000000];
 	int numlines;
 	struct linepointer lps[MAX_PROGRAM_LINES]; // 100K lines
-	int online, nextline;
+	int online, nextline, nextbyte;
 	int execute_count;
 	int numvariables;
 	struct variable vars[MAX_VARIABLES];
@@ -112,7 +117,7 @@ typedef struct basic_context {
 	int dataline;
 	char *datatake;
 	int gosubsp;
-	int gosubstack[GOSUBMAX];
+	struct gosubentry gosubstack[GOSUBMAX];
 	int numstatements;
 	Uint32 temp;
 // graphics rendering state
