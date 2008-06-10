@@ -701,7 +701,7 @@ int newline=1;
 			if((long)ei->value == ei->value)
 				tprintf(bc, " %ld", (long)ei->value);
 			else
-				tprintf(bc, " %.16f", ei->value);
+				tprintf(bc, " %.2f", ei->value);
 		} else if(ei->type == OT_BSTRING)
 		{
 			bstring *bs = ei->string;
@@ -1528,10 +1528,15 @@ int until, diff;
 	}
 }
 
+void dohome(bc *bc)
+{
+	tprintf(bc, "\0330x\0330y");
+}
 
 void docls(bc *bc, char **take)
 {
 	cleartext(bc);
+	dohome(bc);
 	fillscreen(bc, 0, 0, 0, 255);
 }
 
@@ -1549,11 +1554,6 @@ void dofill(bc *bc, char **take)
 {
 	cleartext(bc);
 	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue, bc->galpha);
-}
-
-void dohome(bc *bc)
-{
-	tprintf(bc, "\0330x\0330y");
 }
 
 void dotest(bc *bc)
@@ -1691,7 +1691,12 @@ einfo einfo, *ei=&einfo;
 			t[0] = ei->value;
 			t[1]=0;
 		} else
-			snprintf(t, sizeof(t), "%lf", ei->value);
+		{
+			if(ei->value != (int)ei->value)
+				snprintf(t, sizeof(t), "%.2lf", ei->value);
+			else
+				snprintf(t, sizeof(t), "%d", (int)ei->value);
+		}
 		gfr->string = make_bstring(t, strlen(t));
 	}
 }
