@@ -214,6 +214,12 @@ void flushinput(bc *bc)
 	while(takedown(bc)>=0);
 }
 
+void fakekey(bc *bc, int key, int mod)
+{
+	markkey(bc, key, mod, 1);
+	markkey(bc, key, mod, 0);
+}
+
 void scaninput(bc *bc)
 {
 SDL_Event event;
@@ -241,6 +247,19 @@ int key,mod;
 			bc->mousey=event.button.y;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
+// button 5 down = scrolling down. Button 4 down = scrolling up
+			if(event.button.button == 5)
+			{
+				fakekey(bc, SDLK_PAGEDOWN, 0);
+				fakekey(bc, SDLK_PAGEDOWN, 0);
+				fakekey(bc, SDLK_PAGEDOWN, 0);
+			}
+			else if(event.button.button == 4)
+			{
+				fakekey(bc, SDLK_PAGEUP, 0);
+				fakekey(bc, SDLK_PAGEUP, 0);
+				fakekey(bc, SDLK_PAGEUP, 0);
+			}
 			bc->mouseb|=1<<(event.button.button-1);
 			bc->mousex=event.button.x;
 			bc->mousey=event.button.y;

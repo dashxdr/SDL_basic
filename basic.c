@@ -1469,6 +1469,7 @@ struct stmt statements[]={
 {"line", doline, TOKEN_STATEMENT, 0},
 {"color", docolor, TOKEN_STATEMENT, 0},
 {"clear", doclear, TOKEN_STATEMENT, 0},
+{"cls", doclear, TOKEN_STATEMENT, 0},
 {"fill", dofill, TOKEN_STATEMENT, 0},
 {"home", dohome, TOKEN_STATEMENT, 0},
 {"circle", docircle, TOKEN_STATEMENT, 0},
