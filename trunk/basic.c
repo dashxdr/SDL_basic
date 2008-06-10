@@ -1668,6 +1668,68 @@ void dorightstring(bc *bc, struct gen_func_ret *gfr)
 	doleftmidrightstring(bc, gfr, SRIGHT);
 }
 
+#define TYPE_CHR 0
+#define TYPE_STR 1
+void dochrstrstring(bc *bc, struct gen_func_ret *gfr, int type)
+{
+int res;
+einfo einfo, *ei=&einfo;
+	gfr->type = OT_BSTRING;
+
+	ei->flags_in = EXPR_NUMERIC;
+	res = expr(bc, gfr->take, ei);
+	if(res)
+	{
+		gfr->type = OT_DOUBLE;
+		gfr->value = 0.0;
+	} else
+	{
+		char t[128];
+		gfr->type = OT_BSTRING;
+		if(type == TYPE_CHR)
+		{
+			t[0] = ei->value;
+			t[1]=0;
+		} else
+			snprintf(t, sizeof(t), "%lf", ei->value);
+		gfr->string = make_bstring(t, strlen(t));
+	}
+}
+
+void dochrstring(bc *bc, struct gen_func_ret *gfr)
+{
+	dochrstrstring(bc, gfr, TYPE_CHR);
+}
+void dostrstring(bc *bc, struct gen_func_ret *gfr)
+{
+	dochrstrstring(bc, gfr, TYPE_STR);
+}
+
+void doval(bc *bc, struct gen_func_ret *gfr)
+{
+int res;
+einfo einfo, *ei=&einfo;
+bstring *s1=0;
+char scopy[64];
+int len;
+	ei->flags_in = EXPR_STRING;
+	res = expr(bc, gfr->take, ei);
+	if(ei->type == OT_BSTRING)
+		s1 = ei->string;
+	if(res) goto err;
+	gfr->type = OT_DOUBLE;
+	gfr->value = 0.0;
+	len=s1->length;
+
+	if(len>sizeof(scopy)-1)
+		len=sizeof(scopy)-1;
+
+	strncpy(scopy, s1->string, len);
+	scopy[len]=0;
+	sscanf(scopy, "%lf", &gfr->value);
+err:
+	free_bstring(s1);
+}
 
 
 void domousex(bc *bc, struct gen_func_ret *gfr)
@@ -1798,7 +1860,10 @@ struct stmt statements[]={
 {"on", doon, TOKEN_STATEMENT, 0},
 {"left$", doleftstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
 {"mid$", domidstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
-{"right$", dorightstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
+{"right$", dorightstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"chr$", dochrstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"str$", dostrstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"val", doval, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
