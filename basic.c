@@ -430,10 +430,23 @@ struct inout io[MAX_PROGRAM_LINES];
 int i;
 char *p;
 int lc,delta;
-
+int v1, v2;
+int n=0;
+	if(sscanf(text, "%d,%d", &v1, &v2) == 2)
+		n=2;
+	else if(sscanf(text, "%d", &v1) == 1)
+		n=1;
+	if((n>0 && (v1<1 || v1>1000)) ||
+			(n>1 && (v2<1 || v2>1000)))
+	{
+		error(bc, "Values must range from 1 to 1000");
+		return;
+	}
 	p=bc->program;
-	delta=10;
-	lc=delta;
+	if(n>0) lc = v1;
+	else lc=10;
+	if(n>1) delta = v2;
+	else delta=10;
 	for(i=0;*p && i<MAX_PROGRAM_LINES-1;++i)
 	{
 		io[i].in = atoi(p);
