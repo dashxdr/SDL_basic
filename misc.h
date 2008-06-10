@@ -226,6 +226,9 @@ extern int token_data;
 extern int token_and;
 extern int token_or;
 extern int token_mod;
+extern int token_goto;
+extern int token_gosub;
+
 
 // expr.c
 
