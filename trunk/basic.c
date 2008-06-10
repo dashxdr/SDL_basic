@@ -1376,10 +1376,15 @@ int until, diff;
 }
 
 
-void doclear(bc *bc, char **take)
+void docls(bc *bc, char **take)
 {
 	cleartext(bc);
 	fillscreen(bc, 0, 0, 0, 255);
+}
+
+void doclear(bc *bc, char **take)
+{
+	run_error(bc, SYNTAX_ERROR);
 }
 
 void dofill(bc *bc, char **take)
@@ -1524,7 +1529,7 @@ struct stmt statements[]={
 {"line", doline, TOKEN_STATEMENT, 0},
 {"color", docolor, TOKEN_STATEMENT, 0},
 {"clear", doclear, TOKEN_STATEMENT, 0},
-{"cls", doclear, TOKEN_STATEMENT, 0},
+{"cls", docls, TOKEN_STATEMENT, 0},
 {"fill", dofill, TOKEN_STATEMENT, 0},
 {"home", dohome, TOKEN_STATEMENT, 0},
 {"circle", docircle, TOKEN_STATEMENT, 0},

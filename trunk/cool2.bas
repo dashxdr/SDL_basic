@@ -1,5 +1,5 @@
 10 home
-20 clear
+20 cls
 30 w=rnd(50)
 40 s=3
 50 x=rnd(xsize)

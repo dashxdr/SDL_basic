@@ -5,7 +5,7 @@
 50 gosub 170
 60 gosub 340
 70 i=1
-80 clear
+80 cls
 90 x(i)=mousex
 100 y(i)=mousey
 110 gosub 230

@@ -3,7 +3,7 @@
 30 cy = ysize/2
 40 pen 10
 50 r=384
-60 clear
+60 cls
 70 color 255,128,64
 80 for i=1 to 100
 90 move cx,cy

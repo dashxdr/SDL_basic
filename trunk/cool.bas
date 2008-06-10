@@ -1,6 +1,6 @@
 10 t=0
 20 home
-30 clear
+30 cls
 40 w=rnd(50)
 50 s=3
 60 x=rnd(1024)
