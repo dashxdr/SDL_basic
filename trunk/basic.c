@@ -1552,12 +1552,17 @@ int res;
 		gfr->value = 0.0;
 }
 
-void doleftstring(bc *bc, struct gen_func_ret *gfr)
+#define SLEFT 0
+#define SMID 1
+#define SRIGHT 2
+
+void doleftmidrightstring(bc *bc, struct gen_func_ret *gfr, int type)
 {
 einfo einfo, *ei=&einfo;
 int res;
 bstring *s1=0, *s2;
-int len;
+int start=0, len=0;
+int v1, v2;
 
 	gfr->type = OT_DOUBLE;
 
@@ -1565,37 +1570,69 @@ int len;
 	res = expr(bc, gfr->take, ei);
 	if(ei->type == OT_BSTRING)
 		s1 = ei->string;
-	if(res)
-	{
-		free_bstring(s1);
-		return;
-	}
+	if(res) goto err;
 
-	if(comma(bc, gfr->take))
-	{
-		free_bstring(s1);
-		return;
-	}
+	if(comma(bc, gfr->take)) goto err;
 
 	ei->flags_in = EXPR_NUMERIC;
 	res = expr(bc, gfr->take, ei);
-	if(res)
+	if(res) goto err;
+
+	v1 = ei->value;
+	if(type == SMID)
 	{
-		free_bstring(s1);
-		return;
+		if(comma(bc, gfr->take)) goto err;
+		ei->flags_in = EXPR_NUMERIC;
+		res = expr(bc, gfr->take, ei);
+		if(res) goto err;
+		v2 = ei->value;
 	}
 
-	len = ei->value;
+	if(type == SMID)
+		len = v2;
+	else
+		len = v1;
+
 	if(len > s1->length)
 		len = s1->length;
 	if(len<0)
 		len = 0;
-	s2 = make_bstring(s1->string, len);
+
+	if(type==SLEFT)
+			start = 0;
+	else if(type==SRIGHT)
+		start = s1->length - len;
+	else
+	{
+		start = v1-1;
+		if(start<0)
+			start=0;
+		if(start+len > s1->length)
+			start = s1->length - len;
+	}
+
+	s2 = make_bstring(s1->string + start, len);
 #warning check if string was allocated
 
-	free_bstring(s1);
 	gfr->string = s2;
 	gfr->type = OT_BSTRING;
+err:
+	free_bstring(s1);
+}
+
+void doleftstring(bc *bc, struct gen_func_ret *gfr)
+{
+	doleftmidrightstring(bc, gfr, SLEFT);
+}
+
+void domidstring(bc *bc, struct gen_func_ret *gfr)
+{
+	doleftmidrightstring(bc, gfr, SMID);
+}
+
+void dorightstring(bc *bc, struct gen_func_ret *gfr)
+{
+	doleftmidrightstring(bc, gfr, SRIGHT);
 }
 
 
@@ -1727,6 +1764,8 @@ struct stmt statements[]={
 {"mod", 0, 0, &token_mod},
 {"on", doon, TOKEN_STATEMENT, 0},
 {"left$", doleftstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
+{"mid$", domidstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
+{"right$", dorightstring, TOKEN_FUNCTION|TOKEN_GENERAL,0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
