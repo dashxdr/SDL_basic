@@ -524,6 +524,7 @@ struct cmd *cmd;
 #define STACK_OVERFLOW        "Stack overflow"
 #define BAD_RETURN            "Return without gosub"
 #define WRONG_NUMBER          "Wrong number of parameters"
+#define SQRT_ERROR            "Can't take square root of negative number"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -1149,6 +1150,13 @@ void doabs(bc *bc, double *p)
 	if(*p<0.0) *p = -*p;
 }
 
+void dosqr(bc *bc, double *p)
+{
+	if(*p>=0.0) *p = sqrt(*p);
+	else
+		run_error(bc, SQRT_ERROR);
+}
+
 void docos(bc *bc, double *p)
 {
 	*p = cos(*p);
@@ -1497,6 +1505,7 @@ struct stmt statements[]={
 {"atn2", doatn2, TOKEN_FUNCTION | TOKEN_2PARS, 0},
 {"atn", doatn, TOKEN_FUNCTION, 0},
 {"abs", doabs, TOKEN_FUNCTION, 0},
+{"sqr", dosqr, TOKEN_FUNCTION, 0},
 {"move", domove, TOKEN_STATEMENT, 0},
 {"pen", dopen, TOKEN_STATEMENT, 0},
 {"line", doline, TOKEN_STATEMENT, 0},
