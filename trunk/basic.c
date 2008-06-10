@@ -369,6 +369,7 @@ int thisline;
 	line=temp+10;
 	take=bc->program;
 	put=bc->runnable;
+#warning -- 10 print "goto 10" would pose a problem for this...
 	while(*take)
 	{
 		p1=line;
@@ -399,6 +400,7 @@ int thisline;
 					*put++ = *p1++;
 				continue;
 			}
+more:
 			while(iswhite(*p1))
 				if(put<e)
 					*put++ = *p1++;
@@ -416,6 +418,18 @@ int thisline;
 				return;
 			}
 			put+=snprintf(put, e-put, "%d", iof->out);
+			while(iswhite(*p1))
+				if(put<e)
+					*put++ = *p1++;
+				else
+					++p1;
+			if(*p1 == ',') // on x goto #,#,#...
+			{
+				if(put<e)
+					*put++ = *p1++;
+				goto more;
+			}
+
 		}
 		if(put<e)
 			*put++ = '\n';
@@ -538,6 +552,7 @@ struct cmd *cmd;
 #define BAD_RETURN            "Return without gosub"
 #define WRONG_NUMBER          "Wrong number of parameters"
 #define SQRT_ERROR            "Can't take square root of negative number"
+#define ON_RANGE_ERROR        "'ON' index out of range"
 
 void run_error(bc *bc, char *s, ...)
 {
@@ -1091,16 +1106,14 @@ int pos;
 void dogoto(bc *bc, char **take)
 {
 int newline;
-int linewant;
-	linewant = atoi(*take);
-	newline = findrunline(bc, linewant);
+	newline = findrunline(bc, atoi(*take));
 	if(newline<0)
 		run_error(bc, NO_SUCH_LINE);
 	else
 		bc->nextline = newline;
 }
 
-void dogosub(bc *bc, char **take)
+void gosub_push(bc *bc)
 {
 	if(bc->gosubsp == GOSUBMAX)
 	{
@@ -1108,6 +1121,54 @@ void dogosub(bc *bc, char **take)
 		return;
 	}
 	bc->gosubstack[bc->gosubsp++] = bc->nextline;
+}
+
+void doon(bc *bc, char **take)
+{
+einfo einfo, *ei=&einfo;
+int res=0;
+int k;
+int type;
+
+	ei->flags_in = EXPR_NUMERIC;
+	res = expr(bc, take, ei);
+	if(res) return;
+	type=*(unsigned char *)*take;
+	if(type != token_goto && type != token_gosub)
+	{
+		run_error(bc, SYNTAX_ERROR);
+		return;
+	}
+	++*take;
+	k=ei->value;
+	if(k<1)
+	{
+		run_error(bc, ON_RANGE_ERROR);
+		return;
+	}
+	while(--k > 0)
+	{
+		while(isdigit(**take)) ++*take;
+		if(**take!=',')
+		{
+			run_error(bc, ON_RANGE_ERROR);
+			return;
+		}
+		++*take;
+	}
+	if(!isdigit(**take))
+	{
+		run_error(bc, ON_RANGE_ERROR);
+		return;
+	}
+	if(type == token_gosub)
+		gosub_push(bc);
+	dogoto(bc, take);
+}
+
+void dogosub(bc *bc, char **take)
+{
+	gosub_push(bc);
 	dogoto(bc, take);
 }
 
@@ -1475,6 +1536,8 @@ int token_data;
 int token_and;
 int token_or;
 int token_mod;
+int token_goto;
+int token_gosub;
 
 struct stmt {
 	char *name;
@@ -1495,7 +1558,7 @@ struct stmt statements[]={
 {"let", dolet, TOKEN_STATEMENT, 0},
 {"input", doinput, TOKEN_STATEMENT, 0},
 {"print", doprint, TOKEN_STATEMENT, 0},
-{"goto", dogoto, TOKEN_STATEMENT, 0},
+{"goto", dogoto, TOKEN_STATEMENT, &token_goto},
 {"read", doread, TOKEN_STATEMENT, 0},
 {"dim", dodim, TOKEN_STATEMENT, 0},
 {"then", 0, 0, &token_then},
@@ -1505,7 +1568,7 @@ struct stmt statements[]={
 {"next", donext, TOKEN_STATEMENT},
 {"if", doif, TOKEN_STATEMENT, &token_if},
 {"else", 0, 0, &token_else},
-{"gosub", dogosub, TOKEN_STATEMENT, 0},
+{"gosub", dogosub, TOKEN_STATEMENT, &token_gosub},
 {"return", doreturn, TOKEN_STATEMENT, 0},
 {"end", doend, TOKEN_STATEMENT, 0},
 {"stop", dostop, TOKEN_STATEMENT, 0},
@@ -1550,7 +1613,7 @@ struct stmt statements[]={
 {"and", 0, 0, &token_and},
 {"or", 0, 0, &token_or},
 {"mod", 0, 0, &token_mod},
-
+{"on", doon, TOKEN_STATEMENT, 0},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)
