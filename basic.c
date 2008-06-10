@@ -1958,6 +1958,8 @@ struct stmt *st;
 	bc->gblue=255;
 	bc->galpha=255;
 	bc->pen = 1.0;
+	bc->shape_numpoints = 0;
+	bc->shape_numcontours = 0;
 	free_variables(bc);
 
 	memset(bc->tokenmap, 0, sizeof(bc->tokenmap));
