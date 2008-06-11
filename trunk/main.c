@@ -36,9 +36,9 @@ int v1,v2;
 					MINXSIZE, MINYSIZE, MAXXSIZE, MAXYSIZE);
 				exit(0);
 			}
-			if(v1&15 || v2&15)
+			if(v1&7 || v2&7)
 			{
-				fprintf(stderr, "Dimensions must be a multiple of 16\n");
+				fprintf(stderr, "Dimensions must be a multiple of 8\n");
 				exit(0);
 			}
 			xsize = v1;
