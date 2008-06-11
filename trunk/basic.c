@@ -722,9 +722,9 @@ int newline=1;
 			if(ei->type == OT_DOUBLE)
 			{
 				if((long)ei->value == ei->value)
-					tprintf(bc, " %ld", (long)ei->value);
+					tprintf(bc, " %ld ", (long)ei->value);
 				else
-					tprintf(bc, " %.2f", ei->value);
+					tprintf(bc, " %.2f ", ei->value);
 			} else if(ei->type == OT_BSTRING)
 			{
 				bstring *bs = ei->string;
@@ -737,14 +737,33 @@ int newline=1;
 		if(!**take || **take==':') break;
 		if(**take == '"')
 			continue;
-		if(**take != ';')
+		if(**take == ',')
 		{
-			if(*(unsigned char *)*take!=token_else)
-				run_error(bc, SYNTAX_ERROR);
-			break;
+			int t;
+			++*take;
+			t=(bc->txpos&~15)+16;
+			if(t>=bc->txsize)
+				tprintf(bc, "\n");
+			else
+			{
+				char spaces[32];
+				t-=bc->txpos;
+				memset(spaces, ' ', t);
+				spaces[t] = 0;
+				tprintf(bc, "%s", spaces);
+			}
+			newline = 0;
+			continue;
 		}
-		newline=0;
-		++*take;
+		if(**take == ';')
+		{
+			++*take;
+			newline=0;
+			continue;
+		}
+		if(*(unsigned char *)*take!=token_else)
+			run_error(bc, SYNTAX_ERROR);
+		break;
 	}
 	if(newline)
 		tprintf(bc, "\n");
