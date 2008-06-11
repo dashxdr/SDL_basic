@@ -692,6 +692,34 @@ int newline=1;
 			v=ei->value;
 			v&=1023;
 			tprintf(bc, "\033%dx\033%dy", v&63, v>>6);
+			continue;
+		}
+		if(*(unsigned char *)*take == token_tab)
+		{
+			int t;
+			++*take;
+			if(**take != '(')
+			{
+				error(bc, SYNTAX_ERROR);
+				break;
+			}
+			++*take;
+			ei->flags_in = EXPR_NUMERIC;
+			res = expr(bc, take, ei);
+			if(res) break;
+			if(**take != ')')
+			{
+				error(bc, SYNTAX_ERROR);
+				break;
+			}
+			++*take;
+			if(comma(bc, take))
+				break;
+			t=ei->value;
+			t&=63;
+
+			if(bc->txpos<t)
+				tprintf(bc, "\033%dx", t);
 		}
 
 		ei->flags_in = 0;
@@ -1839,6 +1867,7 @@ int token_or;
 int token_mod;
 int token_goto;
 int token_gosub;
+int token_tab;
 
 struct stmt {
 	char *name;
@@ -1924,6 +1953,7 @@ struct stmt statements[]={
 {"string$", dostringstring, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"val", doval, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
 {"asc", doasc, TOKEN_FUNCTION|TOKEN_GENERAL, 0},
+{"tab", 0, 0, &token_tab},
 {0,0}};
 
 struct stmt *to_statement(bc *bc, int token)

@@ -233,6 +233,7 @@ extern int token_or;
 extern int token_mod;
 extern int token_goto;
 extern int token_gosub;
+extern int token_tab;
 
 
 // expr.c
