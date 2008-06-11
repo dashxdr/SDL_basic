@@ -687,14 +687,10 @@ int newline=1;
 			ei->flags_in = EXPR_NUMERIC;
 			res = expr(bc, take, ei);
 			if(res) break;
-			if(comma(bc, take))
-				break;
 			v=ei->value;
 			v&=1023;
 			tprintf(bc, "\033%dx\033%dy", v&63, v>>6);
-			continue;
-		}
-		if(*(unsigned char *)*take == token_tab)
+		} else if(*(unsigned char *)*take == token_tab)
 		{
 			int t;
 			++*take;
@@ -713,31 +709,31 @@ int newline=1;
 				break;
 			}
 			++*take;
-			if(comma(bc, take))
-				break;
 			t=ei->value;
 			t&=63;
 
 			if(bc->txpos<t)
 				tprintf(bc, "\033%dx", t);
+		} else
+		{
+			ei->flags_in = 0;
+			res = expr(bc, take, ei);
+			if(res) break;
+			if(ei->type == OT_DOUBLE)
+			{
+				if((long)ei->value == ei->value)
+					tprintf(bc, " %ld", (long)ei->value);
+				else
+					tprintf(bc, " %.2f", ei->value);
+			} else if(ei->type == OT_BSTRING)
+			{
+				bstring *bs = ei->string;
+				if(bs)
+					tprintf(bc, "%s", bs->string);
+				free_bstring(bs);
+			}
 		}
 
-		ei->flags_in = 0;
-		res = expr(bc, take, ei);
-		if(res) break;
-		if(ei->type == OT_DOUBLE)
-		{
-			if((long)ei->value == ei->value)
-				tprintf(bc, " %ld", (long)ei->value);
-			else
-				tprintf(bc, " %.2f", ei->value);
-		} else if(ei->type == OT_BSTRING)
-		{
-			bstring *bs = ei->string;
-			if(bs)
-				tprintf(bc, "%s", bs->string);
-			free_bstring(bs);
-		}
 		if(!**take || **take==':') break;
 		if(**take == '"')
 			continue;
