@@ -8,7 +8,7 @@
 %}
 %token IF THEN ELSE
 %token ON GOTO GOSUB RETURN LET INPUT PRINT READ DATA DIM
-%token FOR NEXT STEP END STOP
+%token FOR TO NEXT STEP END STOP
 %token INT FIX SGN SIN COS RND POW LOG EXP TAN ATN2 ATN ABS SQR LEN
 %token LEFTSTR MIDSTR RIGHTSTR CHRSTR STRSTR STRINGSTR VAL ASC TAB
 %token MOUSEX MOUSEY MOUSEB XSIZE YSIZE TICKS
@@ -26,7 +26,7 @@
 %left '*' '/' MOD
 %left POWER
 %right UNARY
-%expect 7
+%expect 3
 %%
 
 program:
@@ -46,17 +46,21 @@ statements:
 	statement
 	| statements ':' statement ;
 
-stint:
-	statements
-	| INTEGER
-	;
-
 optstep:
-	| step numexpr
+	| STEP numexpr
 	;
 
 optforvar:
 	| forvar
+	;
+
+forvar:
+	NUMSYMBOL
+	;	
+
+stint:
+	statement
+	| INTEGER
 	;
 
 statement:
@@ -78,12 +82,12 @@ statement:
 	| RANDOM
 	| END
 	| STOP
-	| SLEEP numexpr
+	| SLEEP num1
 	| MOVE num2
-	| PEN numexpr
-	| LINE numexpr 
+	| PEN num1
+	| LINE num2
 	| COLOR num34
-	| CLEAR numexpr
+	| CLEAR num1
 	| CLS
 	| FILL
 	| HOME
@@ -171,7 +175,6 @@ numlist:
 	;
 
 printlist: /* nothing */
-	|
 	| printitem
 	| printlist printsep printitem
 	| printitem printsep
@@ -197,24 +200,17 @@ printitem:
 	;
 
 inputlist:
-	optstring inputlist2
-	;
-
-optstring:
-	| /* nothing */
-	STRING ','
+	inputlist2
+	| STRING inputlist2
 	;
 
 inputlist2:
 	lvalue
-	| inputlist ',' lvalue
+	| inputlist2 ',' lvalue
 	;
 
 lvalue:
 	var
-	;
-
-ifexpr:
 	;
 
 assignexpr:
@@ -255,32 +251,27 @@ numexpr:
 	| REAL
 	;
 
-numpar1: '(' num1 ')'
-	;
-numpar2: '(' num2 ')'
-	;
-
-stringpar1: '(' stringexpr ')'
+singlestringpar: '(' stringexpr ')'
 	;
 
 numfunc:
-	INT numpar1
-	| FIX numpar1
-	| SGN numpar1
-	| SIN numpar1
-	| COS numpar1
-	| RND numpar1
-	| POW numpar2
-	| LOG numpar1
-	| EXP numpar1
-	| TAN numpar1
-	| ATN numpar1
-	| ATN2 numpar2
-	| ABS numpar1
-	| SQR numpar1
-	| LEN stringpar1
-	| VAL stringpar1
-	| ASC stringpar1
+	INT singlenumpar
+	| FIX singlenumpar
+	| SGN singlenumpar
+	| SIN singlenumpar
+	| COS singlenumpar
+	| RND singlenumpar
+	| POW doublenumpar
+	| LOG singlenumpar
+	| EXP singlenumpar
+	| TAN singlenumpar
+	| ATN singlenumpar
+	| ATN2 doublenumpar
+	| ABS singlenumpar
+	| SQR singlenumpar
+	| LEN singlestringpar
+	| VAL singlestringpar
+	| ASC singlestringpar
 	;
 
 special:
@@ -293,7 +284,7 @@ special:
 	;
 
 stringexpr:
-	stringexpr + stringexpr
+	stringexpr '+' stringexpr
 	| stringexpr EQ stringexpr
 	| stringexpr NE stringexpr
 	| stringfunc
@@ -305,8 +296,8 @@ stringfunc:
 	LEFTSTR '(' stringexpr ',' numexpr ')'
 	| RIGHTSTR '(' stringexpr ',' numexpr ')'
 	| MIDSTR '(' stringexpr ',' numexpr ',' numexpr ')'
-	| CHRSTR numpar1
-	| STRSTR numpar1
+	| CHRSTR singlenumpar
+	| STRSTR singlenumpar
 	| STRINGSTR '(' numexpr ',' stringexpr ')'
 	;
 
