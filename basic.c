@@ -1936,6 +1936,7 @@ struct stmt statements[]={
 {"let", dolet, TOKEN_STATEMENT, 0},
 {"input", doinput, TOKEN_STATEMENT, 0},
 {"print", doprint, TOKEN_STATEMENT, 0},
+{"?", doprint, TOKEN_STATEMENT, 0},
 {"goto", dogoto, TOKEN_STATEMENT, &token_goto},
 {"read", doread, TOKEN_STATEMENT, 0},
 {"dim", dodim, TOKEN_STATEMENT, 0},

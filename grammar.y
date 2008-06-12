@@ -3,7 +3,7 @@
 #include "misc.h"
 
 typedef struct tokeninfo {
-
+	char *at;
 	union
 	{
 		double real;
@@ -394,6 +394,7 @@ char ch;
 	while(get(bc)==' ');
 	back(bc);
 	bc->yylast = bc->yypntr;
+	ti->at = bc->yypntr;
 if(0){char *p=bc->yypntr, csave;
 while(*p && *p++ != '\n');
 csave = *--p;
