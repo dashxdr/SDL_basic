@@ -25,9 +25,11 @@ void yyerror(char *s);
 %token IF THEN ELSE
 %token ON GOTO GOSUB RETURN LET INPUT PRINT READ DATA DIM
 %token FOR TO NEXT STEP END STOP REM
+%token RESTORE
 %token INT FIX SGN SIN COS RND POW LOG EXP TAN ATN2 ATN ABS SQR LEN
 %token LEFTSTR MIDSTR RIGHTSTR CHRSTR STRSTR STRINGSTR VAL ASC TAB
 %token MOUSEX MOUSEY MOUSEB XSIZE YSIZE TICKS
+%token INKEYSTR
 %token MOVE PEN LINE COLOR CLEAR RANDOM CLS FILL HOME
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
@@ -85,7 +87,9 @@ statement:
 	| GOTO INTEGER
 	| GOSUB INTEGER
 	| ON numexpr GOTO intlist
+	| ON numexpr GOSUB intlist
 	| RETURN
+	| RESTORE
 	| LET assignexpr
 	| assignexpr
 	| INPUT inputlist
@@ -309,11 +313,14 @@ special:
 	| YSIZE
 	| TICKS
 	;
-
+specialstr:
+	INKEYSTR
+	;
 
 stringexpr:
 	stringexpr '+' stringexpr
 	| STRING
+	| specialstr
 	| stringfunc
 	| stringvar
 	| STRING stringfunc
@@ -412,6 +419,7 @@ printf("here:%s\n", bc->yypntr);
 	if(iskeyword(bc, "goto")) return GOTO;
 	if(iskeyword(bc, "home")) return HOME;
 	if(iskeyword(bc, "if")) return IF;
+	if(iskeyword(bc, "inkey$")) return INKEYSTR;
 	if(iskeyword(bc, "input")) return INPUT;
 	if(iskeyword(bc, "int")) return INT;
 	if(iskeyword(bc, "left$")) return LEFTSTR;
@@ -440,6 +448,7 @@ printf("here:%s\n", bc->yypntr);
 		back(bc);
 		return REM;
 	}
+	if(iskeyword(bc, "restore")) return RESTORE;
 	if(iskeyword(bc, "return")) return RETURN;
 	if(iskeyword(bc, "right$")) return RIGHTSTR;
 	if(iskeyword(bc, "rnd")) return RND;
