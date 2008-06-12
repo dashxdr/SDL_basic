@@ -3,8 +3,15 @@
 #include "misc.h"
 
 typedef struct tokeninfo {
-	double value;
-	char *start;
+
+	union
+	{
+		double real;
+		char *start;
+		int integer;
+		char name[16];
+		char string[256];
+	} value;
 } tokeninfo;
 
 
@@ -53,12 +60,14 @@ program:
 	;
 
 prog2:
-	line
+	line 
 	| prog2 line
 	;
 
 line:
-	INTEGER statements LF ;
+	INTEGER statements LF {/*tprintf(BC, "processed line %d\n",
+				$1.value.integer);*/}
+	;
 
 statements:
 	statement
@@ -84,7 +93,7 @@ stint:
 statement:
 	IF expr optthen stint
 	| IF expr optthen stint ELSE stint
-	| GOTO INTEGER
+	| GOTO INTEGER {/*tprintf(BC, "goto %d\n", $2.value.integer);*/}
 	| GOSUB INTEGER
 	| ON numexpr GOTO intlist
 	| ON numexpr GOSUB intlist
@@ -319,7 +328,7 @@ specialstr:
 
 stringexpr:
 	stringexpr '+' stringexpr
-	| STRING
+	| STRING {/*tprintf(BC, "string '%s' reduced to stringexpr\n", $1.value.string);*/}
 	| specialstr
 	| stringfunc
 	| stringvar
@@ -377,7 +386,7 @@ char *p2=want;
 	return 0;
 }
 
-int yylex(YYSTYPE *lvalp, bc *parm)
+int yylex(YYSTYPE *ti, bc *parm)
 {
 bc *bc=parm;
 char ch;
@@ -511,6 +520,7 @@ printf("here:%s\n", bc->yypntr);
 	if(isdigit(ch) || ch=='.')
 	{
 		double intpart;
+		double fracpart=0.0;
 		int isreal = (ch=='.');
 
 		intpart = 0.0;
@@ -518,7 +528,6 @@ printf("here:%s\n", bc->yypntr);
 		if(ch=='.')
 		{
 			double digit=0.1;
-			double fracpart=0.0;
 			isreal = 1;
 			while(isdigit(ch=get(bc)))
 			{
@@ -527,26 +536,39 @@ printf("here:%s\n", bc->yypntr);
 			}
 		}
 		back(bc);
-// must set lvalp
-		if(isreal) return REAL;
+		if(isreal)
+		{
+			ti->value.real = intpart + fracpart;
+			return REAL;
+		}
+		ti->value.integer = intpart;
 		return INTEGER;
 	}
 	if(isalpha(ch))
 	{
+		int t=0;
 		for(;;)
 		{
 			ch=get(bc);
 			if(!isalpha(ch) && !isdigit(ch))
 				break;
+			if(t<sizeof(ti->value.name)-2)
+				ti->value.name[t++] = ch;
 		}
 		if(ch=='$')
+		{
+			ti->value.name[t++] = ch;
+			ti->value.name[t] = 0;
 			return STRINGSYMBOL;
+		}
 		back(bc);
+		ti->value.name[t] = 0;
 		return NUMSYMBOL;
 	}
 	if(ch=='"')
 	{
 		get(bc);
+		int t=0;
 		for(;;)
 		{
 			ch=get(bc);
@@ -558,8 +580,10 @@ printf("here:%s\n", bc->yypntr);
 					{back(bc);return -1;} // nonterminated
 			} else if(ch=='"')
 				break;
-// stuff a char in a string I'm building up
+			if(t<sizeof(ti->value.string)-1)
+				ti->value.name[t++] = ch;
 		}
+		ti->value.name[t] = 0;
 		return STRING;
 	}
 	return -1;
