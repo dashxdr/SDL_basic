@@ -134,6 +134,7 @@ typedef struct basic_context {
 	int starttime;
 	int waitbase;
 	char *yypntr;
+	char *yylast;
 } bc;
 
 #define MYF1 0x180

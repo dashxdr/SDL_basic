@@ -477,7 +477,31 @@ void doparse(bc *bc, char *text)
 int res;
 	bc->yypntr = bc->program;
 	res=yyparse(bc);
+	if(!res)
+	{
+		tprintf(bc, "Program parsed correctly\n");
+		return;
+	}
 	tprintf(bc, "yyparse returned %d\n", res);
+	if(res)
+	{
+		char linecopy[1024];
+		int n;
+		char *p;
+		p = bc->yylast;
+		while(p>bc->program && p[-1] != '\n') --p;
+		n=0;
+		for(n=0;p[n] && p[n]!='\n' && n<sizeof(linecopy)-1;++n)
+			linecopy[n] = p[n];
+		linecopy[n] = 0;
+		tprintf(bc, "%s\n", linecopy);
+		n=bc->yylast - p;
+		if(n>sizeof(linecopy)-1)
+			n=sizeof(linecopy)-1;
+		memset(linecopy, ' ', n);
+		linecopy[n]=0;
+		tprintf(bc, "%s^\n", linecopy);
+	}
 }
 
 void dorun(bc *bc, char *text);
