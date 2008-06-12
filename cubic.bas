@@ -261,7 +261,7 @@
 3092 print
 3095 return
 3100 for k=1 to 4
-3110 v=x(t+t2+k);
+3110 v=x(t+t2+k)
 3111 if v=1 then print " X "; else if v=5 then print " O "; else print " . ";
 3120 next k
 3130 return

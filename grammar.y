@@ -1,8 +1,15 @@
 %{
 #include <ctype.h>
 #include "misc.h"
+
+typedef struct tokeninfo {
+	double value;
+	char *start;
+} tokeninfo;
+
+
 #define YYDEBUG 0
-#define YYSTYPE void *
+#define YYSTYPE tokeninfo
 
 #define BC ((bc *)parm)
 
@@ -358,7 +365,6 @@ char *p2=want;
 	if(!*p2)
 	{
 		bc->yypntr += p2-want;
-printf("matched %s\n", want);
 		return 1;
 	}
 	return 0;
@@ -371,7 +377,8 @@ char ch;
 
 	while(get(bc)==' ');
 	back(bc);
-{char *p=bc->yypntr, csave;
+	bc->yylast = bc->yypntr;
+if(0){char *p=bc->yypntr, csave;
 while(*p && *p++ != '\n');
 csave = *--p;
 *p = 0;
