@@ -57,8 +57,10 @@ DECLARE(orord)
 DECLARE(eqs)
 DECLARE(nes)
 DECLARE(sqrd)
+DECLARE(rndd)
 DECLARE(skip2ne) // skip next 2 steps if TOS != 0
 DECLARE(performend)
+DECLARE(sleepd)
 DECLARE(rjmp)
 
 void getdouble(void *d, step *s)
@@ -134,8 +136,24 @@ char name[16];
 			tprintf(bc, "eqd\n");
 		else if(*s == (step)ned)
 			tprintf(bc, "ned\n");
+		else if(*s == (step)ned)
+			tprintf(bc, "ned\n");
+		else if(*s == (step)led)
+			tprintf(bc, "led\n");
+		else if(*s == (step)ged)
+			tprintf(bc, "ged\n");
+		else if(*s == (step)ltd)
+			tprintf(bc, "ltd\n");
+		else if(*s == (step)gtd)
+			tprintf(bc, "gtd\n");
+		else if(*s == (step)sqrd)
+			tprintf(bc, "sqrd\n");
+		else if(*s == (step)rndd)
+			tprintf(bc, "rndd\n");
 		else if(*s == (step)performend)
 			tprintf(bc, "end\n");
+		else if(*s == (step)sleepd)
+			tprintf(bc, "sleepd\n");
 		else
 			tprintf(bc, "??? %x\n", (int)*s);
 		++s;
@@ -268,7 +286,7 @@ statement:
 	| RANDOM
 	| END
 	| STOP
-	| SLEEP num1
+	| SLEEP num1 {emitstep(PS, (step)sleepd)}
 	| MOVE num2
 	| PEN num1
 	| LINE num2
@@ -492,7 +510,7 @@ numfunc:
 	| SGN singlenumpar
 	| SIN singlenumpar
 	| COS singlenumpar
-	| RND singlenumpar
+	| RND singlenumpar {emitstep(PS, (step)rndd)}
 	| POW doublenumpar
 	| LOG singlenumpar
 	| EXP singlenumpar
