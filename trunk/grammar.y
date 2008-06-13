@@ -26,7 +26,6 @@ typedef struct parse_state {
 	char *yypntr;
 	char *yylast;
 	step *nextstep;
-	step *firststep; // first step of the list currently being built up
 	step steps[MAXSTEPS];
 } ps;
 
@@ -58,7 +57,7 @@ DECLARE(orord)
 DECLARE(eqs)
 DECLARE(nes)
 DECLARE(sqrd)
-DECLARE(performif)
+DECLARE(skip2ne) // skip next 2 steps if TOS != 0
 DECLARE(performend)
 DECLARE(rjmp)
 
@@ -124,9 +123,13 @@ char name[16];
 		else if(*s == (step)pushi)
 			tprintf(bc, "pushi %d\n", (int)*++s);
 		else if(*s == (step)rjmp)
-			tprintf(bc, "rjmp %d\n", (int)*++s);
-		else if(*s == (step)performif)
-			tprintf(bc, "performif\n");
+		{
+			tprintf(bc, "rjmp %d (%d)\n", (int)s[1],
+				s-ps->steps + s[1]);
+			++s;
+		}
+		else if(*s == (step)skip2ne)
+			tprintf(bc, "skip2ne\n");
 		else if(*s == (step)eqd)
 			tprintf(bc, "eqd\n");
 		else if(*s == (step)ned)
@@ -137,19 +140,6 @@ char name[16];
 			tprintf(bc, "??? %x\n", (int)*s);
 		++s;
 	}
-}
-
-static step *closeoff(ps *ps)
-{
-/*
-step *t;
-	t=ps->firststep;
-	*t = (step)(ps->nextstep - t);
-	ps->firststep = ps->nextstep;
-	*ps->nextstep++ = (step)0;
-	return t;
-*/
-	return 0;
 }
 
 static void emitstep(ps *ps, step s)
@@ -256,9 +246,9 @@ statements:
 
 statement:
 	IF numexpr optthen fixif stint mark
-		{$4.value.step[-1] = $6.value.step - $4.value.step}
+		{$4.value.step[1] = $6.value.step - $4.value.step}
 	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
-		{$4.value.step[-1] = $7.value.step - $4.value.step;
+		{$4.value.step[1] = $7.value.step - $4.value.step;
 		$7.value.step[-1] = $9.value.step - $7.value.step+2}
 	| GOTO INTEGER
 	| GOSUB INTEGER
@@ -297,9 +287,9 @@ statement:
 	| REM
 	;
 
-fixif: /* nothing */ {emitpushi(PS, 0); // size of true side
+fixif: /* nothing */ {emitstep(PS, (step)skip2ne);
 		$$.value.step = PS->nextstep;
-		emitstep(PS, (step)performif)}
+		emitrjmp(PS, 0)} // size of true side}
 	;
 
 fixifelse: /* nothing */ {emitrjmp(PS, 0); // true side to skip over false
@@ -455,10 +445,8 @@ lvalue:
 	;
 
 assignexpr:
-	numvar '=' ne {emitstep(PS, (step)assignd);
-			$$.value.step = closeoff(PS)}
-	| stringvar '=' se {emitstep(PS, (step)assigns);
-			$$.value.step = closeoff(PS)}
+	numvar '=' numexpr {emitstep(PS, (step)assignd)}
+	| stringvar '=' stringexpr {emitstep(PS, (step)assigns)}
 	;
 
 expr:
@@ -467,30 +455,26 @@ expr:
 	;
 
 numexpr:
-	ne {$$.value.step = closeoff(PS)}
-	;
-
-ne:
-	'-' ne %prec UNARY
-	| '(' ne ')'
-	| ne '+' ne {emitstep(PS, (step)addd)}
-	| ne '-' ne {emitstep(PS, (step)subd)}
-	| ne '*' ne {emitstep(PS, (step)muld)}
-	| ne '/' ne {emitstep(PS, (step)divd)}
-	| ne POWER ne {emitstep(PS, (step)powerd)}
-	| ne LL ne
-	| ne RR ne
-	| ne '=' ne {emitstep(PS, (step)eqd)}
-	| ne NE ne {emitstep(PS, (step)ned)}
-	| ne LT ne {emitstep(PS, (step)ltd)}
-	| ne GT ne {emitstep(PS, (step)gtd)}
-	| ne LE ne {emitstep(PS, (step)led)}
-	| ne GE ne {emitstep(PS, (step)ged)}
-	| ne AND ne {emitstep(PS, (step)andd)}
-	| ne OR ne {emitstep(PS, (step)ord)}
-	| ne XOR ne {emitstep(PS, (step)xord)}
-	| ne ANDAND ne {emitstep(PS, (step)andandd)}
-	| ne OROR ne {emitstep(PS, (step)orord)}
+	'-' numexpr %prec UNARY
+	| '(' numexpr ')'
+	| numexpr '+' numexpr {emitstep(PS, (step)addd)}
+	| numexpr '-' numexpr {emitstep(PS, (step)subd)}
+	| numexpr '*' numexpr {emitstep(PS, (step)muld)}
+	| numexpr '/' numexpr {emitstep(PS, (step)divd)}
+	| numexpr POWER numexpr {emitstep(PS, (step)powerd)}
+	| numexpr LL numexpr
+	| numexpr RR numexpr
+	| numexpr '=' numexpr {emitstep(PS, (step)eqd)}
+	| numexpr NE numexpr {emitstep(PS, (step)ned)}
+	| numexpr LT numexpr {emitstep(PS, (step)ltd)}
+	| numexpr GT numexpr {emitstep(PS, (step)gtd)}
+	| numexpr LE numexpr {emitstep(PS, (step)led)}
+	| numexpr GE numexpr {emitstep(PS, (step)ged)}
+	| numexpr AND numexpr {emitstep(PS, (step)andd)}
+	| numexpr OR numexpr {emitstep(PS, (step)ord)}
+	| numexpr XOR numexpr {emitstep(PS, (step)xord)}
+	| numexpr ANDAND numexpr {emitstep(PS, (step)andandd)}
+	| numexpr OROR numexpr {emitstep(PS, (step)orord)}
 	| stringexpr '=' stringexpr {emitstep(PS, (step)eqs)}
 	| stringexpr NE stringexpr {emitstep(PS, (step)nes)}
 	| numfunc
@@ -534,14 +518,13 @@ specialstr:
 	INKEYSTR
 	;
 
-stringexpr:
-	se { $$.value.step = closeoff(PS)}
+stringexpr: sss
 	;
 
-se:
+sss:
 	sitem
-	| se '+' sitem
-	| se sitem
+	| sss '+' sitem
+	| sss sitem
 	;
 
 sitem:
@@ -815,9 +798,7 @@ int res=0;
 		return;
 	}
 	ps->bc = bc;
-	ps->firststep = ps->steps;
 	ps->nextstep = ps->steps;
-	closeoff(ps);
 	ps->yypntr = bc->program;
 
 	res=yyparse(ps);
