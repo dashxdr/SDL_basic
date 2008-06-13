@@ -2,6 +2,10 @@
 #include <ctype.h>
 #include "misc.h"
 
+typedef struct item item;
+typedef struct list list;
+typedef int step; // program element, needs to hold a void * or int
+
 typedef struct tokeninfo {
 	char *at;
 	union
@@ -12,20 +16,197 @@ typedef struct tokeninfo {
 		char name[16];
 		char string[256];
 		int count;
+		step *step;
 	} value;
 } tokeninfo;
+
+#define MAXSTEPS 100000
+typedef struct parse_state {
+	bc *bc;
+	char *yypntr;
+	char *yylast;
+	step *nextstep;
+	step *firststep; // first step of the list currently being built up
+	step steps[MAXSTEPS];
+} ps;
+
+#define DECLARE(name) void name(bc *bc){} extern void name(bc *bc);
+DECLARE(pushd)
+DECLARE(evald)
+DECLARE(pushvd)
+DECLARE(pushi)
+DECLARE(pushvad)
+DECLARE(arrayd)
+DECLARE(assignd)
+DECLARE(assigns)
+DECLARE(addd)
+DECLARE(subd)
+DECLARE(muld)
+DECLARE(divd)
+DECLARE(powerd)
+DECLARE(eqd)
+DECLARE(ned)
+DECLARE(ltd)
+DECLARE(gtd)
+DECLARE(led)
+DECLARE(ged)
+DECLARE(andd)
+DECLARE(ord)
+DECLARE(xord)
+DECLARE(andandd)
+DECLARE(orord)
+DECLARE(eqs)
+DECLARE(nes)
+DECLARE(sqrd)
+DECLARE(performif)
+DECLARE(performend)
+DECLARE(rjmp)
+
+void getdouble(void *d, step *s)
+{
+void *p=d;
+	((step*)p)[0] = s[0];
+	((step*)p)[1] = s[1];
+}
+
+static void getname(char *p, step *s)
+{
+	*(int *)p = *(int *)s;
+}
+
+static void disassemble(ps *ps)
+{
+step *s, *e;
+bc *bc = ps->bc;
+double d;
+char name[16];
+
+	s = ps->steps;
+	e = ps->nextstep;
+	while(s<e)
+	{
+		tprintf(bc, "%4d: ", (int)(s-ps->steps));
+		if(*s == (step)pushd)
+		{
+			getdouble(&d, s+1);
+//printf("%x %x\n", s[1], s[2]);
+			tprintf(bc, "pushd %.8f\n", d);
+			s+=2;
+		}
+		else if(*s == (step)evald)
+			tprintf(bc, "evald\n");
+		else if(*s == (step)assignd)
+			tprintf(bc, "assignd\n", name);
+		else if(*s == (step)pushvd)
+		{
+			getname(name, s+1);
+			tprintf(bc, "pushvd %s\n", name);
+			++s;
+		}
+		else if(*s == (step)pushvad)
+		{
+			getname(name, s+1);
+			tprintf(bc, "pushvad %s\n", name);
+			++s;
+		}
+		else if(*s == (step)addd)
+			tprintf(bc, "addd\n");
+		else if(*s == (step)subd)
+			tprintf(bc, "subd\n");
+		else if(*s == (step)muld)
+			tprintf(bc, "muld\n");
+		else if(*s == (step)divd)
+			tprintf(bc, "divd\n");
+		else if(*s == (step)powerd)
+			tprintf(bc, "powerd\n");
+		else if(*s == (step)arrayd)
+			tprintf(bc, "arrayd\n");
+		else if(*s == (step)pushi)
+			tprintf(bc, "pushi %d\n", (int)*++s);
+		else if(*s == (step)rjmp)
+			tprintf(bc, "rjmp %d\n", (int)*++s);
+		else if(*s == (step)performif)
+			tprintf(bc, "performif\n");
+		else if(*s == (step)eqd)
+			tprintf(bc, "eqd\n");
+		else if(*s == (step)ned)
+			tprintf(bc, "ned\n");
+		else if(*s == (step)performend)
+			tprintf(bc, "end\n");
+		else
+			tprintf(bc, "??? %x\n", (int)*s);
+		++s;
+	}
+}
+
+static step *closeoff(ps *ps)
+{
+/*
+step *t;
+	t=ps->firststep;
+	*t = (step)(ps->nextstep - t);
+	ps->firststep = ps->nextstep;
+	*ps->nextstep++ = (step)0;
+	return t;
+*/
+	return 0;
+}
+
+static void emitstep(ps *ps, step s)
+{
+	*ps->nextstep++ = s;
+}
+
+static void emitpushd(ps *ps, double val)
+{
+void *p=&val;
+	emitstep(ps, (step)pushd);
+	emitstep(ps, ((step *)p)[0]);
+	emitstep(ps, ((step *)p)[1]);
+}
+
+static void emitname(ps *ps, char *name)
+{
+char temp[sizeof(int)] = {0};
+	strcpy(temp, name);
+	emitstep(ps, *(step *)temp);
+}
+
+static void emitpushvd(ps *ps, char *name)
+{
+	emitstep(ps, (step)pushvd);
+	emitname(ps, name);
+}
+
+static void emitpushi(ps *ps, int v)
+{
+	emitstep(ps, (step)pushi);
+	emitstep(ps, (step)v);
+}
+
+static void emitpushvad(ps *ps, char *name)
+{
+	emitstep(ps, (step)pushvad);
+	emitname(ps, name);
+}
+
+static void emitrjmp(ps *ps, int delta)
+{
+	emitstep(ps, (step)rjmp);
+	emitstep(ps, (step)delta);
+}
 
 
 #define YYDEBUG 0
 #define YYSTYPE tokeninfo
 
-#define BC ((bc *)parm)
+#define PS ((ps *)parm)
 
 
 #define YYPARSE_PARAM parm
 #define YYLEX_PARAM parm
 
-int yylex(YYSTYPE *lvalp, bc *parm);
+int yylex(YYSTYPE *lvalp, ps *parm);
 void yyerror(char *s);
 
 %}
@@ -52,7 +233,7 @@ void yyerror(char *s);
 %left '*' '/' MOD
 %left POWER
 %right UNARY
-%expect 5
+%expect 6
 %%
 
 program:
@@ -66,35 +247,20 @@ prog2:
 	;
 
 line:
-	INTEGER statements LF {/*tprintf(BC, "processed line %d\n",
-				$1.value.integer);*/}
+	INTEGER statements LF
 	;
 
 statements:
 	statement
 	| statements ':' statement ;
 
-optstep:
-	| STEP numexpr
-	;
-
-optforvar:
-	| forvar
-	;
-
-forvar:
-	NUMSYMBOL
-	;	
-
-stint:
-	statement
-	| INTEGER
-	;
-
 statement:
-	IF expr optthen stint
-	| IF expr optthen stint ELSE stint
-	| GOTO INTEGER {/*tprintf(BC, "goto %d\n", $2.value.integer);*/}
+	IF numexpr optthen fixif stint mark
+		{$4.value.step[-1] = $6.value.step - $4.value.step}
+	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
+		{$4.value.step[-1] = $7.value.step - $4.value.step;
+		$7.value.step[-1] = $9.value.step - $7.value.step+2}
+	| GOTO INTEGER
 	| GOSUB INTEGER
 	| ON numexpr GOTO intlist
 	| ON numexpr GOSUB intlist
@@ -129,6 +295,35 @@ statement:
 	| SPOT
 	| UPDATE
 	| REM
+	;
+
+fixif: /* nothing */ {emitpushi(PS, 0); // size of true side
+		$$.value.step = PS->nextstep;
+		emitstep(PS, (step)performif)}
+	;
+
+fixifelse: /* nothing */ {emitrjmp(PS, 0); // true side to skip over false
+		$$.value.step = PS->nextstep;}
+	;
+
+mark: /* nothing */ {$$.value.step = PS->nextstep}
+	;
+
+optstep: { emitpushd(PS, 1.0)}
+	| STEP numexpr
+	;
+
+optforvar:
+	| forvar
+	;
+
+forvar:
+	NUMSYMBOL
+	;	
+
+stint:
+	statements
+	| INTEGER
 	;
 
 optthen: /* nothing */
@@ -169,8 +364,8 @@ sym:
 	| STRINGSYMBOL
 	;
 
-intlist: INTEGER
-	| intlist ',' INTEGER
+intlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
+	| intlist ',' INTEGER {++$$.value.count;emitpushi(PS, $3.value.integer)}
 	;
 
 datalist:
@@ -200,8 +395,10 @@ var:
 	;
 
 numvar:
-	NUMSYMBOL {tprintf(BC, "pushvd %s\n", $1.value.name)}
-	| NUMSYMBOL '(' numlist ')' {tprintf(BC, "pushi %d\npushvad %s\narrayd\n", $3.value.count, $1.value.name)}
+	NUMSYMBOL {emitpushvd(PS, $1.value.name)}
+	| NUMSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
+					emitpushvad(PS, $1.value.name);
+					emitstep(PS, (step)arrayd)}
 	;
 
 stringvar:
@@ -258,8 +455,10 @@ lvalue:
 	;
 
 assignexpr:
-	numvar '=' numexpr {tprintf(BC, "assignd\n");}
-	| stringvar '=' stringexpr {tprintf(BC, "assigns\n");}
+	numvar '=' ne {emitstep(PS, (step)assignd);
+			$$.value.step = closeoff(PS)}
+	| stringvar '=' se {emitstep(PS, (step)assigns);
+			$$.value.step = closeoff(PS)}
 	;
 
 expr:
@@ -268,32 +467,36 @@ expr:
 	;
 
 numexpr:
-	'-' numexpr %prec UNARY
-	| '(' numexpr ')'
-	| numexpr '+' numexpr {tprintf(BC, "addd\n")}
-	| numexpr '-' numexpr {tprintf(BC, "subd\n")}
-	| numexpr '*' numexpr {tprintf(BC, "muld\n")}
-	| numexpr '/' numexpr {tprintf(BC, "divd\n")}
-	| numexpr LL numexpr
-	| numexpr RR numexpr
-	| numexpr '=' numexpr {tprintf(BC, "eqd\n")}
-	| numexpr NE numexpr {tprintf(BC, "ned\n")}
-	| numexpr LT numexpr {tprintf(BC, "ltd\n")}
-	| numexpr GT numexpr {tprintf(BC, "gtd\n")}
-	| numexpr LE numexpr {tprintf(BC, "led\n")}
-	| numexpr GE numexpr {tprintf(BC, "ged\n")}
-	| numexpr AND numexpr {tprintf(BC, "andd\n")}
-	| numexpr OR numexpr {tprintf(BC, "ord\n")}
-	| numexpr XOR numexpr {tprintf(BC, "xord\n")}
-	| numexpr ANDAND numexpr {tprintf(BC, "andandd\n")}
-	| numexpr OROR numexpr {tprintf(BC, "orord\n")}
-	| numexpr POWER numexpr {tprintf(BC, "powerd\n")}
-	| stringexpr '=' stringexpr {tprintf(BC, "eqs\n")}
-	| stringexpr NE stringexpr {tprintf(BC, "nes\n")}
+	ne {$$.value.step = closeoff(PS)}
+	;
+
+ne:
+	'-' ne %prec UNARY
+	| '(' ne ')'
+	| ne '+' ne {emitstep(PS, (step)addd)}
+	| ne '-' ne {emitstep(PS, (step)subd)}
+	| ne '*' ne {emitstep(PS, (step)muld)}
+	| ne '/' ne {emitstep(PS, (step)divd)}
+	| ne POWER ne {emitstep(PS, (step)powerd)}
+	| ne LL ne
+	| ne RR ne
+	| ne '=' ne {emitstep(PS, (step)eqd)}
+	| ne NE ne {emitstep(PS, (step)ned)}
+	| ne LT ne {emitstep(PS, (step)ltd)}
+	| ne GT ne {emitstep(PS, (step)gtd)}
+	| ne LE ne {emitstep(PS, (step)led)}
+	| ne GE ne {emitstep(PS, (step)ged)}
+	| ne AND ne {emitstep(PS, (step)andd)}
+	| ne OR ne {emitstep(PS, (step)ord)}
+	| ne XOR ne {emitstep(PS, (step)xord)}
+	| ne ANDAND ne {emitstep(PS, (step)andandd)}
+	| ne OROR ne {emitstep(PS, (step)orord)}
+	| stringexpr '=' stringexpr {emitstep(PS, (step)eqs)}
+	| stringexpr NE stringexpr {emitstep(PS, (step)nes)}
 	| numfunc
 	| special
-	| numvar {tprintf(BC, "evald\n", $1.value.name)}
-	| real {tprintf(BC, "pushd %.2f\n", $1.value.real)}
+	| numvar {emitstep(PS, (step)evald)}
+	| real {emitpushd(PS, $1.value.real)}
 	;
 
 singlestringpar: '(' stringexpr ')'
@@ -313,7 +516,7 @@ numfunc:
 	| ATN singlenumpar
 	| ATN2 doublenumpar
 	| ABS singlenumpar
-	| SQR singlenumpar {tprintf(BC, "sqrd\n")}
+	| SQR singlenumpar {emitstep(PS, (step)sqrd)}
 	| LEN singlestringpar
 	| VAL singlestringpar
 	| ASC singlestringpar
@@ -332,15 +535,20 @@ specialstr:
 	;
 
 stringexpr:
-	stringexpr '+' stringexpr
-	| STRING {/*tprintf(BC, "string '%s' reduced to stringexpr\n", $1.value.string);*/}
+	se { $$.value.step = closeoff(PS)}
+	;
+
+se:
+	sitem
+	| se '+' sitem
+	| se sitem
+	;
+
+sitem:
+	STRING
 	| specialstr
 	| stringfunc
 	| stringvar
-	| STRING stringfunc
-	| STRING stringvar
-	| stringfunc STRING
-	| stringvar STRING
 	;
 
 stringfunc:
@@ -358,22 +566,22 @@ void yyerror(char *s)
 {
 }
 
-static inline char at(bc *bc)
+static inline char at(ps *ps)
 {
-	return *bc->yypntr;
+	return *ps->yypntr;
 }
-static inline char get(bc *bc)
+static inline char get(ps *ps)
 {
-	return *bc->yypntr++;
+	return *ps->yypntr++;
 }
-static inline char back(bc *bc)
+static inline char back(ps *ps)
 {
-	return *--bc->yypntr;
+	return *--ps->yypntr;
 }
 
-static int iskeyword(bc *bc, char *want)
+static int iskeyword(ps *ps, char *want)
 {
-char *p1=bc->yypntr;
+char *p1=ps->yypntr;
 char *p2=want;
 
 	while(*p2)
@@ -385,108 +593,108 @@ char *p2=want;
 	}
 	if(!*p2)
 	{
-		bc->yypntr += p2-want;
+		ps->yypntr += p2-want;
 		return 1;
 	}
 	return 0;
 }
 
-int yylex(YYSTYPE *ti, bc *parm)
+int yylex(YYSTYPE *ti, ps *parm)
 {
-bc *bc=parm;
 char ch;
+ps *ps=parm;
 
-	while(get(bc)==' ');
-	back(bc);
-	bc->yylast = bc->yypntr;
-	ti->at = bc->yypntr;
-if(0){char *p=bc->yypntr, csave;
+	while(get(ps)==' ');
+	back(ps);
+	ps->yylast = ps->yypntr;
+	ti->at = ps->yypntr;
+if(0){char *p=ps->yypntr, csave;
 while(*p && *p++ != '\n');
 csave = *--p;
 *p = 0;
-printf("here:%s\n", bc->yypntr);
+printf("here:%s\n", ps->yypntr);
 *p = csave;
 }
 
 // alphabetized for readability -- but atn2 must be before atn
-	if(iskeyword(bc, "abs")) return ABS;
-	if(iskeyword(bc, "and")) return ANDAND;
-	if(iskeyword(bc, "asc")) return ASC;
-	if(iskeyword(bc, "atn2")) return ATN2; // order critical!
-	if(iskeyword(bc, "atn")) return ATN;
-	if(iskeyword(bc, "box")) return BOX;
-	if(iskeyword(bc, "chr$")) return CHRSTR;
-	if(iskeyword(bc, "circle")) return CIRCLE;
-	if(iskeyword(bc, "clear")) return CLEAR;
-	if(iskeyword(bc, "cls")) return CLS;
-	if(iskeyword(bc, "color")) return COLOR;
-	if(iskeyword(bc, "cos")) return COS;
-	if(iskeyword(bc, "data")) return DATA;
-	if(iskeyword(bc, "dim")) return DIM;
-	if(iskeyword(bc, "disc")) return DISC;
-	if(iskeyword(bc, "else")) return ELSE;
-	if(iskeyword(bc, "end")) return END;
-	if(iskeyword(bc, "exp")) return EXP;
-	if(iskeyword(bc, "fill")) return FILL;
-	if(iskeyword(bc, "fix")) return FIX;
-	if(iskeyword(bc, "for")) return FOR;
-	if(iskeyword(bc, "gosub")) return GOSUB;
-	if(iskeyword(bc, "goto")) return GOTO;
-	if(iskeyword(bc, "home")) return HOME;
-	if(iskeyword(bc, "if")) return IF;
-	if(iskeyword(bc, "inkey$")) return INKEYSTR;
-	if(iskeyword(bc, "input")) return INPUT;
-	if(iskeyword(bc, "int")) return INT;
-	if(iskeyword(bc, "left$")) return LEFTSTR;
-	if(iskeyword(bc, "len")) return LEN;
-	if(iskeyword(bc, "let")) return LET;
-	if(iskeyword(bc, "line")) return LINE;
-	if(iskeyword(bc, "log")) return LOG;
-	if(iskeyword(bc, "mid$")) return MIDSTR;
-	if(iskeyword(bc, "mod")) return MOD;
-	if(iskeyword(bc, "mouseb")) return MOUSEB;
-	if(iskeyword(bc, "mousex")) return MOUSEX;
-	if(iskeyword(bc, "mousey")) return MOUSEY;
-	if(iskeyword(bc, "move")) return MOVE;
-	if(iskeyword(bc, "next")) return NEXT;
-	if(iskeyword(bc, "on")) return ON;
-	if(iskeyword(bc, "or")) return OROR;
-	if(iskeyword(bc, "pen")) return PEN;
-	if(iskeyword(bc, "pow")) return POW;
-	if(iskeyword(bc, "print")) return PRINT;
-	if(iskeyword(bc, "random")) return RANDOM;
-	if(iskeyword(bc, "read")) return READ;
-	if(iskeyword(bc, "rect")) return RECT;
-	if(iskeyword(bc, "rem") || at(bc) == '\'')
+	if(iskeyword(ps, "abs")) return ABS;
+	if(iskeyword(ps, "and")) return ANDAND;
+	if(iskeyword(ps, "asc")) return ASC;
+	if(iskeyword(ps, "atn2")) return ATN2; // order critical!
+	if(iskeyword(ps, "atn")) return ATN;
+	if(iskeyword(ps, "box")) return BOX;
+	if(iskeyword(ps, "chr$")) return CHRSTR;
+	if(iskeyword(ps, "circle")) return CIRCLE;
+	if(iskeyword(ps, "clear")) return CLEAR;
+	if(iskeyword(ps, "cls")) return CLS;
+	if(iskeyword(ps, "color")) return COLOR;
+	if(iskeyword(ps, "cos")) return COS;
+	if(iskeyword(ps, "data")) return DATA;
+	if(iskeyword(ps, "dim")) return DIM;
+	if(iskeyword(ps, "disc")) return DISC;
+	if(iskeyword(ps, "else")) return ELSE;
+	if(iskeyword(ps, "end")) return END;
+	if(iskeyword(ps, "exp")) return EXP;
+	if(iskeyword(ps, "fill")) return FILL;
+	if(iskeyword(ps, "fix")) return FIX;
+	if(iskeyword(ps, "for")) return FOR;
+	if(iskeyword(ps, "gosub")) return GOSUB;
+	if(iskeyword(ps, "goto")) return GOTO;
+	if(iskeyword(ps, "home")) return HOME;
+	if(iskeyword(ps, "if")) return IF;
+	if(iskeyword(ps, "inkey$")) return INKEYSTR;
+	if(iskeyword(ps, "input")) return INPUT;
+	if(iskeyword(ps, "int")) return INT;
+	if(iskeyword(ps, "left$")) return LEFTSTR;
+	if(iskeyword(ps, "len")) return LEN;
+	if(iskeyword(ps, "let")) return LET;
+	if(iskeyword(ps, "line")) return LINE;
+	if(iskeyword(ps, "log")) return LOG;
+	if(iskeyword(ps, "mid$")) return MIDSTR;
+	if(iskeyword(ps, "mod")) return MOD;
+	if(iskeyword(ps, "mouseb")) return MOUSEB;
+	if(iskeyword(ps, "mousex")) return MOUSEX;
+	if(iskeyword(ps, "mousey")) return MOUSEY;
+	if(iskeyword(ps, "move")) return MOVE;
+	if(iskeyword(ps, "next")) return NEXT;
+	if(iskeyword(ps, "on")) return ON;
+	if(iskeyword(ps, "or")) return OROR;
+	if(iskeyword(ps, "pen")) return PEN;
+	if(iskeyword(ps, "pow")) return POW;
+	if(iskeyword(ps, "print")) return PRINT;
+	if(iskeyword(ps, "random")) return RANDOM;
+	if(iskeyword(ps, "read")) return READ;
+	if(iskeyword(ps, "rect")) return RECT;
+	if(iskeyword(ps, "rem") || at(ps) == '\'')
 	{
-		while((ch=get(bc)) && ch!='\n');
-		back(bc);
+		while((ch=get(ps)) && ch!='\n');
+		back(ps);
 		return REM;
 	}
-	if(iskeyword(bc, "restore")) return RESTORE;
-	if(iskeyword(bc, "return")) return RETURN;
-	if(iskeyword(bc, "right$")) return RIGHTSTR;
-	if(iskeyword(bc, "rnd")) return RND;
-	if(iskeyword(bc, "sgn")) return SGN;
-	if(iskeyword(bc, "sin")) return SIN;
-	if(iskeyword(bc, "sleep")) return SLEEP;
-	if(iskeyword(bc, "spot")) return SPOT;
-	if(iskeyword(bc, "sqr")) return SQR;
-	if(iskeyword(bc, "step")) return STEP;
-	if(iskeyword(bc, "stop")) return STOP;
-	if(iskeyword(bc, "string$")) return STRINGSTR;
-	if(iskeyword(bc, "tab")) return TAB;
-	if(iskeyword(bc, "tan")) return TAN;
-	if(iskeyword(bc, "test")) return TEST;
-	if(iskeyword(bc, "then")) return THEN;
-	if(iskeyword(bc, "ticks")) return TICKS;
-	if(iskeyword(bc, "to")) return TO;
-	if(iskeyword(bc, "update")) return UPDATE;
-	if(iskeyword(bc, "val")) return VAL;
-	if(iskeyword(bc, "xsize")) return XSIZE;
-	if(iskeyword(bc, "ysize")) return YSIZE;
+	if(iskeyword(ps, "restore")) return RESTORE;
+	if(iskeyword(ps, "return")) return RETURN;
+	if(iskeyword(ps, "right$")) return RIGHTSTR;
+	if(iskeyword(ps, "rnd")) return RND;
+	if(iskeyword(ps, "sgn")) return SGN;
+	if(iskeyword(ps, "sin")) return SIN;
+	if(iskeyword(ps, "sleep")) return SLEEP;
+	if(iskeyword(ps, "spot")) return SPOT;
+	if(iskeyword(ps, "sqr")) return SQR;
+	if(iskeyword(ps, "step")) return STEP;
+	if(iskeyword(ps, "stop")) return STOP;
+	if(iskeyword(ps, "string$")) return STRINGSTR;
+	if(iskeyword(ps, "tab")) return TAB;
+	if(iskeyword(ps, "tan")) return TAN;
+	if(iskeyword(ps, "test")) return TEST;
+	if(iskeyword(ps, "then")) return THEN;
+	if(iskeyword(ps, "ticks")) return TICKS;
+	if(iskeyword(ps, "to")) return TO;
+	if(iskeyword(ps, "update")) return UPDATE;
+	if(iskeyword(ps, "val")) return VAL;
+	if(iskeyword(ps, "xsize")) return XSIZE;
+	if(iskeyword(ps, "ysize")) return YSIZE;
 
-	ch=get(bc);
+	ch=get(ps);
 	switch(ch)
 	{
 	case '@': return ch;
@@ -505,23 +713,23 @@ printf("here:%s\n", bc->yypntr);
 	case '\n': return LF;
 	case '=': return ch;
 	case '~': return POWER;
-	case 0: back(bc);
+	case 0: back(ps);
 		return 0;
 	case '>':
-		ch=get(bc);
+		ch=get(ps);
 		if(ch=='>') return RR;
 		if(ch=='=') return GE;
-		back(bc);
+		back(ps);
 		return GT;
 	case '<':
-		ch=get(bc);
+		ch=get(ps);
 		if(ch=='>') return NE;
 		if(ch=='=') return LE;
 		if(ch=='<') return LL;
-		back(bc);
+		back(ps);
 		return LT;
 	}
-	ch=back(bc);
+	ch=back(ps);
 
 	if(isdigit(ch) || ch=='.')
 	{
@@ -530,18 +738,18 @@ printf("here:%s\n", bc->yypntr);
 		int isreal = (ch=='.');
 
 		intpart = 0.0;
-		while(isdigit(ch=get(bc))) {intpart*=10;intpart+=ch-'0';}
+		while(isdigit(ch=get(ps))) {intpart*=10;intpart+=ch-'0';}
 		if(ch=='.')
 		{
 			double digit=0.1;
 			isreal = 1;
-			while(isdigit(ch=get(bc)))
+			while(isdigit(ch=get(ps)))
 			{
 				fracpart += digit * (ch - '0');
 				digit /= 10.0;
 			}
 		}
-		back(bc);
+		back(ps);
 		if(isreal)
 		{
 			ti->value.real = intpart + fracpart;
@@ -555,7 +763,7 @@ printf("here:%s\n", bc->yypntr);
 		int t=0;
 		for(;;)
 		{
-			ch=get(bc);
+			ch=get(ps);
 			if(!isalpha(ch) && !isdigit(ch))
 				break;
 			if(t<sizeof(ti->value.name)-2)
@@ -567,23 +775,23 @@ printf("here:%s\n", bc->yypntr);
 			ti->value.name[t] = 0;
 			return STRINGSYMBOL;
 		}
-		back(bc);
+		back(ps);
 		ti->value.name[t] = 0;
 		return NUMSYMBOL;
 	}
 	if(ch=='"')
 	{
-		get(bc);
+		get(ps);
 		int t=0;
 		for(;;)
 		{
-			ch=get(bc);
-			if(!ch) {back(bc);return -1;} // nonterminated string
+			ch=get(ps);
+			if(!ch) {back(ps);return -1;} // nonterminated string
 			if(ch=='\\')
 			{
-				ch=get(bc);
+				ch=get(ps);
 				if(!ch || ch=='\n')
-					{back(bc);return -1;} // nonterminated
+					{back(ps);return -1;} // nonterminated
 			} else if(ch=='"')
 				break;
 			if(t<sizeof(ti->value.string)-1)
@@ -593,6 +801,57 @@ printf("here:%s\n", bc->yypntr);
 		return STRING;
 	}
 	return -1;
+}
+
+
+void doparse(bc *bc)
+{
+struct parse_state *ps;
+int res=0;
+	ps = malloc(sizeof(struct parse_state));
+	if(!ps)
+	{
+		tprintf(bc, "Out of memory.\n");
+		return;
+	}
+	ps->bc = bc;
+	ps->firststep = ps->steps;
+	ps->nextstep = ps->steps;
+	closeoff(ps);
+	ps->yypntr = bc->program;
+
+	res=yyparse(ps);
+
+	if(!res)
+	{
+		tprintf(bc, "Program parsed correctly\n");
+		emitstep(ps, (step)performend);
+		disassemble(ps);
+		free(ps);
+		return;
+	}
+	tprintf(bc, "yyparse returned %d\n", res);
+	if(res)
+	{
+		char linecopy[1024];
+		int n;
+		char *p;
+		p = ps->yylast;
+		while(p>bc->program && p[-1] != '\n') --p;
+		n=0;
+		for(n=0;p[n] && p[n]!='\n' && n<sizeof(linecopy)-1;++n)
+			linecopy[n] = p[n];
+		linecopy[n] = 0;
+		tprintf(bc, "%s\n", linecopy);
+		n=ps->yylast - p;
+		if(n>sizeof(linecopy)-1)
+			n=sizeof(linecopy)-1;
+		memset(linecopy, ' ', n);
+		linecopy[n]=0;
+		tprintf(bc, "%s^\n", linecopy);
+	}
+
+	free(ps);
 }
 
 
