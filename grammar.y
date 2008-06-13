@@ -11,6 +11,7 @@ typedef struct tokeninfo {
 		int integer;
 		char name[16];
 		char string[256];
+		int count;
 	} value;
 } tokeninfo;
 
@@ -178,8 +179,13 @@ datalist:
 	;
 
 dataentry:
-	INTEGER
+	real
 	| STRING
+	;
+
+real:
+	INTEGER {$$.value.real = (double)$1.value.integer}
+	| REAL
 	;
 
 
@@ -194,8 +200,8 @@ var:
 	;
 
 numvar:
-	NUMSYMBOL
-	| NUMSYMBOL '(' numlist ')'
+	NUMSYMBOL {tprintf(BC, "pushvd %s\n", $1.value.name)}
+	| NUMSYMBOL '(' numlist ')' {tprintf(BC, "pushi %d\npushvad %s\narrayd\n", $3.value.count, $1.value.name)}
 	;
 
 stringvar:
@@ -204,8 +210,8 @@ stringvar:
 	;
 
 numlist:
-	numexpr
-	| numlist ',' numexpr
+	numexpr {$$.value.count = 1}
+	| numlist ',' numexpr {++$$.value.count}
 	;
 
 printlist: /* nothing */
@@ -252,8 +258,8 @@ lvalue:
 	;
 
 assignexpr:
-	numvar '=' numexpr
-	| stringvar '=' stringexpr
+	numvar '=' numexpr {tprintf(BC, "assignd\n");}
+	| stringvar '=' stringexpr {tprintf(BC, "assigns\n");}
 	;
 
 expr:
@@ -264,31 +270,30 @@ expr:
 numexpr:
 	'-' numexpr %prec UNARY
 	| '(' numexpr ')'
-	| numexpr '+' numexpr
-	| numexpr '-' numexpr
-	| numexpr '*' numexpr
-	| numexpr '/' numexpr
+	| numexpr '+' numexpr {tprintf(BC, "addd\n")}
+	| numexpr '-' numexpr {tprintf(BC, "subd\n")}
+	| numexpr '*' numexpr {tprintf(BC, "muld\n")}
+	| numexpr '/' numexpr {tprintf(BC, "divd\n")}
 	| numexpr LL numexpr
 	| numexpr RR numexpr
-	| numexpr '=' numexpr
-	| numexpr NE numexpr
-	| numexpr LT numexpr
-	| numexpr GT numexpr
-	| numexpr LE numexpr
-	| numexpr GE numexpr
-	| numexpr AND numexpr
-	| numexpr OR numexpr
-	| numexpr XOR numexpr
-	| numexpr ANDAND numexpr
-	| numexpr OROR numexpr
-	| numexpr POWER numexpr
-	| stringexpr '=' stringexpr
-	| stringexpr NE stringexpr
+	| numexpr '=' numexpr {tprintf(BC, "eqd\n")}
+	| numexpr NE numexpr {tprintf(BC, "ned\n")}
+	| numexpr LT numexpr {tprintf(BC, "ltd\n")}
+	| numexpr GT numexpr {tprintf(BC, "gtd\n")}
+	| numexpr LE numexpr {tprintf(BC, "led\n")}
+	| numexpr GE numexpr {tprintf(BC, "ged\n")}
+	| numexpr AND numexpr {tprintf(BC, "andd\n")}
+	| numexpr OR numexpr {tprintf(BC, "ord\n")}
+	| numexpr XOR numexpr {tprintf(BC, "xord\n")}
+	| numexpr ANDAND numexpr {tprintf(BC, "andandd\n")}
+	| numexpr OROR numexpr {tprintf(BC, "orord\n")}
+	| numexpr POWER numexpr {tprintf(BC, "powerd\n")}
+	| stringexpr '=' stringexpr {tprintf(BC, "eqs\n")}
+	| stringexpr NE stringexpr {tprintf(BC, "nes\n")}
 	| numfunc
 	| special
-	| numvar
-	| INTEGER
-	| REAL
+	| numvar {tprintf(BC, "evald\n", $1.value.name)}
+	| real {tprintf(BC, "pushd %.2f\n", $1.value.real)}
 	;
 
 singlestringpar: '(' stringexpr ')'
@@ -308,7 +313,7 @@ numfunc:
 	| ATN singlenumpar
 	| ATN2 doublenumpar
 	| ABS singlenumpar
-	| SQR singlenumpar
+	| SQR singlenumpar {tprintf(BC, "sqrd\n")}
 	| LEN singlestringpar
 	| VAL singlestringpar
 	| ASC singlestringpar
@@ -466,7 +471,7 @@ printf("here:%s\n", bc->yypntr);
 	if(iskeyword(bc, "sin")) return SIN;
 	if(iskeyword(bc, "sleep")) return SLEEP;
 	if(iskeyword(bc, "spot")) return SPOT;
-	if(iskeyword(bc, " sqr")) return SQR;
+	if(iskeyword(bc, "sqr")) return SQR;
 	if(iskeyword(bc, "step")) return STEP;
 	if(iskeyword(bc, "stop")) return STOP;
 	if(iskeyword(bc, "string$")) return STRINGSTR;
