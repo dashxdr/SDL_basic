@@ -30,6 +30,7 @@ void rjmp(bc *bc)
 	{
 		update(bc);
 		checkdone(bc);
+		scaninput(bc);
 	}
 }
 
@@ -189,6 +190,11 @@ double d;
 		checkdone(bc);
 	}
 }
+
+void mousexd(bc *bc){(bc->vsp++)->d = bc->mousex;}
+void mouseyd(bc *bc){(bc->vsp++)->d = bc->mousey;}
+void mousebd(bc *bc){(bc->vsp++)->d = bc->mouseb;}
+void ticksd(bc *bc){(bc->vsp++)->d = SDL_GetTicks() - bc->starttime;}
 
 void color3(bc *bc)
 {

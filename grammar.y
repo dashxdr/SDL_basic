@@ -191,6 +191,14 @@ char name[NAMELEN];
 			tprintf(bc, "dimd\n");
 		else if(s->func == dims)
 			tprintf(bc, "dims\n");
+		else if(s->func == mousexd)
+			tprintf(bc, "mousex\n");
+		else if(s->func == mouseyd)
+			tprintf(bc, "mousey\n");
+		else if(s->func == mousebd)
+			tprintf(bc, "mouseb\n");
+		else if(s->func == ticksd)
+			tprintf(bc, "ticks\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -620,12 +628,12 @@ numfunc:
 	;
 
 special:
-	MOUSEX
-	| MOUSEY
-	| MOUSEB
+	MOUSEX {emitfunc(PS, mousexd)}
+	| MOUSEY {emitfunc(PS, mouseyd)}
+	| MOUSEB {emitfunc(PS, mousebd)}
 	| XSIZE {emitpushd(PS, PS->bc->xsize)}
 	| YSIZE {emitpushd(PS, PS->bc->ysize)}
-	| TICKS
+	| TICKS {emitfunc(PS, ticksd)}
 	;
 specialstr:
 	INKEYSTR
