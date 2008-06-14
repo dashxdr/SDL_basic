@@ -387,6 +387,9 @@ DECLARE(box4)
 DECLARE(performdisc)
 DECLARE(dimd)
 DECLARE(dims)
-
+DECLARE(performcircle)
+DECLARE(performpen)
+DECLARE(performstop)
+DECLARE(performfill)
 
 void vmachine(bc *bc, step *program, step *stack);
