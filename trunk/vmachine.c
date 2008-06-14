@@ -75,7 +75,7 @@ void logd(bc *bc){double *d=&bc->vsp[-1].d;*d = log(*d);}
 void expd(bc *bc){double *d=&bc->vsp[-1].d;*d = exp(*d);}
 void tand(bc *bc){double *d=&bc->vsp[-1].d;*d = tan(*d);}
 void atnd(bc *bc){double *d=&bc->vsp[-1].d;*d = atan(*d);}
-void atn2d(bc *bc){bc->vsp[-1].d=atan2(bc->vsp[-2].d, bc->vsp[-1].d);--bc->vsp;}
+void atn2d(bc *bc){bc->vsp[-2].d=atan2(bc->vsp[-2].d, bc->vsp[-1].d);--bc->vsp;}
 void absd(bc *bc){double *d=&bc->vsp[-1].d;if(*d<0.0) *d = -*d;}
 
 void sqrd(bc *bc){double *d=&bc->vsp[-1].d;if(*d>=0.0) *d = sqrt(*d);}
