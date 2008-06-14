@@ -4,11 +4,6 @@
 
 #define NAMELEN 16
 
-typedef struct item item;
-typedef struct list list;
-typedef int step; // program element, needs to hold a void * or int
-#define STEPS_PER_DOUBLE (sizeof(double)/sizeof(step))
-
 typedef struct tokeninfo {
 	char *at;
 	union
@@ -56,55 +51,15 @@ typedef struct parse_state {
 	variable vars[MAXVARIABLES];
 } ps;
 
-#define DECLARE(name) void name(bc *bc){} extern void name(bc *bc);
-DECLARE(pushd)
-DECLARE(evald)
-DECLARE(pushvd)
-DECLARE(pushi)
-DECLARE(pushvad)
-DECLARE(arrayd)
-DECLARE(assignd)
-DECLARE(assigns)
-DECLARE(addd)
-DECLARE(subd)
-DECLARE(muld)
-DECLARE(divd)
-DECLARE(powerd)
-DECLARE(eqd)
-DECLARE(ned)
-DECLARE(ltd)
-DECLARE(gtd)
-DECLARE(led)
-DECLARE(ged)
-DECLARE(andd)
-DECLARE(ord)
-DECLARE(xord)
-DECLARE(andandd)
-DECLARE(orord)
-DECLARE(eqs)
-DECLARE(nes)
-DECLARE(sqrd)
-DECLARE(rndd)
-DECLARE(skip2ne) // skip next 2 steps if TOS != 0
-DECLARE(performend)
-DECLARE(sleepd)
-DECLARE(rjmp)
-
-static void getdouble(void *d, step *s)
-{
-	*(double *)d = *(double *)s;
-}
-
 static void getname(ps *ps, char *p, step *s)
 {
-	strcpy(p, ps->vars[(int)*s].name);
+	strcpy(p, ps->vars[s->i].name);
 }
 
 static void disassemble(ps *ps)
 {
 step *s, *e;
 bc *bc = ps->bc;
-double d;
 char name[NAMELEN];
 
 	s = ps->steps;
@@ -112,80 +67,90 @@ char name[NAMELEN];
 	while(s<e)
 	{
 		tprintf(bc, "%4d: ", (int)(s-ps->steps));
-		if(*s == (step)pushd)
+		if(s->func == pushd)
 		{
-			getdouble(&d, s+1);
 //printf("%x %x\n", s[1], s[2]);
-			tprintf(bc, "pushd %.8f\n", d);
-			s+= STEPS_PER_DOUBLE;
+			tprintf(bc, "pushd %.8f\n", s[1].d);
+			++s;
 		}
-		else if(*s == (step)evald)
+		else if(s->func == evald)
 			tprintf(bc, "evald\n");
-		else if(*s == (step)assignd)
+		else if(s->func == assignd)
 			tprintf(bc, "assignd\n", name);
-		else if(*s == (step)assigns)
+		else if(s->func == assigns)
 			tprintf(bc, "assigns\n", name);
-		else if(*s == (step)pushvd)
+		else if(s->func == pushvd)
 		{
 			getname(ps, name, s+1);
 			tprintf(bc, "pushvd %s\n", name);
 			++s;
 		}
-		else if(*s == (step)pushvad)
+		else if(s->func == pushvad)
 		{
 			getname(ps, name, s+1);
 			tprintf(bc, "pushvad %s\n", name);
 			++s;
 		}
-		else if(*s == (step)addd)
+		else if(s->func == addd)
 			tprintf(bc, "addd\n");
-		else if(*s == (step)subd)
+		else if(s->func == subd)
 			tprintf(bc, "subd\n");
-		else if(*s == (step)muld)
+		else if(s->func == muld)
 			tprintf(bc, "muld\n");
-		else if(*s == (step)divd)
+		else if(s->func == divd)
 			tprintf(bc, "divd\n");
-		else if(*s == (step)powerd)
+		else if(s->func == powerd)
 			tprintf(bc, "powerd\n");
-		else if(*s == (step)arrayd)
+		else if(s->func == arrayd)
 			tprintf(bc, "arrayd\n");
-		else if(*s == (step)pushi)
-			tprintf(bc, "pushi %d\n", (int)*++s);
-		else if(*s == (step)rjmp)
+		else if(s->func == pushi)
+			tprintf(bc, "pushi %d\n", (++s)->i);
+		else if(s->func == rjmp)
 		{
-			tprintf(bc, "rjmp %d (%d)\n", (int)s[1],
-				s-ps->steps + s[1]);
+			tprintf(bc, "rjmp %d (%d)\n", s[1].i,
+				s-ps->steps + s[1].i);
 			++s;
 		}
-		else if(*s == (step)skip2ne)
+		else if(s->func == skip2ne)
 			tprintf(bc, "skip2ne\n");
-		else if(*s == (step)eqd)
+		else if(s->func == eqd)
 			tprintf(bc, "eqd\n");
-		else if(*s == (step)ned)
+		else if(s->func == ned)
 			tprintf(bc, "ned\n");
-		else if(*s == (step)ned)
+		else if(s->func == ned)
 			tprintf(bc, "ned\n");
-		else if(*s == (step)led)
+		else if(s->func == led)
 			tprintf(bc, "led\n");
-		else if(*s == (step)ged)
+		else if(s->func == ged)
 			tprintf(bc, "ged\n");
-		else if(*s == (step)ltd)
+		else if(s->func == ltd)
 			tprintf(bc, "ltd\n");
-		else if(*s == (step)gtd)
+		else if(s->func == gtd)
 			tprintf(bc, "gtd\n");
-		else if(*s == (step)sqrd)
+		else if(s->func == sqrd)
 			tprintf(bc, "sqrd\n");
-		else if(*s == (step)rndd)
+		else if(s->func == rndd)
 			tprintf(bc, "rndd\n");
-		else if(*s == (step)performend)
+		else if(s->func == performend)
 			tprintf(bc, "end\n");
-		else if(*s == (step)sleepd)
+		else if(s->func == sleepd)
 			tprintf(bc, "sleepd\n");
 		else
-			tprintf(bc, "??? %x\n", (int)*s);
+			tprintf(bc, "??? %x\n", s->i);
 		++s;
 	}
 }
+
+static void emitfunc(ps *ps, void (*func)())
+{
+	ps->nextstep++ -> func = func;
+}
+
+static void emitint(ps *ps, int i)
+{
+	ps->nextstep++ -> i = i;
+}
+
 
 static void emitstep(ps *ps, step s)
 {
@@ -196,7 +161,7 @@ static void emitpushd(ps *ps, double val)
 {
 	emitstep(ps, (step)pushd);
 	*(double *)ps->nextstep = val;
-	ps->nextstep += STEPS_PER_DOUBLE;
+	++ps->nextstep;
 }
 
 static void emitpushvd(ps *ps, int num)
@@ -219,8 +184,8 @@ static void emitpushvad(ps *ps, int num) // identical to pushvd
 
 static void emitrjmp(ps *ps, int delta)
 {
-	emitstep(ps, (step)rjmp);
-	emitstep(ps, (step)delta);
+	emitfunc(ps, rjmp);
+	emitint(ps, delta);
 }
 
 
@@ -283,10 +248,10 @@ statements:
 
 statement:
 	IF numexpr optthen fixif stint mark
-		{$4.value.step[1] = $6.value.step - $4.value.step}
+		{$4.value.step[1].i = $6.value.step - $4.value.step}
 	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
-		{$4.value.step[1] = $7.value.step - $4.value.step;
-		$7.value.step[-1] = $9.value.step - $7.value.step+2}
+		{$4.value.step[1].i = $7.value.step - $4.value.step;
+		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
 	| GOTO INTEGER
 	| GOSUB INTEGER
 	| ON numexpr GOTO intlist
@@ -868,6 +833,9 @@ int res=0;
 		tprintf(bc, "Program parsed correctly\n");
 		emitstep(ps, (step)performend);
 		disassemble(ps);
+
+vmachine(bc, ps->steps, bc->vstack);
+
 		free(ps);
 		return;
 	}
