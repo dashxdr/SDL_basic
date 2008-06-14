@@ -78,6 +78,23 @@ typedef union {
 } step; // program element, needs to hold a void * or int or double
 
 
+#define MAXVARIABLES 1024
+#define NAMELEN 16
+#define MAXDIMENSIONS 16
+// array and variable of the same name share structure
+typedef struct {
+	char name[NAMELEN];
+	int rank;
+	int dimensions[MAXDIMENSIONS];
+	void *pointer;
+	union {
+		double d;
+		bstring *s;
+	} value;
+} variable;
+
+
+
 #define MAX_SHAPE_POINTS 1024
 #define MAX_SHAPE_CONTOURS 64
 
@@ -146,6 +163,9 @@ typedef struct basic_context {
 	step *vsp;
 	step vstack[512];
 	int vdone;
+	int numvars;
+	variable vvars[MAXVARIABLES];
+
 } bc;
 
 #define MYF1 0x180
@@ -350,5 +370,6 @@ DECLARE(skip2ne) // skip next 2 steps if TOS != 0
 DECLARE(performend)
 DECLARE(sleepd)
 DECLARE(rjmp)
+DECLARE(printd)
 
 void vmachine(bc *bc, step *program, step *stack);
