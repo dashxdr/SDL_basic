@@ -391,5 +391,7 @@ DECLARE(performcircle)
 DECLARE(performpen)
 DECLARE(performstop)
 DECLARE(performfill)
+DECLARE(performmove)
+DECLARE(performline)
 
 void vmachine(bc *bc, step *program, step *stack);

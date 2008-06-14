@@ -234,6 +234,19 @@ void performfill(bc *bc)
 	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue, bc->galpha);
 }
 
+void performmove(bc *bc)
+{
+	bc->gx = bc->vsp[-2].d;
+	bc->gy = bc->vsp[-1].d;
+	bc->vsp -= 2;
+}
+
+void performline(bc *bc)
+{
+	stroke(bc, bc->vsp[-2].d, bc->vsp[-1].d);
+	bc->vsp -= 2;
+}
+
 void vmachine(bc *bc, step *program, step *stack)
 {
 	bc->vdone = 0;
