@@ -371,5 +371,7 @@ DECLARE(performend)
 DECLARE(sleepd)
 DECLARE(rjmp)
 DECLARE(printd)
+DECLARE(lf)
+DECLARE(tab)
 
 void vmachine(bc *bc, step *program, step *stack);
