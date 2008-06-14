@@ -38,6 +38,8 @@ void ltd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d < bc->vsp[0].d;}
 void gtd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d > bc->vsp[0].d;}
 
 void sqrd(bc *bc){if(bc->vsp[-1].d>=0.0) bc->vsp[-1].d = sqrt(bc->vsp[-1].d);}
+void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
+
 void rndd(bc *bc)
 {
 int r;

@@ -130,6 +130,8 @@ char name[NAMELEN];
 			tprintf(bc, "xord\n");
 		else if(s->func == powerd)
 			tprintf(bc, "powerd\n");
+		else if(s->func == chs)
+			tprintf(bc, "chs\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -447,7 +449,7 @@ expr:
 	;
 
 numexpr:
-	'-' numexpr %prec UNARY
+	'-' numexpr %prec UNARY {emitfunc(PS, chs)}
 	| '(' numexpr ')'
 	| numexpr '+' numexpr {emitstep(PS, (step)addd)}
 	| numexpr '-' numexpr {emitstep(PS, (step)subd)}
