@@ -151,6 +151,10 @@ char name[NAMELEN];
 			tprintf(bc, "circle\n");
 		else if(s->func == performpen)
 			tprintf(bc, "pen\n");
+		else if(s->func == performmove)
+			tprintf(bc, "move\n");
+		else if(s->func == performline)
+			tprintf(bc, "line\n");
 		else if(s->func == performstop)
 			tprintf(bc, "stop\n");
 		else if(s->func == dimd)
@@ -351,8 +355,8 @@ statement:
 	| FILL {emitfunc(PS, performfill)}
 	| CLEAR num1
 	| TEST
-	| MOVE num2
-	| LINE num2
+	| MOVE num2 {emitfunc(PS, performmove)}
+	| LINE num2 {emitfunc(PS, performline)}
 	| BOX num4 {emitfunc(PS, box4)}
 	| RECT num4
 	| RANDOM
