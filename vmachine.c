@@ -13,10 +13,25 @@ TD(nes)
           low level generic functions
 **************************************************************************/
 
+void checkdone(bc *bc)
+{
+	if(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
+		 BF_STOPHIT | BF_QUIT))
+		bc->vdone = 1;
+}
+
 void pushd(bc *bc){bc->vsp++->d = bc->vip++->d;}
 void pushi(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void performend(bc *bc){bc->vdone = 1;}
-void rjmp(bc *bc){bc->vip += bc->vip->i - 1;}
+void rjmp(bc *bc)
+{
+	bc->vip += bc->vip->i - 1;
+	if(!(++bc->xcount&0xff))
+	{
+		update(bc);
+		checkdone(bc);
+	}
+}
 
 void addd(bc *bc){--bc->vsp;bc->vsp[-1].d += bc->vsp[0].d;}
 void muld(bc *bc){--bc->vsp;bc->vsp[-1].d *= bc->vsp[0].d;}
@@ -122,6 +137,7 @@ double d;
 		}
 		SDL_Delay(1);
 		scaninput(bc);
+		checkdone(bc);
 	}
 }
 

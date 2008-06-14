@@ -268,6 +268,9 @@ int key,mod;
 			bc->mousex=event.motion.x;
 			bc->mousey=event.motion.y;
 			break;
+		case SDL_QUIT:
+			bc->flags |= BF_QUIT;
+			break;
 		}
 	}
 }

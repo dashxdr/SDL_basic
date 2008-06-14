@@ -910,7 +910,7 @@ int res=0;
 		emitstep(ps, (step)performend);
 		res = fixuplinerefs(ps);
 		if(res) return;
-		disassemble(ps);
+//		disassemble(ps);
  
 vmachine(bc, ps->steps, bc->vstack);
 
