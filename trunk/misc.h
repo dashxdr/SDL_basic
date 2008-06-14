@@ -406,5 +406,9 @@ DECLARE(tand)
 DECLARE(atnd)
 DECLARE(atn2d)
 DECLARE(absd)
+DECLARE(mousexd)
+DECLARE(mouseyd)
+DECLARE(mousebd)
+DECLARE(ticksd)
 
 void vmachine(bc *bc, step *program, step *stack);
