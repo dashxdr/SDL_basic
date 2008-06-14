@@ -157,6 +157,7 @@ typedef struct basic_context {
 	short shape_pathstops[MAX_SHAPE_CONTOURS];
 	FT_Vector  shape_points[MAX_SHAPE_POINTS];
 	char shape_tags[MAX_SHAPE_POINTS];
+//
 	int starttime;
 	int waitbase;
 	step *vip;
@@ -165,6 +166,7 @@ typedef struct basic_context {
 	int vdone;
 	int numvars;
 	variable vvars[MAXVARIABLES];
+	int xcount;
 
 } bc;
 
