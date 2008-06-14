@@ -107,6 +107,30 @@ char name[NAMELEN];
 			tprintf(bc, "gtd\n");
 		else if(s->func == sqrd)
 			tprintf(bc, "sqrd\n");
+		else if(s->func == fixd)
+			tprintf(bc, "fixd\n");
+		else if(s->func == intd)
+			tprintf(bc, "intd\n");
+		else if(s->func == sgnd)
+			tprintf(bc, "sgnd\n");
+		else if(s->func == sind)
+			tprintf(bc, "sind\n");
+		else if(s->func == cosd)
+			tprintf(bc, "cosd\n");
+		else if(s->func == powd)
+			tprintf(bc, "powd\n");
+		else if(s->func == logd)
+			tprintf(bc, "logd\n");
+		else if(s->func == expd)
+			tprintf(bc, "expd\n");
+		else if(s->func == tand)
+			tprintf(bc, "tand\n");
+		else if(s->func == atnd)
+			tprintf(bc, "atnd\n");
+		else if(s->func == atn2d)
+			tprintf(bc, "atn2d\n");
+		else if(s->func == absd)
+			tprintf(bc, "absd\n");
 		else if(s->func == rndd)
 			tprintf(bc, "rndd\n");
 		else if(s->func == performend)
@@ -153,6 +177,10 @@ char name[NAMELEN];
 			tprintf(bc, "circle\n");
 		else if(s->func == performpen)
 			tprintf(bc, "pen\n");
+		else if(s->func == spot)
+			tprintf(bc, "spot\n");
+		else if(s->func == update)
+			tprintf(bc, "update\n");
 		else if(s->func == performmove)
 			tprintf(bc, "move\n");
 		else if(s->func == performline)
@@ -359,14 +387,14 @@ statement:
 	| LINE num2 {emitfunc(PS, performline)}
 	| BOX num4 {emitfunc(PS, box4)}
 	| RECT num4 {emitfunc(PS, rect4)}
+	| SPOT {emitfunc(PS, spot)}
+	| UPDATE {emitfunc(PS, update)}
 	| RANDOM
-	| SPOT
-	| UPDATE
 	| REM
 	| GOSUB INTEGER
+	| RETURN
 	| ON numexpr GOTO intlist
 	| ON numexpr GOSUB intlist
-	| RETURN
 	| RESTORE
 	| INPUT inputlist
 	| READ varlist
@@ -572,20 +600,20 @@ singlestringpar: '(' stringexpr ')'
 	;
 
 numfunc:
-	INT singlenumpar
-	| FIX singlenumpar
-	| SGN singlenumpar
-	| SIN singlenumpar
-	| COS singlenumpar
-	| RND singlenumpar {emitstep(PS, (step)rndd)}
-	| POW doublenumpar
-	| LOG singlenumpar
-	| EXP singlenumpar
-	| TAN singlenumpar
-	| ATN singlenumpar
-	| ATN2 doublenumpar
-	| ABS singlenumpar
-	| SQR singlenumpar {emitstep(PS, (step)sqrd)}
+	INT singlenumpar {emitfunc(PS, intd)}
+	| FIX singlenumpar {emitfunc(PS, fixd)}
+	| SGN singlenumpar {emitfunc(PS, sgnd)}
+	| SIN singlenumpar {emitfunc(PS, sind)}
+	| COS singlenumpar {emitfunc(PS, cosd)}
+	| RND singlenumpar {emitfunc(PS, rndd)}
+	| POW doublenumpar {emitfunc(PS, powd)}
+	| LOG singlenumpar {emitfunc(PS, logd)}
+	| EXP singlenumpar {emitfunc(PS, expd)}
+	| TAN singlenumpar {emitfunc(PS, tand)}
+	| ATN singlenumpar {emitfunc(PS, atnd)}
+	| ATN2 doublenumpar {emitfunc(PS, atn2d)}
+	| ABS singlenumpar {emitfunc(PS, absd)}
+	| SQR singlenumpar {emitfunc(PS, sqrd)}
 	| LEN singlestringpar
 	| VAL singlestringpar
 	| ASC singlestringpar
