@@ -70,7 +70,7 @@ void fixd(bc *bc){double *d=&bc->vsp[-1].d;*d = (int)*d;}
 void sgnd(bc *bc){double *d=&bc->vsp[-1].d;*d = *d<0.0 ? -1 : (*d>0.0 ? 1 : 0.0);}
 void sind(bc *bc){double *d=&bc->vsp[-1].d;*d = sin(*d);}
 void cosd(bc *bc){double *d=&bc->vsp[-1].d;*d = cos(*d);}
-void powd(bc *bc){bc->vsp[-1].d=pow(bc->vsp[-2].d, bc->vsp[-1].d);--bc->vsp;}
+void powd(bc *bc){bc->vsp[-2].d=pow(bc->vsp[-2].d, bc->vsp[-1].d);--bc->vsp;}
 void logd(bc *bc){double *d=&bc->vsp[-1].d;*d = log(*d);}
 void expd(bc *bc){double *d=&bc->vsp[-1].d;*d = exp(*d);}
 void tand(bc *bc){double *d=&bc->vsp[-1].d;*d = tan(*d);}
