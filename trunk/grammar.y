@@ -114,6 +114,10 @@ char name[NAMELEN];
 			tprintf(bc, "sleepd\n");
 		else if(s->func == printd)
 			tprintf(bc, "printd\n");
+		else if(s->func == lf)
+			tprintf(bc, "lf\n");
+		else if(s->func == tab)
+			tprintf(bc, "tab\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -204,7 +208,7 @@ void yyerror(char *s);
 %left '*' '/' MOD
 %left POWER
 %right UNARY
-%expect 6
+%expect 4
 %%
 
 program:
@@ -240,7 +244,7 @@ statement:
 	| LET assignexpr
 	| assignexpr
 	| INPUT inputlist
-	| PRINT printlist
+	| PRINT printlist {if($$.value.integer) emitfunc(PS, lf)}
 	| READ varlist
 	| DATA datalist
 	| DIM dimarraylist
@@ -382,19 +386,14 @@ numlist:
 	| numlist ',' numexpr {++$$.value.count}
 	;
 
-printlist: /* nothing */
-	| printlist2
-	;
-
-printlist2:
-	printitem
-	| printlist2 printsep printitem
-	| printlist2 printsep
-	| printlist2 STRING
+printlist: /* nothing */ {$$.value.integer = 1} // want newline
+	| printitem {$$.value.integer = 1} // want newline
+	| printlist printsep printitem {$$.value.integer = 1} // want newline
+	| printlist printsep {$$.value.integer = 0} // no newline
 	;
 
 printsep: ';'
-	| ','
+	| ',' {emitfunc(PS, tab)}
 	;
 
 printitem:
