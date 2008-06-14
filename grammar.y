@@ -19,13 +19,25 @@ typedef struct tokeninfo {
 	} value;
 } tokeninfo;
 
+typedef struct {
+	int linenumber;
+	int step;
+} linemap;
+
+
 #define MAXSTEPS 100000
+#define MAXLINES 65536
+#define MAXLINEREFS 65536
 typedef struct parse_state {
 	bc *bc;
 	char *yypntr;
 	char *yylast;
 	step *nextstep;
+	step *startstep;
 	step steps[MAXSTEPS];
+	int numlines;
+	linemap lm[MAXLINES];
+	int numlinerefs, linerefs[MAXLINEREFS];
 } ps;
 
 static void getname(ps *ps, char *p, step *s)
@@ -148,6 +160,20 @@ char name[NAMELEN];
 	}
 }
 
+static void lineref(ps *ps)
+{
+	ps->linerefs[ps->numlinerefs++] = ps->nextstep - ps->steps;
+}
+
+static void addline(ps *ps, int number)
+{
+int t1,t2;
+	t1=ps->lm[ps->numlines].step = ps->startstep - ps->steps;
+	t2=ps->lm[ps->numlines++].linenumber = number;
+	ps->startstep = ps->nextstep;
+printf("added line %d at step %d\n", t2,t1);
+}
+
 static void emitfunc(ps *ps, void (*func)())
 {
 	ps->nextstep++ -> func = func;
@@ -246,7 +272,7 @@ prog2:
 	;
 
 line:
-	INTEGER statements LF
+	INTEGER statements LF {addline(PS, $1.value.integer)}
 	;
 
 statements:
@@ -259,7 +285,7 @@ statement:
 	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
 		{$4.value.step[1].i = $7.value.step - $4.value.step;
 		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
-	| GOTO INTEGER
+	| GOTO INTEGER {lineref(PS);emitrjmp(PS, $2.value.integer)}
 	| GOSUB INTEGER
 	| ON numexpr GOTO intlist
 	| ON numexpr GOSUB intlist
@@ -323,7 +349,7 @@ forvar:
 
 stint:
 	statements
-	| INTEGER
+	| INTEGER {lineref(PS);emitrjmp(PS, $1.value.integer)}
 	;
 
 optthen: /* nothing */
@@ -826,6 +852,7 @@ int res=0;
 	}
 	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
+	ps->startstep = ps->steps;
 	ps->nextstep = ps->steps;
 	ps->yypntr = bc->program;
 
@@ -838,7 +865,7 @@ int res=0;
 		emitstep(ps, (step)performend);
 		disassemble(ps);
 
-vmachine(bc, ps->steps, bc->vstack);
+//vmachine(bc, ps->steps, bc->vstack);
 
 		free(ps);
 		return;
