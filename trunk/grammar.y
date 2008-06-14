@@ -2,9 +2,12 @@
 #include <ctype.h>
 #include "misc.h"
 
+#define NAMELEN 16
+
 typedef struct item item;
 typedef struct list list;
 typedef int step; // program element, needs to hold a void * or int
+#define STEPS_PER_DOUBLE (sizeof(double)/sizeof(step))
 
 typedef struct tokeninfo {
 	char *at;
@@ -13,12 +16,34 @@ typedef struct tokeninfo {
 		double real;
 		char *start;
 		int integer;
-		char name[16];
+		char name[NAMELEN];
 		char string[256];
 		int count;
 		step *step;
+		void *pointer;
 	} value;
 } tokeninfo;
+
+#define MAXVARIABLES 1024
+
+#define MAXDIMENSIONS 16
+
+typedef struct arrayinfo {
+	int rank;
+	int dimensions[MAXDIMENSIONS];
+	void *pointer;
+} arrayinfo;
+
+// array and variable of the same name share structure
+typedef struct {
+	char name[NAMELEN];
+	arrayinfo ai;
+	union {
+		double d;
+		bstring *s;
+	} value;
+} variable;
+
 
 #define MAXSTEPS 100000
 typedef struct parse_state {
@@ -27,6 +52,8 @@ typedef struct parse_state {
 	char *yylast;
 	step *nextstep;
 	step steps[MAXSTEPS];
+	int numvars;
+	variable vars[MAXVARIABLES];
 } ps;
 
 #define DECLARE(name) void name(bc *bc){} extern void name(bc *bc);
@@ -63,16 +90,14 @@ DECLARE(performend)
 DECLARE(sleepd)
 DECLARE(rjmp)
 
-void getdouble(void *d, step *s)
+static void getdouble(void *d, step *s)
 {
-void *p=d;
-	((step*)p)[0] = s[0];
-	((step*)p)[1] = s[1];
+	*(double *)d = *(double *)s;
 }
 
-static void getname(char *p, step *s)
+static void getname(ps *ps, char *p, step *s)
 {
-	*(int *)p = *(int *)s;
+	strcpy(p, ps->vars[(int)*s].name);
 }
 
 static void disassemble(ps *ps)
@@ -80,7 +105,7 @@ static void disassemble(ps *ps)
 step *s, *e;
 bc *bc = ps->bc;
 double d;
-char name[16];
+char name[NAMELEN];
 
 	s = ps->steps;
 	e = ps->nextstep;
@@ -92,21 +117,23 @@ char name[16];
 			getdouble(&d, s+1);
 //printf("%x %x\n", s[1], s[2]);
 			tprintf(bc, "pushd %.8f\n", d);
-			s+=2;
+			s+= STEPS_PER_DOUBLE;
 		}
 		else if(*s == (step)evald)
 			tprintf(bc, "evald\n");
 		else if(*s == (step)assignd)
 			tprintf(bc, "assignd\n", name);
+		else if(*s == (step)assigns)
+			tprintf(bc, "assigns\n", name);
 		else if(*s == (step)pushvd)
 		{
-			getname(name, s+1);
+			getname(ps, name, s+1);
 			tprintf(bc, "pushvd %s\n", name);
 			++s;
 		}
 		else if(*s == (step)pushvad)
 		{
-			getname(name, s+1);
+			getname(ps, name, s+1);
 			tprintf(bc, "pushvad %s\n", name);
 			++s;
 		}
@@ -167,23 +194,15 @@ static void emitstep(ps *ps, step s)
 
 static void emitpushd(ps *ps, double val)
 {
-void *p=&val;
 	emitstep(ps, (step)pushd);
-	emitstep(ps, ((step *)p)[0]);
-	emitstep(ps, ((step *)p)[1]);
+	*(double *)ps->nextstep = val;
+	ps->nextstep += STEPS_PER_DOUBLE;
 }
 
-static void emitname(ps *ps, char *name)
-{
-char temp[sizeof(int)] = {0};
-	strcpy(temp, name);
-	emitstep(ps, *(step *)temp);
-}
-
-static void emitpushvd(ps *ps, char *name)
+static void emitpushvd(ps *ps, int num)
 {
 	emitstep(ps, (step)pushvd);
-	emitname(ps, name);
+	emitstep(ps, (step)num);
 }
 
 static void emitpushi(ps *ps, int v)
@@ -192,10 +211,10 @@ static void emitpushi(ps *ps, int v)
 	emitstep(ps, (step)v);
 }
 
-static void emitpushvad(ps *ps, char *name)
+static void emitpushvad(ps *ps, int num) // identical to pushvd
 {
 	emitstep(ps, (step)pushvad);
-	emitname(ps, name);
+	emitstep(ps, (step)num);
 }
 
 static void emitrjmp(ps *ps, int delta)
@@ -403,9 +422,9 @@ var:
 	;
 
 numvar:
-	NUMSYMBOL {emitpushvd(PS, $1.value.name)}
+	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
-					emitpushvad(PS, $1.value.name);
+					emitpushvad(PS, $1.value.integer);
 					emitstep(PS, (step)arrayd)}
 	;
 
@@ -565,6 +584,24 @@ stringfunc:
 
 void yyerror(char *s)
 {
+}
+
+int findvar(ps *ps, char *name)
+{
+int i;
+variable *v;
+	v=ps->vars;
+	for(i=0;i<ps->numvars;++i, ++v)
+		if(!strcmp(v->name, name))
+			return i;
+	if(ps->numvars < MAXVARIABLES)
+	{
+		memset(v, 0, sizeof(*v));
+		strcpy(v->name, name);
+		return ps->numvars++;
+	}
+//WARNING
+	return -1; // ran out
 }
 
 static inline char at(ps *ps)
@@ -762,22 +799,25 @@ printf("here:%s\n", ps->yypntr);
 	if(isalpha(ch))
 	{
 		int t=0;
+		char name[NAMELEN];
 		for(;;)
 		{
 			ch=get(ps);
 			if(!isalpha(ch) && !isdigit(ch))
 				break;
-			if(t<sizeof(ti->value.name)-2)
-				ti->value.name[t++] = ch;
+			if(t<sizeof(name)-2)
+				name[t++] = ch;
 		}
 		if(ch=='$')
 		{
-			ti->value.name[t++] = ch;
-			ti->value.name[t] = 0;
+			name[t++] = ch;
+			name[t] = 0;
+			ti->value.integer = findvar(ps, name);
 			return STRINGSYMBOL;
 		}
 		back(ps);
-		ti->value.name[t] = 0;
+		name[t] = 0;
+		ti->value.integer = findvar(ps, name);
 		return NUMSYMBOL;
 	}
 	if(ch=='"')
@@ -815,12 +855,14 @@ int res=0;
 		tprintf(bc, "Out of memory.\n");
 		return;
 	}
+	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
 	ps->nextstep = ps->steps;
 	ps->yypntr = bc->program;
 
 	res=yyparse(ps);
 
+//printf("numvars = %d\n", ps->numvars);
 	if(!res)
 	{
 		tprintf(bc, "Program parsed correctly\n");
