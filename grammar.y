@@ -19,27 +19,6 @@ typedef struct tokeninfo {
 	} value;
 } tokeninfo;
 
-#define MAXVARIABLES 1024
-
-#define MAXDIMENSIONS 16
-
-typedef struct arrayinfo {
-	int rank;
-	int dimensions[MAXDIMENSIONS];
-	void *pointer;
-} arrayinfo;
-
-// array and variable of the same name share structure
-typedef struct {
-	char name[NAMELEN];
-	arrayinfo ai;
-	union {
-		double d;
-		bstring *s;
-	} value;
-} variable;
-
-
 #define MAXSTEPS 100000
 typedef struct parse_state {
 	bc *bc;
@@ -47,13 +26,11 @@ typedef struct parse_state {
 	char *yylast;
 	step *nextstep;
 	step steps[MAXSTEPS];
-	int numvars;
-	variable vars[MAXVARIABLES];
 } ps;
 
 static void getname(ps *ps, char *p, step *s)
 {
-	strcpy(p, ps->vars[s->i].name);
+	strcpy(p, ps->bc->vvars[s->i].name);
 }
 
 static void disassemble(ps *ps)
@@ -135,6 +112,8 @@ char name[NAMELEN];
 			tprintf(bc, "end\n");
 		else if(s->func == sleepd)
 			tprintf(bc, "sleepd\n");
+		else if(s->func == printd)
+			tprintf(bc, "printd\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -390,7 +369,7 @@ numvar:
 	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
 					emitpushvad(PS, $1.value.integer);
-					emitstep(PS, (step)arrayd)}
+					emitfunc(PS, arrayd)}
 	;
 
 stringvar:
@@ -420,7 +399,7 @@ printsep: ';'
 
 printitem:
 	'@' numexpr
-	| expr
+	| expr {emitfunc(PS, printd);}
 	| TAB singlenumpar
 	;
 
@@ -555,15 +534,16 @@ int findvar(ps *ps, char *name)
 {
 int i;
 variable *v;
-	v=ps->vars;
-	for(i=0;i<ps->numvars;++i, ++v)
+bc *bc = ps->bc;
+	v=bc->vvars;
+	for(i=0;i<bc->numvars;++i, ++v)
 		if(!strcmp(v->name, name))
 			return i;
-	if(ps->numvars < MAXVARIABLES)
+	if(bc->numvars < MAXVARIABLES)
 	{
 		memset(v, 0, sizeof(*v));
 		strcpy(v->name, name);
-		return ps->numvars++;
+		return bc->numvars++;
 	}
 //WARNING
 	return -1; // ran out
@@ -827,7 +807,7 @@ int res=0;
 
 	res=yyparse(ps);
 
-//printf("numvars = %d\n", ps->numvars);
+//printf("numvars = %d\n", bc->numvars);
 	if(!res)
 	{
 		tprintf(bc, "Program parsed correctly\n");
