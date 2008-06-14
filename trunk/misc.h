@@ -374,5 +374,6 @@ DECLARE(rjmp)
 DECLARE(printd)
 DECLARE(lf)
 DECLARE(tab)
+DECLARE(chs)
 
 void vmachine(bc *bc, step *program, step *stack);
