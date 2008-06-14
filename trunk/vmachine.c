@@ -2,11 +2,14 @@
 #include "misc.h"
 
 #define TD(name) void name(bc *bc){}
-TD(pushvad)
 TD(arrayd)
+TD(arrays)
+TD(pushav)
 TD(assigns)
 TD(eqs)
 TD(nes)
+TD(dimd)
+TD(dims)
 
 
 /**************************************************************************
@@ -45,7 +48,7 @@ void xord(bc *bc){--bc->vsp;bc->vsp[-1].d = (int)bc->vsp[-1].d ^ (int)bc->vsp[0]
 void andandd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d && bc->vsp[0].d;}
 void orord(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d || bc->vsp[0].d;}
 
-void pushvd(bc *bc){bc->vsp++ -> p = &bc->vvars[bc->vip++ -> i].value.d;}
+void pushv(bc *bc){bc->vsp++ -> p = &bc->vvars[bc->vip++ -> i].value.d;}
 void evald(bc *bc){	bc->vsp[-1].d = *(double *)bc->vsp[-1].p;}
  // skip next 2 steps if TOS != 0
 void skip2ne(bc *bc){if((--bc->vsp)->d!=0.0) bc->vip+=2;}
@@ -61,6 +64,10 @@ void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
 
 // take both off the stack...
 void assignd(bc *bc){*(double *)bc->vsp[-2].p = bc->vsp[-1].d;bc->vsp-=2;}
+
+
+
+
 
 
 /**************************************************************************

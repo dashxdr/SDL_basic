@@ -40,11 +40,6 @@ typedef struct parse_state {
 	int numlinerefs, linerefs[MAXLINEREFS];
 } ps;
 
-static void getname(ps *ps, char *p, step *s)
-{
-	strcpy(p, ps->bc->vvars[s->i].name);
-}
-
 static void disassemble(ps *ps)
 {
 step *s, *e;
@@ -68,18 +63,10 @@ char name[NAMELEN];
 			tprintf(bc, "assignd\n", name);
 		else if(s->func == assigns)
 			tprintf(bc, "assigns\n", name);
-		else if(s->func == pushvd)
-		{
-			getname(ps, name, s+1);
-			tprintf(bc, "pushvd %s\n", name);
-			++s;
-		}
-		else if(s->func == pushvad)
-		{
-			getname(ps, name, s+1);
-			tprintf(bc, "pushvad %s\n", name);
-			++s;
-		}
+		else if(s->func == pushv)
+			tprintf(bc, "pushv %s\n", bc->vvars[(++s)->i].name);
+		else if(s->func == pushav)
+			tprintf(bc, "pushav %s\n", bc->vvars[(++s)->i].name);
 		else if(s->func == addd)
 			tprintf(bc, "addd\n");
 		else if(s->func == subd)
@@ -92,6 +79,8 @@ char name[NAMELEN];
 			tprintf(bc, "powerd\n");
 		else if(s->func == arrayd)
 			tprintf(bc, "arrayd\n");
+		else if(s->func == arrays)
+			tprintf(bc, "arrays\n");
 		else if(s->func == pushi)
 			tprintf(bc, "pushi %d\n", (++s)->i);
 		else if(s->func == rjmp)
@@ -156,6 +145,10 @@ char name[NAMELEN];
 			tprintf(bc, "box4\n");
 		else if(s->func == performdisc)
 			tprintf(bc, "disc\n");
+		else if(s->func == dimd)
+			tprintf(bc, "dimd\n");
+		else if(s->func == dims)
+			tprintf(bc, "dims\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -242,22 +235,22 @@ static void emitpushd(ps *ps, double val)
 	++ps->nextstep;
 }
 
-static void emitpushvd(ps *ps, int num)
+static void emitpushv(ps *ps, int num)
 {
-	emitstep(ps, (step)pushvd);
-	emitstep(ps, (step)num);
+	emitfunc(ps, pushv);
+	emitint(ps, num);
+}
+
+static void emitpushav(ps *ps, int num)
+{
+	emitfunc(ps, pushav);
+	emitint(ps, num);
 }
 
 static void emitpushi(ps *ps, int v)
 {
 	emitstep(ps, (step)pushi);
 	emitstep(ps, (step)v);
-}
-
-static void emitpushvad(ps *ps, int num) // identical to pushvd
-{
-	emitstep(ps, (step)pushvad);
-	emitstep(ps, (step)num);
 }
 
 static void emitrjmp(ps *ps, int delta)
@@ -427,12 +420,12 @@ dimarraylist:
 	;
 
 dimarrayvar:
-	sym '(' intlist ')'
-	;
-
-sym:
-	NUMSYMBOL
-	| STRINGSYMBOL
+	NUMSYMBOL '(' intlist ')' {emitpushi(PS, $3.value.count);
+				emitpushav(PS, $1.value.integer);
+				emitfunc(PS, dimd)}
+	| STRINGSYMBOL '(' intlist ')' {emitpushi(PS, $3.value.count);
+				emitpushav(PS, $1.value.integer);
+				emitfunc(PS, dims)}
 	;
 
 intlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
@@ -466,15 +459,17 @@ var:
 	;
 
 numvar:
-	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
+	NUMSYMBOL {emitpushv(PS, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
-					emitpushvad(PS, $1.value.integer);
+					emitpushav(PS, $1.value.integer);
 					emitfunc(PS, arrayd)}
 	;
 
 stringvar:
 	STRINGSYMBOL
-	| STRINGSYMBOL '(' numlist ')'
+	| STRINGSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
+					emitpushav(PS, $1.value.integer);
+					emitfunc(PS, arrays)}
 	;
 
 numlist:
@@ -885,7 +880,7 @@ printf("here:%s\n", ps->yypntr);
 }
 
 
-void doparse(bc *bc)
+void parse(bc *bc, int runit)
 {
 struct parse_state *ps;
 int res=0;
@@ -910,10 +905,10 @@ int res=0;
 		emitstep(ps, (step)performend);
 		res = fixuplinerefs(ps);
 		if(res) return;
-//		disassemble(ps);
- 
-vmachine(bc, ps->steps, bc->vstack);
-
+		if(!runit)
+			disassemble(ps);
+		else 
+			vmachine(bc, ps->steps, bc->vstack);
 		free(ps);
 		return;
 	}

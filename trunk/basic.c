@@ -472,6 +472,16 @@ int n=0;
 		renumber_lines(bc, io, i);
 }
 
+void doparse(bc *bc, char *text)
+{
+	parse(bc, 0); // don't run it
+}
+
+void dopr(bc *bc, char *text)
+{
+	parse(bc, 1); // run it
+}
+
 void dorun(bc *bc, char *text);
 
 struct cmd commandlist[]={
@@ -486,6 +496,7 @@ struct cmd commandlist[]={
 {"run", dorun},
 {"ren", doren},
 {"parse", doparse},
+{"pr", dopr},
 {0, 0}};
 
 void processline(bc *bc, char *line)
