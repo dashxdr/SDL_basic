@@ -145,6 +145,8 @@ char name[NAMELEN];
 			tprintf(bc, "color4\n");
 		else if(s->func == box4)
 			tprintf(bc, "box4\n");
+		else if(s->func == rect4)
+			tprintf(bc, "rect4\n");
 		else if(s->func == performdisc)
 			tprintf(bc, "disc\n");
 		else if(s->func == performcircle)
@@ -353,12 +355,10 @@ statement:
 	| CIRCLE num3 {emitfunc(PS, performcircle)}
 	| DISC num3 {emitfunc(PS, performdisc)}
 	| FILL {emitfunc(PS, performfill)}
-	| CLEAR num1
-	| TEST
 	| MOVE num2 {emitfunc(PS, performmove)}
 	| LINE num2 {emitfunc(PS, performline)}
 	| BOX num4 {emitfunc(PS, box4)}
-	| RECT num4
+	| RECT num4 {emitfunc(PS, rect4)}
 	| RANDOM
 	| SPOT
 	| UPDATE
@@ -371,6 +371,8 @@ statement:
 	| INPUT inputlist
 	| READ varlist
 	| DATA datalist
+	| CLEAR num1
+	| TEST
 	;
 
 fixif: /* nothing */ {emitstep(PS, (step)skip2ne);
