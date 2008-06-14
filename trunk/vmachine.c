@@ -154,6 +154,13 @@ double list[4];
 	shape_done(bc);
 }
 
+void performdisc(bc *bc)
+{
+	disc(bc, bc->vsp[-3].d, bc->vsp[-2].d, bc->vsp[-1].d);
+	bc->vsp -= 3;
+}
+
+
 
 
 
