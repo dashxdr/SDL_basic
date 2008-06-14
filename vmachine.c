@@ -206,6 +206,30 @@ double list[4];
 	shape_done(bc);
 }
 
+void rect4(bc *bc)
+{
+double list[4];
+double pen2=bc->pen/2.0;
+
+	list[0]=bc->vsp[-4].d;
+	list[1]=bc->vsp[-3].d;
+	list[2]=bc->vsp[-2].d;
+	list[3]=bc->vsp[-1].d;
+	bc->vsp-=4;
+	shape_init(bc);
+	shape_add(bc, list[0]-list[2]-pen2, list[1]-list[3]-pen2, TAG_ONPATH);
+	shape_add(bc, list[0]+list[2]+pen2, list[1]-list[3]-pen2, TAG_ONPATH);
+	shape_add(bc, list[0]+list[2]+pen2, list[1]+list[3]+pen2, TAG_ONPATH);
+	shape_add(bc, list[0]-list[2]-pen2, list[1]+list[3]+pen2, TAG_ONPATH);
+	shape_end(bc);
+	shape_add(bc, list[0]-list[2]+pen2, list[1]-list[3]+pen2, TAG_ONPATH);
+	shape_add(bc, list[0]+list[2]-pen2, list[1]-list[3]+pen2, TAG_ONPATH);
+	shape_add(bc, list[0]+list[2]-pen2, list[1]+list[3]-pen2, TAG_ONPATH);
+	shape_add(bc, list[0]-list[2]+pen2, list[1]+list[3]-pen2, TAG_ONPATH);
+	shape_done(bc);
+
+}
+
 void performdisc(bc *bc)
 {
 	disc(bc, bc->vsp[-3].d, bc->vsp[-2].d, bc->vsp[-1].d);

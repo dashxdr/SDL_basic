@@ -393,5 +393,6 @@ DECLARE(performstop)
 DECLARE(performfill)
 DECLARE(performmove)
 DECLARE(performline)
+DECLARE(rect4)
 
 void vmachine(bc *bc, step *program, step *stack);
