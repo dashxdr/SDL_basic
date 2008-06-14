@@ -378,8 +378,6 @@ statement:
 	| assignexpr
 	| PRINT printlist {if($2.value.integer) emitfunc(PS, lf)}
 	| DIM dimarraylist
-	| FOR forvar '=' numexpr TO numexpr optstep
-	| NEXT optforvar
 	| END {emitfunc(PS, performend)}
 	| STOP {emitfunc(PS, performstop)}
 	| SLEEP num1 {emitstep(PS, (step)sleepd)}
@@ -397,6 +395,8 @@ statement:
 	| RECT num4 {emitfunc(PS, rect4)}
 	| SPOT {emitfunc(PS, spot)}
 	| UPDATE {emitfunc(PS, update)}
+	| FOR forvar '=' numexpr TO numexpr optstep
+	| NEXT optforvar
 	| RANDOM
 	| REM
 	| GOSUB INTEGER
