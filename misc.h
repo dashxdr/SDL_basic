@@ -380,6 +380,7 @@ DECLARE(home)
 DECLARE(color3)
 DECLARE(color4)
 DECLARE(box4)
+DECLARE(performdisc)
 
 
 void vmachine(bc *bc, step *program, step *stack);

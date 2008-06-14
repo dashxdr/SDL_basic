@@ -154,6 +154,8 @@ char name[NAMELEN];
 			tprintf(bc, "color4\n");
 		else if(s->func == box4)
 			tprintf(bc, "box4\n");
+		else if(s->func == performdisc)
+			tprintf(bc, "disc\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -344,7 +346,7 @@ statement:
 	| FOR forvar '=' numexpr TO numexpr optstep
 	| NEXT optforvar
 	| RANDOM
-	| END
+	| END {emitfunc(PS, performend)}
 	| STOP
 	| SLEEP num1 {emitstep(PS, (step)sleepd)}
 	| MOVE num2
@@ -357,7 +359,7 @@ statement:
 	| FILL
 	| HOME {emitfunc(PS, home)}
 	| CIRCLE num3
-	| DISC num3
+	| DISC num3 {emitfunc(PS, performdisc)}
 	| TEST
 	| BOX num4 {emitfunc(PS, box4)}
 	| RECT num4
@@ -584,8 +586,8 @@ special:
 	MOUSEX
 	| MOUSEY
 	| MOUSEB
-	| XSIZE
-	| YSIZE
+	| XSIZE {emitpushd(PS, PS->bc->xsize)}
+	| YSIZE {emitpushd(PS, PS->bc->ysize)}
 	| TICKS
 	;
 specialstr:
@@ -909,7 +911,7 @@ int res=0;
 		res = fixuplinerefs(ps);
 		if(res) return;
 		disassemble(ps);
-
+ 
 vmachine(bc, ps->steps, bc->vstack);
 
 		free(ps);
