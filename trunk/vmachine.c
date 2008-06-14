@@ -9,6 +9,10 @@ TD(eqs)
 TD(nes)
 
 
+/**************************************************************************
+          low level generic functions
+**************************************************************************/
+
 void pushd(bc *bc){bc->vsp++->d = bc->vip++->d;}
 void pushi(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void performend(bc *bc){bc->vdone = 1;}
@@ -43,6 +47,11 @@ void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
 // take both off the stack...
 void assignd(bc *bc){*(double *)bc->vsp[-2].p = bc->vsp[-1].d;bc->vsp-=2;}
 
+
+/**************************************************************************
+          BASIC high level commands, for the most part...
+**************************************************************************/
+
 void printd(bc *bc)
 {
 double d;
@@ -69,9 +78,6 @@ int t;
 		tprintf(bc, "%s", spaces);
 	}
 }
-
-/**************************************************************************
-**************************************************************************/
 
 void home(bc *bc)
 {
@@ -159,8 +165,6 @@ void performdisc(bc *bc)
 	disc(bc, bc->vsp[-3].d, bc->vsp[-2].d, bc->vsp[-1].d);
 	bc->vsp -= 3;
 }
-
-
 
 
 
