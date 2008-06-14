@@ -118,6 +118,18 @@ char name[NAMELEN];
 			tprintf(bc, "lf\n");
 		else if(s->func == tab)
 			tprintf(bc, "tab\n");
+		else if(s->func == andandd)
+			tprintf(bc, "andandd\n");
+		else if(s->func == orord)
+			tprintf(bc, "orord\n");
+		else if(s->func == andd)
+			tprintf(bc, "andd\n");
+		else if(s->func == ord)
+			tprintf(bc, "ord\n");
+		else if(s->func == xord)
+			tprintf(bc, "xord\n");
+		else if(s->func == powerd)
+			tprintf(bc, "powerd\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -244,7 +256,7 @@ statement:
 	| LET assignexpr
 	| assignexpr
 	| INPUT inputlist
-	| PRINT printlist {if($$.value.integer) emitfunc(PS, lf)}
+	| PRINT printlist {if($2.value.integer) emitfunc(PS, lf)}
 	| READ varlist
 	| DATA datalist
 	| DIM dimarraylist
