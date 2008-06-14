@@ -57,7 +57,27 @@ void ged(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d >= bc->vsp[0].d;}
 void ltd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d < bc->vsp[0].d;}
 void gtd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d > bc->vsp[0].d;}
 
-void sqrd(bc *bc){if(bc->vsp[-1].d>=0.0) bc->vsp[-1].d = sqrt(bc->vsp[-1].d);}
+void intd(bc *bc)
+{
+double *d=&bc->vsp[-1].d;
+	if(*d<0.0)
+		*d=(int)*d - 1;
+	else
+		*d=(int)*d;
+}
+void fixd(bc *bc){double *d=&bc->vsp[-1].d;*d = (int)*d;}
+void sgnd(bc *bc){double *d=&bc->vsp[-1].d;*d = *d<0.0 ? -1 : (*d>0.0 ? 1 : 0.0);}
+void sind(bc *bc){double *d=&bc->vsp[-1].d;*d = sin(*d);}
+void cosd(bc *bc){double *d=&bc->vsp[-1].d;*d = cos(*d);}
+void powd(bc *bc){bc->vsp[-1].d=pow(bc->vsp[-2].d, bc->vsp[-1].d);--bc->vsp;}
+void logd(bc *bc){double *d=&bc->vsp[-1].d;*d = log(*d);}
+void expd(bc *bc){double *d=&bc->vsp[-1].d;*d = exp(*d);}
+void tand(bc *bc){double *d=&bc->vsp[-1].d;*d = tan(*d);}
+void atnd(bc *bc){double *d=&bc->vsp[-1].d;*d = atan(*d);}
+void atn2d(bc *bc){bc->vsp[-1].d=atan2(bc->vsp[-2].d, bc->vsp[-1].d);--bc->vsp;}
+void absd(bc *bc){double *d=&bc->vsp[-1].d;if(*d<0.0) *d = -*d;}
+
+void sqrd(bc *bc){double *d=&bc->vsp[-1].d;if(*d>=0.0) *d = sqrt(*d);}
 void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
 
 // take both off the stack...
