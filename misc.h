@@ -242,6 +242,7 @@ void flushinput(bc *bc);
 
 // basic.c
 
+void reset_waitbase(bc *bc);
 void runinit(bc *bc);
 void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
