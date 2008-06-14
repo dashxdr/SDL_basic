@@ -882,13 +882,24 @@ printf("here:%s\n", ps->yypntr);
 void freeold(bc *bc)
 {
 int i;
-	for(i=0;i<bc->numvars;++i)
+int j,size;
+bstring **s;
+variable *v;
+
+	for(i=0,v=bc->vvars;i<bc->numvars;++i,++v)
 	{
-		if(!bc->vvars[i].pointer)
+		if(!v->pointer)
 			continue;
-		free(bc->vvars[i].pointer);
-		bc->vvars[i].pointer = 0;
-//printf("Freed array in variable %s\n", bc->vvars[i].name);
+		if(index(v->name, '$'))
+		{
+			s=v->pointer;
+			size=v->dimensions[v->rank];
+			for(j=0;j<size;++j)
+				if(s[j])
+					free_bstring(s[j]);
+		}
+		free(v->pointer);
+		v->pointer = 0;
 	}
 
 	bc->numvars = 0;

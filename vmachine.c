@@ -76,7 +76,7 @@ int i;
 #warning do some sanity checks...
 	for(i=0;i<rank;++i)
 		v->dimensions[i+1] = v->dimensions[i] * bc->vsp[i].i;
-	v->pointer = calloc(v->dimensions[rank+1], size);
+	v->pointer = calloc(v->dimensions[rank], size);
 #warning check for allocation success
 }
 
