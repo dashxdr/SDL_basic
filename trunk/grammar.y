@@ -171,8 +171,51 @@ int t1,t2;
 	t1=ps->lm[ps->numlines].step = ps->startstep - ps->steps;
 	t2=ps->lm[ps->numlines++].linenumber = number;
 	ps->startstep = ps->nextstep;
-printf("added line %d at step %d\n", t2,t1);
 }
+
+static int findline(ps *ps, int want)
+{
+int low, high, mid;
+	high=ps->numlines;
+	low = 0;
+	high=ps->numlines;
+	if(!high) return -1;
+	for(;;)
+	{
+		mid = (low+high) >> 1;
+		if(mid==low) break;
+		if(want < ps->lm[mid].linenumber)
+			high=mid;
+		else
+			low=mid;
+	}
+	if(want == ps->lm[mid].linenumber)
+		return ps->lm[mid].step;
+	else
+		return -1;
+
+}
+
+static int fixuplinerefs(ps *ps)
+{
+int i;
+int o;
+int at;
+	for(i=0;i<ps->numlinerefs;++i)
+	{
+		o=ps->linerefs[i];
+		at=findline(ps, ps->steps[o+1].i);
+		if(at<0)
+		{
+#warning fix me up
+			tprintf(ps->bc, "Bad line reference!!!!\n");
+			return -1;
+		}
+		ps->steps[o+1].i = at - o;
+	}
+	return 0;
+}
+
 
 static void emitfunc(ps *ps, void (*func)())
 {
@@ -863,9 +906,11 @@ int res=0;
 	{
 		tprintf(bc, "Program parsed correctly\n");
 		emitstep(ps, (step)performend);
+		res = fixuplinerefs(ps);
+		if(res) return;
 		disassemble(ps);
 
-//vmachine(bc, ps->steps, bc->vstack);
+vmachine(bc, ps->steps, bc->vstack);
 
 		free(ps);
 		return;
