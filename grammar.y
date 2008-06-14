@@ -135,6 +135,8 @@ char name[NAMELEN];
 			tprintf(bc, "chs\n");
 		else if(s->func == cls)
 			tprintf(bc, "cls\n");
+		else if(s->func == performfill)
+			tprintf(bc, "fill\n");
 		else if(s->func == home)
 			tprintf(bc, "home\n");
 		else if(s->func == color3)
@@ -145,6 +147,12 @@ char name[NAMELEN];
 			tprintf(bc, "box4\n");
 		else if(s->func == performdisc)
 			tprintf(bc, "disc\n");
+		else if(s->func == performcircle)
+			tprintf(bc, "circle\n");
+		else if(s->func == performpen)
+			tprintf(bc, "pen\n");
+		else if(s->func == performstop)
+			tprintf(bc, "stop\n");
 		else if(s->func == dimd)
 			tprintf(bc, "dimd\n");
 		else if(s->func == dims)
@@ -324,41 +332,41 @@ statement:
 		{$4.value.step[1].i = $7.value.step - $4.value.step;
 		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
 	| GOTO INTEGER {lineref(PS);emitrjmp(PS, $2.value.integer)}
+	| LET assignexpr
+	| assignexpr
+	| PRINT printlist {if($2.value.integer) emitfunc(PS, lf)}
+	| DIM dimarraylist
+	| FOR forvar '=' numexpr TO numexpr optstep
+	| NEXT optforvar
+	| END {emitfunc(PS, performend)}
+	| STOP {emitfunc(PS, performstop)}
+	| SLEEP num1 {emitstep(PS, (step)sleepd)}
+	| PEN num1 {emitfunc(PS, performpen)}
+	| COLOR num34 {if($2.value.count==3) emitfunc(PS, color3);
+			else emitfunc(PS, color4)}
+	| CLS {emitfunc(PS, cls)}
+	| HOME {emitfunc(PS, home)}
+	| CIRCLE num3 {emitfunc(PS, performcircle)}
+	| DISC num3 {emitfunc(PS, performdisc)}
+	| FILL {emitfunc(PS, performfill)}
+	| CLEAR num1
+	| TEST
+	| MOVE num2
+	| LINE num2
+	| BOX num4 {emitfunc(PS, box4)}
+	| RECT num4
+	| RANDOM
+	| SPOT
+	| UPDATE
+	| REM
 	| GOSUB INTEGER
 	| ON numexpr GOTO intlist
 	| ON numexpr GOSUB intlist
 	| RETURN
 	| RESTORE
-	| LET assignexpr
-	| assignexpr
 	| INPUT inputlist
-	| PRINT printlist {if($2.value.integer) emitfunc(PS, lf)}
 	| READ varlist
 	| DATA datalist
-	| DIM dimarraylist
-	| FOR forvar '=' numexpr TO numexpr optstep
-	| NEXT optforvar
-	| RANDOM
-	| END {emitfunc(PS, performend)}
-	| STOP
-	| SLEEP num1 {emitstep(PS, (step)sleepd)}
-	| MOVE num2
-	| PEN num1
-	| LINE num2
-	| COLOR num34 {if($2.value.count==3) emitfunc(PS, color3);
-			else emitfunc(PS, color4)}
-	| CLEAR num1
-	| CLS {emitfunc(PS, cls)}
-	| FILL
-	| HOME {emitfunc(PS, home)}
-	| CIRCLE num3
-	| DISC num3 {emitfunc(PS, performdisc)}
-	| TEST
-	| BOX num4 {emitfunc(PS, box4)}
-	| RECT num4
-	| SPOT
-	| UPDATE
-	| REM
 	;
 
 fixif: /* nothing */ {emitstep(PS, (step)skip2ne);
@@ -905,6 +913,34 @@ variable *v;
 	bc->numvars = 0;
 }
 
+void pruninit(bc *bc)
+{
+	bc->numlines=0;
+	bc->flags = 0;
+	bc->dataline = 0;
+	bc->datatake = 0;
+	bc->gosubsp = 0;
+	bc->numfors = 0;
+	bc->online = 0;
+	bc->nextline = 0;
+	bc->nextbyte = 0;
+	bc->execute_count = 0;
+	bc->gx=0;
+	bc->gy=0;
+	bc->gred=255;
+	bc->ggreen=255;
+	bc->gblue=255;
+	bc->galpha=255;
+	bc->pen = 1.0;
+	bc->shape_numpoints = 0;
+	bc->shape_numcontours = 0;
+	freeold(bc);
+	bc->numstatements=0;
+	bc->starttime = SDL_GetTicks();
+	reset_waitbase(bc);
+}
+
+
 
 void parse(bc *bc, int runit)
 {
@@ -916,7 +952,6 @@ int res=0;
 		tprintf(bc, "Out of memory.\n");
 		return;
 	}
-	freeold(bc);
 	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
 	ps->startstep = ps->steps;
@@ -924,6 +959,7 @@ int res=0;
 	ps->yypntr = bc->program;
 	bc->numvars = 0;
 
+	pruninit(bc);
 	res=yyparse(ps);
 
 //printf("numvars = %d\n", bc->numvars);

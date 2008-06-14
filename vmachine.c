@@ -175,6 +175,7 @@ void color3(bc *bc)
 	bc->gred = bc->vsp[-3].d;
 	bc->ggreen = bc->vsp[-2].d;
 	bc->gblue = bc->vsp[-1].d;
+	bc->galpha = 255;
 	bc->vsp-=3;
 }
 
@@ -211,8 +212,27 @@ void performdisc(bc *bc)
 	bc->vsp -= 3;
 }
 
+void performcircle(bc *bc)
+{
+	circle(bc, bc->vsp[-3].d, bc->vsp[-2].d, bc->vsp[-1].d);
+	bc->vsp -= 3;
+}
 
+void performpen(bc *bc)
+{
+	bc->pen = (--bc->vsp)->d;
+}
 
+void performstop(bc *bc)
+{
+	bc->flags |= BF_STOPHIT;
+}
+
+void performfill(bc *bc)
+{
+	cleartext(bc);
+	fillscreen(bc, bc->gred, bc->ggreen, bc->gblue, bc->galpha);
+}
 
 void vmachine(bc *bc, step *program, step *stack)
 {

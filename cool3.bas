@@ -1,7 +1,7 @@
 10 home
 20 cls
 30 pen 5
-40 k=sin(a)*127+127;
+40 k=sin(a)*127+127
 50 a=a+.001
 60 color rnd(256),0,0
 70 circle rnd(xsize),rnd(ysize),rnd(50)

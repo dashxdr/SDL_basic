@@ -40,10 +40,9 @@ int w;
 SDL_Surface *scr = bc->thescreen;
 
 	taint(bc);
-	color = maprgb(bc, r, g, b);
+	color = maprgb(bc, r, g, b) | 0xff000000;
 	if(a==255)
 	{
-		color |= 0xff000000;
 		for(i=0;i<bc->xsize;++i)
 			colordot_32(scr, i, 0, color, 255);
 		w=bc->xsize * 4;
