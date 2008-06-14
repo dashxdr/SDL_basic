@@ -375,5 +375,11 @@ DECLARE(printd)
 DECLARE(lf)
 DECLARE(tab)
 DECLARE(chs)
+DECLARE(cls)
+DECLARE(home)
+DECLARE(color3)
+DECLARE(color4)
+DECLARE(box4)
+
 
 void vmachine(bc *bc, step *program, step *stack);

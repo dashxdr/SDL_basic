@@ -132,6 +132,16 @@ char name[NAMELEN];
 			tprintf(bc, "powerd\n");
 		else if(s->func == chs)
 			tprintf(bc, "chs\n");
+		else if(s->func == cls)
+			tprintf(bc, "cls\n");
+		else if(s->func == home)
+			tprintf(bc, "home\n");
+		else if(s->func == color3)
+			tprintf(bc, "color3\n");
+		else if(s->func == color4)
+			tprintf(bc, "color4\n");
+		else if(s->func == box4)
+			tprintf(bc, "box4\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -271,15 +281,16 @@ statement:
 	| MOVE num2
 	| PEN num1
 	| LINE num2
-	| COLOR num34
+	| COLOR num34 {if($2.value.count==3) emitfunc(PS, color3);
+			else emitfunc(PS, color4)}
 	| CLEAR num1
-	| CLS
+	| CLS {emitfunc(PS, cls)}
 	| FILL
-	| HOME
+	| HOME {emitfunc(PS, home)}
 	| CIRCLE num3
 	| DISC num3
 	| TEST
-	| BOX num4
+	| BOX num4 {emitfunc(PS, box4)}
 	| RECT num4
 	| SPOT
 	| UPDATE
@@ -320,17 +331,17 @@ optthen: /* nothing */
 	;
 
 num1:
-	numexpr
+	numexpr {$$.value.count=1}
 	;
 
 num2:
-	numexpr ',' numexpr
+	numexpr ',' numexpr {$$.value.count = 2}
 	;
 num3:
-	numexpr ',' numexpr ',' numexpr
+	numexpr ',' numexpr ',' numexpr {$$.value.count = 3}
 	;
 num4:
-	numexpr ',' numexpr ',' numexpr ',' numexpr
+	numexpr ',' numexpr ',' numexpr ',' numexpr {$$.value.count = 4}
 	;
 
 num34:

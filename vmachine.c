@@ -40,6 +40,51 @@ void gtd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d > bc->vsp[0].d;}
 void sqrd(bc *bc){if(bc->vsp[-1].d>=0.0) bc->vsp[-1].d = sqrt(bc->vsp[-1].d);}
 void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
 
+// take both off the stack...
+void assignd(bc *bc){*(double *)bc->vsp[-2].p = bc->vsp[-1].d;bc->vsp-=2;}
+
+void printd(bc *bc)
+{
+double d;
+	d=(--bc->vsp)->d;
+	if(d==(int)d)
+		tprintf(bc, " %d ", (int)d);
+	else
+		tprintf(bc, " %.2f ", d);
+}
+
+void lf(bc *bc){tprintf(bc, "\n");}
+void tab(bc *bc)
+{
+int t;
+	t=(bc->txpos&~15)+16;
+	if(t>=bc->txsize)
+		tprintf(bc, "\n");
+	else
+	{
+		char spaces[32];
+		t-=bc->txpos;
+		memset(spaces, ' ', t);
+		spaces[t] = 0;
+		tprintf(bc, "%s", spaces);
+	}
+}
+
+/**************************************************************************
+**************************************************************************/
+
+void home(bc *bc)
+{
+	tprintf(bc, "\0330x\0330y");
+}
+
+void cls(bc *bc)
+{
+	cleartext(bc);
+	home(bc);
+	fillscreen(bc, 0, 0, 0, 255);
+}
+
 void rndd(bc *bc)
 {
 int r;
@@ -74,35 +119,44 @@ double d;
 	}
 }
 
-// take both off the stack...
-void assignd(bc *bc){*(double *)bc->vsp[-2].p = bc->vsp[-1].d;bc->vsp-=2;}
-
-void printd(bc *bc)
+void color3(bc *bc)
 {
-double d;
-	d=(--bc->vsp)->d;
-	if(d==(int)d)
-		tprintf(bc, " %d ", (int)d);
-	else
-		tprintf(bc, " %.2f ", d);
+	bc->gred = bc->vsp[-3].d;
+	bc->ggreen = bc->vsp[-2].d;
+	bc->gblue = bc->vsp[-1].d;
+	bc->vsp-=3;
 }
 
-void lf(bc *bc){tprintf(bc, "\n");}
-void tab(bc *bc)
+void color4(bc *bc)
 {
-int t;
-	t=(bc->txpos&~15)+16;
-	if(t>=bc->txsize)
-		tprintf(bc, "\n");
-	else
-	{
-		char spaces[32];
-		t-=bc->txpos;
-		memset(spaces, ' ', t);
-		spaces[t] = 0;
-		tprintf(bc, "%s", spaces);
-	}
+	bc->gred = bc->vsp[-4].d;
+	bc->ggreen = bc->vsp[-3].d;
+	bc->gblue = bc->vsp[-2].d;
+	bc->galpha = bc->vsp[-1].d;
+	bc->vsp-=4;
 }
+
+// x,y,  width, height
+void box4(bc *bc)
+{
+double list[4];
+
+	list[0]=bc->vsp[-4].d;
+	list[1]=bc->vsp[-3].d;
+	list[2]=bc->vsp[-2].d;
+	list[3]=bc->vsp[-1].d;
+	bc->vsp-=4;
+	shape_init(bc);
+	shape_add(bc, list[0]-list[2], list[1]-list[3], TAG_ONPATH);
+	shape_add(bc, list[0]+list[2], list[1]-list[3], TAG_ONPATH);
+	shape_add(bc, list[0]+list[2], list[1]+list[3], TAG_ONPATH);
+	shape_add(bc, list[0]-list[2], list[1]+list[3], TAG_ONPATH);
+	shape_done(bc);
+}
+
+
+
+
 
 void vmachine(bc *bc, step *program, step *stack)
 {
