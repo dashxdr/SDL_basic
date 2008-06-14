@@ -4,12 +4,9 @@
 #define TD(name) void name(bc *bc){}
 TD(arrayd)
 TD(arrays)
-TD(pushav)
 TD(assigns)
 TD(eqs)
 TD(nes)
-TD(dimd)
-TD(dims)
 
 
 /**************************************************************************
@@ -49,6 +46,7 @@ void andandd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d && bc->vsp[0].d;}
 void orord(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d || bc->vsp[0].d;}
 
 void pushv(bc *bc){bc->vsp++ -> p = &bc->vvars[bc->vip++ -> i].value.d;}
+void pushav(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void evald(bc *bc){	bc->vsp[-1].d = *(double *)bc->vsp[-1].p;}
  // skip next 2 steps if TOS != 0
 void skip2ne(bc *bc){if((--bc->vsp)->d!=0.0) bc->vip+=2;}
@@ -65,8 +63,32 @@ void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
 // take both off the stack...
 void assignd(bc *bc){*(double *)bc->vsp[-2].p = bc->vsp[-1].d;bc->vsp-=2;}
 
+static void dim(bc *bc, int size)
+{
+variable *v;
+int rank;
+int i;
+	v=bc->vvars+bc->vsp[-1].i;
+	rank = bc->vsp[-2].i;
+	bc->vsp -= rank+2;
+	v->dimensions[0]=1;
+	v->rank = rank;
+#warning do some sanity checks...
+	for(i=0;i<rank;++i)
+		v->dimensions[i+1] = v->dimensions[i] * bc->vsp[i].i;
+	v->pointer = calloc(v->dimensions[rank+1], size);
+#warning check for allocation success
+}
 
+void dimd(bc *bc)
+{
+	dim(bc, sizeof(double));
+}
 
+void dims(bc *bc)
+{
+	dim(bc, sizeof(bstring *));
+}
 
 
 

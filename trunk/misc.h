@@ -86,7 +86,7 @@ typedef union {
 typedef struct {
 	char name[NAMELEN];
 	int rank;
-	int dimensions[MAXDIMENSIONS];
+	int dimensions[MAXDIMENSIONS+1];
 	void *pointer;
 	union {
 		double d;

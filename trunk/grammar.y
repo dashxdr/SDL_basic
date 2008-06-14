@@ -879,6 +879,21 @@ printf("here:%s\n", ps->yypntr);
 	return -1;
 }
 
+void freeold(bc *bc)
+{
+int i;
+	for(i=0;i<bc->numvars;++i)
+	{
+		if(!bc->vvars[i].pointer)
+			continue;
+		free(bc->vvars[i].pointer);
+		bc->vvars[i].pointer = 0;
+//printf("Freed array in variable %s\n", bc->vvars[i].name);
+	}
+
+	bc->numvars = 0;
+}
+
 
 void parse(bc *bc, int runit)
 {
@@ -890,11 +905,13 @@ int res=0;
 		tprintf(bc, "Out of memory.\n");
 		return;
 	}
+	freeold(bc);
 	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
 	ps->startstep = ps->steps;
 	ps->nextstep = ps->steps;
 	ps->yypntr = bc->program;
+	bc->numvars = 0;
 
 	res=yyparse(ps);
 
