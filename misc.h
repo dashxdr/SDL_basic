@@ -78,6 +78,11 @@ typedef union {
 	char str[STEPSIZE];
 } step; // program element, needs to hold a void * or int or double
 
+typedef struct {
+	int linenumber;
+	int step;
+} linemap;
+
 
 #define MAXVARIABLES 1024
 #define NAMELEN 16
@@ -168,12 +173,14 @@ typedef struct basic_context {
 //
 	int starttime;
 	int waitbase;
+	step *base;
 	step *vip;
 	step *vsp;
 	step vstack[512];
 	int vdone;
 	int numvars;
 	variable vvars[MAXVARIABLES];
+	linemap lm[MAX_PROGRAM_LINES];
 	int xcount;
 
 } bc;

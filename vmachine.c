@@ -9,15 +9,26 @@ TD(eqs)
 TD(nes)
 
 
-void verror(bc *bc, char *s, ...)
+void verror(bc *bc, int ipfix, char *s, ...)
 {
 va_list ap;
 char temp[1024];
+int n;
+int line;
+	n=bc->vip - bc->base + ipfix; // ipfix takes us back to inst. start
+	for(line=0;line<bc->numlines;++line)
+		if(bc->lm[line].step > n)
+			break;
 	va_start(ap, s);
 	vsnprintf(temp, sizeof(temp), s, ap);
 	va_end(ap);
-	tprintf(bc, "\n%s\n", temp);
+	tprintf(bc, "\nLine %d: %s\n", bc->lm[line-1].linenumber, temp);
 	bc->vdone = 1;
+}
+
+void nomem(bc *bc, int ipfix)
+{
+	verror(bc, ipfix, "Out of memory");
 }
 
 
@@ -51,7 +62,7 @@ void rcall(bc *bc)
 {
 	if(bc->gosubsp == GOSUBMAX)
 	{
-		verror(bc, "Gosub stack overflow");
+		verror(bc, -1, "Gosub stack overflow");
 		++bc->vip;
 	}
 	else
@@ -64,7 +75,7 @@ void rcall(bc *bc)
 void ret(bc *bc)
 {
 	if(!bc->gosubsp)
-		verror(bc, "Return outside of subroutine");
+		verror(bc, -1, "Return outside of subroutine");
 	else
 		bc->vip = bc->gosubs[--bc->gosubsp];
 }
@@ -125,16 +136,30 @@ static void dim(bc *bc, int size)
 variable *v;
 int rank;
 int i;
+int t;
 	v=bc->vvars+bc->vsp[-1].i;
 	rank = bc->vsp[-2].i;
 	bc->vsp -= rank+2;
+	if(v->rank)
+	{
+		verror(bc, -1, "Dumplicate dimension variable '%s'", v->name);
+		return;
+	}
 	v->dimensions[0]=1;
 	v->rank = rank;
-#warning do some sanity checks... -- can't redim for example...
 	for(i=0;i<rank;++i)
-		v->dimensions[i+1] = v->dimensions[i] * bc->vsp[i].i;
+	{
+		t=bc->vsp[i].i;
+		if(t<1)
+		{
+			verror(bc, -1, "Invalid dimension size on '%s'", v->name);
+			return;
+		}
+		v->dimensions[i+1] = v->dimensions[i] * t;
+	}
 	v->pointer = calloc(v->dimensions[rank], size);
-#warning check for allocation success
+	if(!v->pointer)
+		nomem(bc, -1);
 }
 
 void dimd(bc *bc)
@@ -158,15 +183,19 @@ int t;
 	v=bc->vvars+bc->vsp[-1].i;
 	rank = bc->vsp[-2].i;
 	bc->vsp -= rank+2;
+	if(v->rank != rank)
+	{
+		verror(bc, -1, "Wrong number of array dimensions on '%s'\n", v->name);
+		return;
+	}
 	j=0;
-#warning sanity checks -- make sure rank is same...
 	for(i=0;i<rank;++i)
 	{
 		t=bc->vsp[i].d - 1;
 		j += t*v->dimensions[i];
 		if(t<0 || j>=v->dimensions[i+1])
 		{
-			verror(bc, "Subscript out of range");
+			verror(bc, -1, "Subscript out of range");
 			break;
 		}
 	}
@@ -187,7 +216,11 @@ forstate *fs;
 
 forstate *addfor(bc *bc)
 {
-#warning check for out of fors
+	if(bc->numfors == MAX_FORS)
+	{
+		verror(bc, -1, "Too many for statements. Limit %d.\n", MAX_FORS);
+		return 0;
+	}
 	return bc->forstates + bc->numfors++;
 }
 
@@ -199,7 +232,12 @@ variable *v;
 	fs = getfor(bc, v);
 	if(!fs)
 	{
-		fs = addfor(bc);
+		if(bc->numfors == MAX_FORS)
+		{
+			verror(bc, -1, "Too many for statements. Limit %d.\n", MAX_FORS);
+			return;
+		}
+		fs = bc->forstates + bc->numfors++;
 		fs->v = v;
 	}
 	fs->delta = bc->vsp[-2].d;
@@ -233,7 +271,8 @@ void performnext(bc *bc)
 {
 	if(bc->numfors)
 		lownext(bc, bc->forstates + bc->numfors - 1);
-#warning next with out for error...
+	else
+		verror(bc, -1, "NEXT without FOR");
 }
 
 void performnext1(bc *bc)
@@ -243,7 +282,8 @@ forstate *fs;
 	fs = getfor(bc, v);
 	if(fs)
 		lownext(bc, fs);
-#warning next without for error...
+	else
+		verror(bc, -1, "NEXT without FOR, '%s'", v->name);
 }
 
 
@@ -437,6 +477,7 @@ void vmachine(bc *bc, step *program, step *stack)
 	bc->vdone = 0;
 	bc->vip = program;
 	bc->vsp = stack;
+	bc->base = program;
 
 	while(!bc->vdone)
 		(bc->vip++ -> func)(bc);

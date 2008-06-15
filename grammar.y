@@ -19,14 +19,9 @@ typedef struct tokeninfo {
 	} value;
 } tokeninfo;
 
-typedef struct {
-	int linenumber;
-	int step;
-} linemap;
 
 
 #define MAXSTEPS 100000
-#define MAXLINES 65536
 #define MAXLINEREFS 65536
 typedef struct parse_state {
 	bc *bc;
@@ -35,8 +30,6 @@ typedef struct parse_state {
 	step *nextstep;
 	step *startstep;
 	step steps[MAXSTEPS];
-	int numlines;
-	linemap lm[MAXLINES];
 	int numlinerefs, linerefs[MAXLINEREFS];
 } ps;
 
@@ -220,30 +213,31 @@ static void lineref(ps *ps)
 
 static void addline(ps *ps, int number)
 {
+bc *bc = ps->bc;
 int t1,t2;
-	t1=ps->lm[ps->numlines].step = ps->startstep - ps->steps;
-	t2=ps->lm[ps->numlines++].linenumber = number;
+	t1=bc->lm[bc->numlines].step = ps->startstep - ps->steps;
+	t2=bc->lm[bc->numlines++].linenumber = number;
 	ps->startstep = ps->nextstep;
 }
 
 static int findline(ps *ps, int want)
 {
 int low, high, mid;
-	high=ps->numlines;
+bc *bc=ps->bc;
 	low = 0;
-	high=ps->numlines;
+	high=bc->numlines;
 	if(!high) return -1;
 	for(;;)
 	{
 		mid = (low+high) >> 1;
 		if(mid==low) break;
-		if(want < ps->lm[mid].linenumber)
+		if(want < bc->lm[mid].linenumber)
 			high=mid;
 		else
 			low=mid;
 	}
-	if(want == ps->lm[mid].linenumber)
-		return ps->lm[mid].step;
+	if(want == bc->lm[mid].linenumber)
+		return bc->lm[mid].step;
 	else
 		return -1;
 
