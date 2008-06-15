@@ -8,6 +8,11 @@ TD(assigns)
 TD(eqs)
 TD(nes)
 
+void takeaction(bc *bc)
+{
+	bc->takeaction = 0;
+}
+
 
 void verror(bc *bc, int ipfix, char *s, ...)
 {
@@ -23,7 +28,7 @@ int line;
 	vsnprintf(temp, sizeof(temp), s, ap);
 	va_end(ap);
 	tprintf(bc, "\nLine %d: %s\n", bc->lm[line-1].linenumber, temp);
-	bc->takeaction = 1;
+	takeaction(bc);
 }
 
 void nomem(bc *bc, int ipfix)
@@ -40,7 +45,7 @@ void nomem(bc *bc, int ipfix)
 void pushd(bc *bc){bc->vsp++->d = bc->vip++->d;}
 void pushi(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void pushea(bc *bc){bc->vsp++->p = bc->vip -1 + bc->vip->i;++bc->vip;}
-void performend(bc *bc){bc->flags|=BF_ENDHIT;bc->takeaction = 1;}
+void performend(bc *bc){bc->flags|=BF_ENDHIT;takeaction(bc);}
 void rjmp(bc *bc)
 {
 	bc->vip += bc->vip->i - 1;
@@ -511,16 +516,16 @@ void vmachine(bc *bc, step *program, step *stack)
 
 	for(;;)
 	{
-		if(bc->takeaction)
+		(bc->vip++ -> func)(bc);
+		if(bc->takeaction != globaltime)
 		{
-			bc->takeaction = 0;
+			bc->takeaction = globaltime;
 			update(bc);
 			scaninput(bc);
 			if(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
 				 BF_STOPHIT | BF_QUIT))
 				break;
 		}
-		(bc->vip++ -> func)(bc);
 	}
 	resetupdate(bc);
 	tprintf(bc, "Elapsed time %.3f seconds.\n",

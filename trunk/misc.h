@@ -222,6 +222,7 @@ typedef struct basic_context {
 
 // main.c
 
+extern int globaltime;
 
 // font.c
 
