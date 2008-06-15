@@ -82,9 +82,9 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 		else if(s->func == powerd)
 			tprintf(bc, "powerd\n");
 		else if(s->func == arrayd)
-			tprintf(bc, "arrayd\n");
+			tprintf(bc, "arrayd %d\n", (++s)->i);
 		else if(s->func == arrays)
-			tprintf(bc, "arrays\n");
+			tprintf(bc, "arrays %d\n", (++s)->i);
 		else if(s->func == pushi)
 			tprintf(bc, "pushi %d\n", (++s)->i);
 		else if(s->func == pushea)
@@ -101,9 +101,9 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			++s;
 		}
 		else if(s->func == ongoto)
-			tprintf(bc, "ongoto\n");
+			tprintf(bc, "ongoto %d\n", (++s)->i);
 		else if(s->func == ongosub)
-			tprintf(bc, "ongosub\n");
+			tprintf(bc, "ongosub %d\n", (++s)->i);
 		else if(s->func == ret)
 			tprintf(bc, "ret\n");
 		else if(s->func == skip2ne)
@@ -205,9 +205,9 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 		else if(s->func == performstop)
 			tprintf(bc, "stop\n");
 		else if(s->func == dimd)
-			tprintf(bc, "dimd\n");
+			tprintf(bc, "dimd %d\n", (++s)->i);
 		else if(s->func == dims)
-			tprintf(bc, "dims\n");
+			tprintf(bc, "dims %d\n", (++s)->i);
 		else if(s->func == mousexd)
 			tprintf(bc, "mousex\n");
 		else if(s->func == mouseyd)
@@ -337,6 +337,42 @@ static void emitpushi(ps *ps, int v)
 	emitint(ps, v);
 }
 
+static void emitdims(ps *ps, int v)
+{
+	emitfunc(ps, dims);
+	emitint(ps, v);
+}
+
+static void emitdimd(ps *ps, int v)
+{
+	emitfunc(ps, dimd);
+	emitint(ps, v);
+}
+
+static void emitarrayd(ps *ps, int v)
+{
+	emitfunc(ps, arrayd);
+	emitint(ps, v);
+}
+
+static void emitarrays(ps *ps, int v)
+{
+	emitfunc(ps, arrays);
+	emitint(ps, v);
+}
+
+static void emitongoto(ps *ps, int v)
+{
+	emitfunc(ps, ongoto);
+	emitint(ps, v);
+}
+
+static void emitongosub(ps *ps, int v)
+{
+	emitfunc(ps, ongosub);
+	emitint(ps, v);
+}
+
 static void emitpushea(ps *ps, int v)
 {
 	emitfunc(ps, pushea);
@@ -449,10 +485,8 @@ statement:
 	| RETURN {emitfunc(PS, ret)}
 	| REM {/* do nothing */}
 	| RANDOM
-	| ON numexpr GOTO linelist {emitpushi(PS, $4.value.count);
-			emitfunc(PS, ongoto)}
-	| ON numexpr GOSUB linelist {emitpushi(PS, $4.value.count);
-			emitfunc(PS, ongosub)}
+	| ON numexpr GOTO linelist {emitongoto(PS, $4.value.count)}
+	| ON numexpr GOSUB linelist {emitongosub(PS, $4.value.count)}
 	| RESTORE
 	| INPUT inputlist
 	| READ readlist
@@ -520,16 +554,14 @@ dimarraylist:
 	;
 
 dimarrayvar:
-	NUMSYMBOL '(' intlist ')' {emitpushi(PS, $3.value.count);
-				emitpushav(PS, $1.value.integer);
-				emitfunc(PS, dimd)}
-	| STRINGSYMBOL '(' intlist ')' {emitpushi(PS, $3.value.count);
-				emitpushav(PS, $1.value.integer);
-				emitfunc(PS, dims)}
+	NUMSYMBOL '(' dimlist ')' {emitpushav(PS, $1.value.integer);
+				emitdimd(PS, $3.value.count)}
+	| STRINGSYMBOL '(' dimlist ')' {emitpushav(PS, $1.value.integer);
+				emitdims(PS, $3.value.count)}
 	;
 
-intlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
-	| intlist ',' INTEGER {++$$.value.count;emitpushi(PS, $3.value.integer)}
+dimlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
+	| dimlist ',' INTEGER {++$$.value.count;emitpushi(PS, $3.value.integer)}
 	;
 
 linelist: INTEGER {$$.value.count = 1;lineref(PS);
@@ -570,16 +602,14 @@ var:
 
 numvar:
 	NUMSYMBOL {emitpushv(PS, $1.value.integer)}
-	| NUMSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
-					emitpushav(PS, $1.value.integer);
-					emitfunc(PS, arrayd)}
+	| NUMSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
+					emitarrayd(PS, $3.value.count)}
 	;
 
 stringvar:
 	STRINGSYMBOL
-	| STRINGSYMBOL '(' numlist ')' {emitpushi(PS, $3.value.count);
-					emitpushav(PS, $1.value.integer);
-					emitfunc(PS, arrays)}
+	| STRINGSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
+					emitarrays(PS, $3.value.count)}
 	;
 
 numlist:
