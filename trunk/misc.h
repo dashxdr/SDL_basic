@@ -151,6 +151,7 @@ typedef struct basic_context {
 	char *datatake;
 	int gosubsp;
 	struct gosubentry gosubstack[GOSUBMAX];
+	step *gosubs[GOSUBMAX];
 	int numstatements;
 	Uint32 temp;
 // graphics rendering state
@@ -419,5 +420,7 @@ DECLARE(ticksd)
 DECLARE(performfor)
 DECLARE(performnext)
 DECLARE(performnext1)
+DECLARE(rcall)
+DECLARE(ret)
 
 void vmachine(bc *bc, step *program, step *stack);
