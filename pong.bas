@@ -7,9 +7,9 @@
 70 if dx>-r/2 then 60
 80 dy=rnd(r*2+1)-r
 90 if dx*dx + dy*dy < r*r/2 then 60
-100 b=10 rem border size
-110 ph=75 REM paddle height
-120 clr
+100 b=10: rem border size
+110 ph=75: REM paddle height
+120 cls
 130 y=mousey
 140 if y<ph then y=ph
 150 if y>ysize-ph then y=ysize-ph
