@@ -730,13 +730,10 @@ specialstr:
 	INKEYSTR
 	;
 
-stringexpr: sss
-	;
-
-sss:
+stringexpr:
 	sitem
-	| sss '+' sitem
-	| sss sitem
+	| stringexpr '+' sitem
+	| stringexpr sitem
 	;
 
 sitem:
