@@ -1,5 +1,5 @@
 10 home
-20 rr=40 rem radius of disc
+20 rr=40 : rem radius of disc
 30 dim r(200),g(200),b(200)
 40 dim x(1000),y(1000)
 50 gosub 170
