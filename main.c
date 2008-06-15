@@ -17,10 +17,11 @@
 
 
 bc mybc;
+int globaltime=0;
 
 Uint32 mytimer(Uint32 interval, void *param)
 {
-	mybc.takeaction = 1;
+	++globaltime;
 	return 10;
 }
 
