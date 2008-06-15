@@ -1,12 +1,25 @@
 #include <math.h>
+#include <stdarg.h>
 #include "misc.h"
 
 #define TD(name) void name(bc *bc){}
-TD(arrayd)
 TD(arrays)
 TD(assigns)
 TD(eqs)
 TD(nes)
+
+
+void verror(bc *bc, char *s, ...)
+{
+va_list ap;
+char temp[1024];
+	va_start(ap, s);
+	vsnprintf(temp, sizeof(temp), s, ap);
+	va_end(ap);
+	tprintf(bc, "\n%s\n", temp);
+	bc->vdone = 1;
+}
+
 
 
 /**************************************************************************
@@ -94,7 +107,7 @@ int i;
 	bc->vsp -= rank+2;
 	v->dimensions[0]=1;
 	v->rank = rank;
-#warning do some sanity checks...
+#warning do some sanity checks... -- can't redim for example...
 	for(i=0;i<rank;++i)
 		v->dimensions[i+1] = v->dimensions[i] * bc->vsp[i].i;
 	v->pointer = calloc(v->dimensions[rank], size);
@@ -109,6 +122,31 @@ void dimd(bc *bc)
 void dims(bc *bc)
 {
 	dim(bc, sizeof(bstring *));
+}
+
+void arrayd(bc *bc)
+{
+variable *v;
+int rank;
+int i;
+int j;
+int t;
+
+	v=bc->vvars+bc->vsp[-1].i;
+	rank = bc->vsp[-2].i;
+	bc->vsp -= rank+2;
+	j=0;
+	for(i=0;i<rank;++i)
+	{
+		t=bc->vsp[i].d - 1;
+		j += t*v->dimensions[i];
+		if(t<0 || j>=v->dimensions[i+1])
+		{
+			verror(bc, "Subscript out of range");
+			break;
+		}
+	}
+	(bc->vsp++)->p = (double *)v->pointer + j;
 }
 
 forstate *getfor(bc *bc, variable *v)
@@ -378,4 +416,7 @@ void vmachine(bc *bc, step *program, step *stack)
 
 	while(!bc->vdone)
 		(bc->vip++ -> func)(bc);
+	tprintf(bc, "Elapsed time %.3f seconds.\n",
+		(SDL_GetTicks()-bc->starttime)/1000.0);
+
 }
