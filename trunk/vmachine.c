@@ -495,6 +495,26 @@ void ongosub(bc *bc)
 	ongoto(bc);
 }
 
+void datad(bc *bc)
+{
+	if(bc->datanum < MAXDATA)
+		bc->data[bc->datanum++] = (bc->vip++)->d;
+	else
+	{
+		verror(bc, -1, "Too much data in program");
+		++bc->vip;
+	}
+}
+
+void readd(bc *bc)
+{
+	--bc->vsp;
+	if(bc->datapull < bc->datanum)
+		*(double *)bc->vsp->p = bc->data[bc->datapull++];
+	else
+		verror(bc, -1, "Ran out of data");
+}
+
 
 void vmachine(bc *bc, step *program, step *stack)
 {
@@ -502,6 +522,8 @@ void vmachine(bc *bc, step *program, step *stack)
 	bc->vip = program;
 	bc->vsp = stack;
 	bc->base = program;
+	bc->datanum = 0;
+	bc->datapull = 0;
 
 	while(!bc->vdone)
 		(bc->vip++ -> func)(bc);

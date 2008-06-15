@@ -56,11 +56,11 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 		}
 		tprintf(bc, "%4d: ", (int)(s-ps->steps));
 		if(s->func == pushd)
-		{
-//printf("%x %x\n", s[1], s[2]);
-			tprintf(bc, "pushd %.8f\n", s[1].d);
-			++s;
-		}
+			tprintf(bc, "pushd %.8f\n", (++s)->d);
+		else if(s->func == datad)
+			tprintf(bc, "datad %.8f\n", (++s)->d);
+		else if(s->func == readd)
+			tprintf(bc, "readd\n");
 		else if(s->func == evald)
 			tprintf(bc, "evald\n");
 		else if(s->func == assignd)
@@ -242,6 +242,12 @@ bc *bc = ps->bc;
 	bc->lm[bc->numlines++].linenumber = number;
 }
 
+static void adddata(ps *ps, double v)
+{
+	if(ps->bc->datanum < MAXDATA)
+		ps->bc->data[ps->bc->datanum++] = v;
+}
+
 static int findline(ps *ps, int want)
 {
 int low, high, mid;
@@ -302,11 +308,15 @@ static void emitstep(ps *ps, step s)
 	*ps->nextstep++ = s;
 }
 
+static void emitdouble(ps *ps, double val)
+{
+	ps->nextstep++ -> d = val;
+}
+
 static void emitpushd(ps *ps, double val)
 {
-	emitstep(ps, (step)pushd);
-	*(double *)ps->nextstep = val;
-	++ps->nextstep;
+	emitfunc(ps, pushd);
+	emitdouble(ps, val);
 }
 
 static void emitpushv(ps *ps, int num)
@@ -445,7 +455,7 @@ statement:
 			emitfunc(PS, ongosub)}
 	| RESTORE
 	| INPUT inputlist
-	| READ varlist
+	| READ readlist
 	| DATA datalist
 	| CLEAR num1
 	| TEST
@@ -534,7 +544,7 @@ datalist:
 	;
 
 dataentry:
-	real
+	real {adddata(PS, $1.value.real)}
 	| STRING
 	;
 
@@ -544,10 +554,14 @@ real:
 	;
 
 
-varlist:
-	var
-	| varlist ',' var
+readlist:
+	readvar
+	| readlist ',' readvar
 	;
+
+readvar:
+	numvar {emitfunc(PS, readd)}
+	| stringvar;
 
 var:
 	numvar
@@ -1003,6 +1017,8 @@ variable *v;
 
 void pruninit(bc *bc)
 {
+	bc->datanum=0;
+	bc->datapull=0;
 	bc->numlines=0;
 	bc->flags = 0;
 	bc->dataline = 0;
@@ -1028,6 +1044,24 @@ void pruninit(bc *bc)
 	reset_waitbase(bc);
 }
 
+void dump_data_init(ps *ps)
+{
+	emitrcall(ps, 0); // call to load up all the data...
+}
+
+void dump_data_finish(ps *ps)
+{
+bc *bc=ps->bc;
+int i;
+	bc->base[1].i = ps->nextstep - bc->base; // fixup initial rcall
+	for(i=0;i<bc->datanum;++i)
+	{
+		emitfunc(ps, datad);
+		emitdouble(ps, bc->data[i]);
+	}
+
+	emitfunc(ps, ret);
+}
 
 
 void parse(bc *bc, int runit)
@@ -1043,18 +1077,22 @@ int res=0;
 	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
 	ps->nextstep = ps->steps;
+	bc->base = ps->steps;
 	ps->yypntr = bc->program;
 	ps->linestart = ps->yypntr;
 	bc->numvars = 0;
 
 	pruninit(bc);
+	dump_data_init(ps);
 	res=yyparse(ps);
 
 //printf("numvars = %d\n", bc->numvars);
 	if(!res)
 	{
 		tprintf(bc, "Program parsed correctly\n");
-		emitstep(ps, (step)performend);
+		emitfunc(ps, performend);
+		dump_data_finish(ps);
+
 		res = fixuplinerefs(ps);
 		if(res) return;
 		if(!runit)
