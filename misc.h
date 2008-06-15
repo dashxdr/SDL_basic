@@ -84,6 +84,7 @@ typedef struct {
 	char *src;
 } linemap;
 
+#define MAXDATA 100000
 
 #define MAXVARIABLES 1024
 #define NAMELEN 16
@@ -172,6 +173,9 @@ typedef struct basic_context {
 	FT_Vector  shape_points[MAX_SHAPE_POINTS];
 	char shape_tags[MAX_SHAPE_POINTS];
 //
+	int datanum;
+	int datapull;
+	double data[MAXDATA];
 	int starttime;
 	int waitbase;
 	step *base;
@@ -433,5 +437,7 @@ DECLARE(ret)
 DECLARE(ongoto)
 DECLARE(ongosub)
 DECLARE(pushea)
+DECLARE(datad)
+DECLARE(readd)
 
 void vmachine(bc *bc, step *program, step *stack);
