@@ -111,6 +111,79 @@ void dims(bc *bc)
 	dim(bc, sizeof(bstring *));
 }
 
+forstate *getfor(bc *bc, variable *v)
+{
+int i;
+forstate *fs;
+	for(i=bc->numfors, fs=bc->forstates+i-1;i;--i, --fs)
+	{
+		if(fs->v == v)
+			return fs;
+	}
+	return 0;	
+}
+
+forstate *addfor(bc *bc)
+{
+#warning check for out of fors
+	return bc->forstates + bc->numfors++;
+}
+
+void performfor(bc *bc)
+{
+forstate *fs;
+variable *v;
+	v=bc->vvars + bc->vsp[-1].i;
+	fs = getfor(bc, v);
+	if(!fs)
+	{
+		fs = addfor(bc);
+		fs->v = v;
+	}
+	fs->delta = bc->vsp[-2].d;
+	fs->end = bc->vsp[-3].d;
+	fs->start = bc->vip;
+	v->value.d = bc->vsp[-4].d;
+	bc->vsp -= 4;
+}
+
+void lownext(bc *bc, forstate *fs)
+{
+variable *v=fs->v;
+	if((fs->delta > 0.0 && v->value.d < fs->end) ||
+		(fs->delta < 0.0 && v->value.d > fs->end) ||
+		(fs->delta == 0.0 && v->value.d != fs->end))
+	{
+		v->value.d += fs->delta;
+		bc->vip = fs->start;
+	} else
+	{
+		--bc->numfors;
+		if(fs - bc->forstates < bc->numfors)
+		{
+			memmove(fs, fs+1, (bc->numfors - (fs-bc->forstates)) *
+				sizeof(*fs));
+		}
+	}
+}
+
+void performnext(bc *bc)
+{
+	if(bc->numfors)
+		lownext(bc, bc->forstates + bc->numfors - 1);
+#warning next with out for error...
+}
+
+void performnext1(bc *bc)
+{
+variable *v = bc->vvars + (--bc->vsp)->i;
+forstate *fs;
+	fs = getfor(bc, v);
+	if(fs)
+		lownext(bc, fs);
+#warning next without for error...
+}
+
 
 
 /**************************************************************************

@@ -199,6 +199,12 @@ char name[NAMELEN];
 			tprintf(bc, "mouseb\n");
 		else if(s->func == ticksd)
 			tprintf(bc, "ticks\n");
+		else if(s->func == performfor)
+			tprintf(bc, "for\n");
+		else if(s->func == performnext)
+			tprintf(bc, "next\n");
+		else if(s->func == performnext1)
+			tprintf(bc, "next1\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -396,6 +402,7 @@ statement:
 	| SPOT {emitfunc(PS, spot)}
 	| UPDATE {emitfunc(PS, update)}
 	| FOR forvar '=' numexpr TO numexpr optstep
+		{emitpushav(PS, $2.value.integer);emitfunc(PS, performfor)}
 	| NEXT optforvar
 	| RANDOM
 	| REM
@@ -427,8 +434,8 @@ optstep: { emitpushd(PS, 1.0)}
 	| STEP numexpr
 	;
 
-optforvar:
-	| forvar
+optforvar: {emitfunc(PS, performnext)}
+	| forvar {emitpushav(PS, $1.value.integer);emitfunc(PS, performnext1)}
 	;
 
 forvar:
