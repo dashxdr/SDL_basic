@@ -21,7 +21,10 @@ int globaltime=0;
 
 Uint32 mytimer(Uint32 interval, void *param)
 {
-	++globaltime;
+int nt;
+	nt=globaltime+1;
+	if(!nt) ++nt; // my god how anal this is...
+	globaltime=nt;
 	return 10;
 }
 
