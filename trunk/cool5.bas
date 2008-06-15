@@ -14,6 +14,7 @@
 140 color 255-k*2, 0, 0
 150 line cx+r*cos(a), cy+r*sin(a)
 160 next i
+165 update
 170 j=j+1
 180 if j=100 then j=0
 190 if r>0 then 80
