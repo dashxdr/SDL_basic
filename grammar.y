@@ -277,9 +277,12 @@ bc *bc=ps->bc;
 
 static int fixuplinerefs(ps *ps)
 {
+bc *bc=ps->bc;
 int i;
 int o;
 int at;
+int line;
+
 	for(i=0;i<ps->numlinerefs;++i)
 	{
 		o=ps->linerefs[i];
@@ -287,7 +290,12 @@ int at;
 		if(at<0)
 		{
 #warning fix me up
-			tprintf(ps->bc, "Bad line reference!!!!\n");
+			for(line=0;line<bc->numlines;++line)
+				if(bc->lm[line].step > o)
+					break;
+			tprintf(ps->bc,
+				"Unresolved line reference on line %d\n",
+				bc->lm[line-1].linenumber);
 			return -1;
 		}
 		ps->steps[o+1].i = at - o;
@@ -629,7 +637,6 @@ printitem:
 	'@' numexpr
 	| numexpr {emitfunc(PS, printd);}
 	| stringexpr
-	| TAB singlenumpar
 	;
 
 singlenumpar:
@@ -737,6 +744,7 @@ sitem:
 	| specialstr
 	| stringfunc
 	| stringvar
+	| TAB singlenumpar
 	;
 
 stringfunc:
