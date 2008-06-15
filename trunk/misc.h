@@ -94,6 +94,11 @@ typedef struct {
 	} value;
 } variable;
 
+typedef struct {
+	variable *v;
+	double delta, end;
+	step *start;
+} forstate;
 
 
 #define MAX_SHAPE_POINTS 1024
@@ -141,6 +146,7 @@ typedef struct basic_context {
 	int tokenmap[256];
 	int numfors;
 	struct forinfo fors[MAX_FORS];
+	forstate forstates[MAX_FORS];
 	int dataline;
 	char *datatake;
 	int gosubsp;
@@ -410,5 +416,8 @@ DECLARE(mousexd)
 DECLARE(mouseyd)
 DECLARE(mousebd)
 DECLARE(ticksd)
+DECLARE(performfor)
+DECLARE(performnext)
+DECLARE(performnext1)
 
 void vmachine(bc *bc, step *program, step *stack);
