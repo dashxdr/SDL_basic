@@ -179,8 +179,8 @@ char name[NAMELEN];
 			tprintf(bc, "pen\n");
 		else if(s->func == spot)
 			tprintf(bc, "spot\n");
-		else if(s->func == update)
-			tprintf(bc, "update\n");
+		else if(s->func == forceupdate)
+			tprintf(bc, "forceupdate\n");
 		else if(s->func == performmove)
 			tprintf(bc, "move\n");
 		else if(s->func == performline)
@@ -400,7 +400,7 @@ statement:
 	| BOX num4 {emitfunc(PS, box4)}
 	| RECT num4 {emitfunc(PS, rect4)}
 	| SPOT {emitfunc(PS, spot)}
-	| UPDATE {emitfunc(PS, update)}
+	| UPDATE {emitfunc(PS, forceupdate)}
 	| FOR forvar '=' numexpr TO numexpr optstep
 		{emitpushav(PS, $2.value.integer);emitfunc(PS, performfor)}
 	| NEXT optforvar
