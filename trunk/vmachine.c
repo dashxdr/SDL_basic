@@ -451,6 +451,7 @@ void performpen(bc *bc)
 void performstop(bc *bc)
 {
 	bc->flags |= BF_STOPHIT;
+	verror(bc, -1, "STOP");
 }
 
 void performfill(bc *bc)
