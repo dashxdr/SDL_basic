@@ -7,6 +7,10 @@ TD(arrays)
 TD(assigns)
 TD(eqs)
 TD(nes)
+TD(pushs)
+TD(adds)
+TD(evals)
+TD(prints)
 
 void takeaction(bc *bc)
 {
