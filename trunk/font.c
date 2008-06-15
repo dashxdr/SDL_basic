@@ -185,12 +185,11 @@ char tt[2];
 
 void newline(bc *bc)
 {
-	++bc->typos;
-	if(bc->typos == bc->tysize)
-	{
+	bc->txpos = 0;
+	if(bc->typos < bc->tysize-1)
+		++bc->typos;
+	else
 		scrollup(bc);
-		--bc->typos;
-	}
 }
 
 void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c)
@@ -256,11 +255,7 @@ static int escapedata[20],ecount;
 			bc->txpos=0;
 			break;
 		case '\n':
-			bc->txpos=0;
-			if(bc->typos<bc->tysize-1)
-				++bc->typos;
-			else
-				scrollup(bc);
+			newline(bc);
 			break;
 		case '\t':
 			while(bc->txpos&7)
@@ -279,6 +274,8 @@ static int escapedata[20],ecount;
 			drawcharxy(bc, bc->txpos++,bc->typos,ch);
 			break;
 		}
+		if(bc->txpos >= bc->txsize)
+			newline(bc);
 	}
 	cursor(bc, 1);
 	update(bc);
