@@ -81,6 +81,7 @@ typedef union {
 typedef struct {
 	int linenumber;
 	int step;
+	char *src;
 } linemap;
 
 

@@ -27,8 +27,8 @@ typedef struct parse_state {
 	bc *bc;
 	char *yypntr;
 	char *yylast;
+	char *linestart;
 	step *nextstep;
-	step *startstep;
 	step steps[MAXSTEPS];
 	int numlinerefs, linerefs[MAXLINEREFS];
 } ps;
@@ -38,11 +38,22 @@ static void disassemble(ps *ps)
 step *s, *e;
 bc *bc = ps->bc;
 char name[NAMELEN];
-
+linemap *lm = bc->lm, *elm = lm + bc->numlines;
 	s = ps->steps;
 	e = ps->nextstep;
 	while(s<e)
 	{
+		if(lm < elm && lm->step == s-ps->steps)
+		{
+			char *p, save;
+			p=lm->src;
+			while(*p && *p != '\n') ++p;
+			save = *p;
+			*p = 0;
+			tprintf(bc, ";-----%s\n", lm->src);
+			*p = save;
+			++lm;
+		}
 		tprintf(bc, "%4d: ", (int)(s-ps->steps));
 		if(s->func == pushd)
 		{
@@ -222,13 +233,13 @@ static void lineref(ps *ps)
 	ps->linerefs[ps->numlinerefs++] = ps->nextstep - ps->steps;
 }
 
-static void addline(ps *ps, int number)
+static void addline(ps *ps, int number, int stepnum)
 {
 bc *bc = ps->bc;
-int t1,t2;
-	t1=bc->lm[bc->numlines].step = ps->startstep - ps->steps;
-	t2=bc->lm[bc->numlines++].linenumber = number;
-	ps->startstep = ps->nextstep;
+	bc->lm[bc->numlines].step = stepnum;
+	bc->lm[bc->numlines].src = ps->linestart;
+	ps->linestart = ps->yypntr;
+	bc->lm[bc->numlines++].linenumber = number;
 }
 
 static int findline(ps *ps, int want)
@@ -385,7 +396,8 @@ prog2:
 	;
 
 line:
-	INTEGER statements LF {addline(PS, $1.value.integer)}
+	mark INTEGER statements LF {addline(PS, $2.value.integer,
+					$1.value.step - PS->steps)}
 	;
 
 statements:
@@ -1030,9 +1042,9 @@ int res=0;
 	}
 	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
-	ps->startstep = ps->steps;
 	ps->nextstep = ps->steps;
 	ps->yypntr = bc->program;
+	ps->linestart = ps->yypntr;
 	bc->numvars = 0;
 
 	pruninit(bc);
