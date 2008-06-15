@@ -1011,9 +1011,9 @@ printf("here:%s\n", ps->yypntr);
 			} else if(ch=='"')
 				break;
 			if(t<sizeof(ti->value.string)-1)
-				ti->value.name[t++] = ch;
+				ti->value.string[t++] = ch;
 		}
-		ti->value.name[t] = 0;
+		ti->value.string[t] = 0;
 		return STRING;
 	}
 	return -1;
