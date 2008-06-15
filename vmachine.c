@@ -47,6 +47,29 @@ void rjmp(bc *bc)
 	}
 }
 
+void rcall(bc *bc)
+{
+	if(bc->gosubsp == GOSUBMAX)
+	{
+		verror(bc, "Gosub stack overflow");
+		++bc->vip;
+	}
+	else
+	{
+		bc->gosubs[bc->gosubsp++] = bc->vip+1;
+		bc->vip += bc->vip->i - 1;
+	}
+}
+
+void ret(bc *bc)
+{
+	if(!bc->gosubsp)
+		verror(bc, "Return outside of subroutine");
+	else
+		bc->vip = bc->gosubs[--bc->gosubsp];
+}
+
+
 void addd(bc *bc){--bc->vsp;bc->vsp[-1].d += bc->vsp[0].d;}
 void muld(bc *bc){--bc->vsp;bc->vsp[-1].d *= bc->vsp[0].d;}
 void subd(bc *bc){--bc->vsp;bc->vsp[-1].d -= bc->vsp[0].d;}
@@ -136,6 +159,7 @@ int t;
 	rank = bc->vsp[-2].i;
 	bc->vsp -= rank+2;
 	j=0;
+#warning sanity checks -- make sure rank is same...
 	for(i=0;i<rank;++i)
 	{
 		t=bc->vsp[i].d - 1;

@@ -83,12 +83,14 @@ char name[NAMELEN];
 			tprintf(bc, "arrays\n");
 		else if(s->func == pushi)
 			tprintf(bc, "pushi %d\n", (++s)->i);
-		else if(s->func == rjmp)
+		else if(s->func == rjmp || s->func == rcall)
 		{
-			tprintf(bc, "rjmp %d (%d)\n", s[1].i,
-				s-ps->steps + s[1].i);
+			tprintf(bc, "%s %d (%d)\n",
+				s->func == rjmp ? "rjmp" : "rcall",
+				s[1].i, s-ps->steps + s[1].i);
 			++s;
-		}
+		} else if(s->func == ret)
+			tprintf(bc, "ret\n");
 		else if(s->func == skip2ne)
 			tprintf(bc, "skip2ne\n");
 		else if(s->func == eqd)
@@ -315,6 +317,12 @@ static void emitrjmp(ps *ps, int delta)
 	emitint(ps, delta);
 }
 
+static void emitrcall(ps *ps, int delta)
+{
+	emitfunc(ps, rcall);
+	emitint(ps, delta);
+}
+
 
 #define YYDEBUG 0
 #define YYSTYPE tokeninfo
@@ -404,10 +412,10 @@ statement:
 	| FOR forvar '=' numexpr TO numexpr optstep
 		{emitpushav(PS, $2.value.integer);emitfunc(PS, performfor)}
 	| NEXT optforvar
+	| GOSUB INTEGER {lineref(PS);emitrcall(PS, $2.value.integer)}
+	| RETURN {emitfunc(PS, ret)}
 	| RANDOM
 	| REM
-	| GOSUB INTEGER
-	| RETURN
 	| ON numexpr GOTO intlist
 	| ON numexpr GOSUB intlist
 	| RESTORE
