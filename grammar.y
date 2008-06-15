@@ -43,7 +43,7 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 	e = ps->nextstep;
 	while(s<e)
 	{
-		if(lm < elm && lm->step == s-ps->steps)
+		while(lm < elm && lm->step == s-ps->steps)
 		{
 			char *p, save;
 			p=lm->src;
@@ -108,6 +108,10 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "ret\n");
 		else if(s->func == skip2ne)
 			tprintf(bc, "skip2ne\n");
+		else if(s->func == eqs)
+			tprintf(bc, "eqs\n");
+		else if(s->func == nes)
+			tprintf(bc, "nes\n");
 		else if(s->func == eqd)
 			tprintf(bc, "eqd\n");
 		else if(s->func == ned)
