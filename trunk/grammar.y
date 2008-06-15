@@ -306,12 +306,6 @@ static void emitint(ps *ps, int i)
 	ps->nextstep++ -> i = i;
 }
 
-
-static void emitstep(ps *ps, step s)
-{
-	*ps->nextstep++ = s;
-}
-
 static void emitdouble(ps *ps, double val)
 {
 	ps->nextstep++ -> d = val;
