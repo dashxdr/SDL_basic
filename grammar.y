@@ -467,7 +467,7 @@ statement:
 	| DIM dimarraylist
 	| END {emitfunc(PS, performend)}
 	| STOP {emitfunc(PS, performstop)}
-	| SLEEP num1 {emitstep(PS, (step)sleepd)}
+	| SLEEP num1 {emitfunc(PS, sleepd)}
 	| PEN num1 {emitfunc(PS, performpen)}
 	| COLOR num34 {if($2.value.count==3) emitfunc(PS, color3);
 			else emitfunc(PS, color4)}
@@ -499,7 +499,7 @@ statement:
 	| TEST
 	;
 
-fixif: /* nothing */ {emitstep(PS, (step)skip2ne);
+fixif: /* nothing */ {emitfunc(PS, skip2ne);
 		$$.value.step = PS->nextstep;
 		emitrjmp(PS, 0)} // size of true side}
 	;
@@ -633,7 +633,8 @@ printsep: ';'
 
 printitem:
 	'@' numexpr
-	| expr {emitfunc(PS, printd);}
+	| numexpr {emitfunc(PS, printd);}
+	| stringexpr
 	| TAB singlenumpar
 	;
 
@@ -660,41 +661,36 @@ lvalue:
 	;
 
 assignexpr:
-	numvar '=' numexpr {emitstep(PS, (step)assignd)}
-	| stringvar '=' stringexpr {emitstep(PS, (step)assigns)}
-	;
-
-expr:
-	numexpr
-	| stringexpr
+	numvar '=' numexpr {emitfunc(PS, assignd)}
+	| stringvar '=' stringexpr {emitfunc(PS, assigns)}
 	;
 
 numexpr:
 	'-' numexpr %prec UNARY {emitfunc(PS, chs)}
 	| '(' numexpr ')'
-	| numexpr '+' numexpr {emitstep(PS, (step)addd)}
-	| numexpr '-' numexpr {emitstep(PS, (step)subd)}
-	| numexpr '*' numexpr {emitstep(PS, (step)muld)}
-	| numexpr '/' numexpr {emitstep(PS, (step)divd)}
-	| numexpr POWER numexpr {emitstep(PS, (step)powerd)}
+	| numexpr '+' numexpr {emitfunc(PS, addd)}
+	| numexpr '-' numexpr {emitfunc(PS, subd)}
+	| numexpr '*' numexpr {emitfunc(PS, muld)}
+	| numexpr '/' numexpr {emitfunc(PS, divd)}
+	| numexpr POWER numexpr {emitfunc(PS, powerd)}
 	| numexpr LL numexpr
 	| numexpr RR numexpr
-	| numexpr '=' numexpr {emitstep(PS, (step)eqd)}
-	| numexpr NE numexpr {emitstep(PS, (step)ned)}
-	| numexpr LT numexpr {emitstep(PS, (step)ltd)}
-	| numexpr GT numexpr {emitstep(PS, (step)gtd)}
-	| numexpr LE numexpr {emitstep(PS, (step)led)}
-	| numexpr GE numexpr {emitstep(PS, (step)ged)}
-	| numexpr AND numexpr {emitstep(PS, (step)andd)}
-	| numexpr OR numexpr {emitstep(PS, (step)ord)}
-	| numexpr XOR numexpr {emitstep(PS, (step)xord)}
-	| numexpr ANDAND numexpr {emitstep(PS, (step)andandd)}
-	| numexpr OROR numexpr {emitstep(PS, (step)orord)}
-	| stringexpr '=' stringexpr {emitstep(PS, (step)eqs)}
-	| stringexpr NE stringexpr {emitstep(PS, (step)nes)}
+	| numexpr '=' numexpr {emitfunc(PS, eqd)}
+	| numexpr NE numexpr {emitfunc(PS, ned)}
+	| numexpr LT numexpr {emitfunc(PS, ltd)}
+	| numexpr GT numexpr {emitfunc(PS, gtd)}
+	| numexpr LE numexpr {emitfunc(PS, led)}
+	| numexpr GE numexpr {emitfunc(PS, ged)}
+	| numexpr AND numexpr {emitfunc(PS, andd)}
+	| numexpr OR numexpr {emitfunc(PS, ord)}
+	| numexpr XOR numexpr {emitfunc(PS, xord)}
+	| numexpr ANDAND numexpr {emitfunc(PS, andandd)}
+	| numexpr OROR numexpr {emitfunc(PS, orord)}
+	| stringexpr '=' stringexpr {emitfunc(PS, eqs)}
+	| stringexpr NE stringexpr {emitfunc(PS, nes)}
 	| numfunc
 	| special
-	| numvar {emitstep(PS, (step)evald)}
+	| numvar {emitfunc(PS, evald)}
 	| real {emitpushd(PS, $1.value.real)}
 	;
 
