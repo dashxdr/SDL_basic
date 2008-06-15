@@ -76,13 +76,24 @@ char name[NAMELEN];
 			tprintf(bc, "arrays\n");
 		else if(s->func == pushi)
 			tprintf(bc, "pushi %d\n", (++s)->i);
+		else if(s->func == pushea)
+		{
+			tprintf(bc, "pushea %d (%d)\n", s[1].i,
+				s-ps->steps + s[1].i);
+			++s;
+		}
 		else if(s->func == rjmp || s->func == rcall)
 		{
 			tprintf(bc, "%s %d (%d)\n",
 				s->func == rjmp ? "rjmp" : "rcall",
 				s[1].i, s-ps->steps + s[1].i);
 			++s;
-		} else if(s->func == ret)
+		}
+		else if(s->func == ongoto)
+			tprintf(bc, "ongoto\n");
+		else if(s->func == ongosub)
+			tprintf(bc, "ongosub\n");
+		else if(s->func == ret)
 			tprintf(bc, "ret\n");
 		else if(s->func == skip2ne)
 			tprintf(bc, "skip2ne\n");
@@ -301,8 +312,14 @@ static void emitpushav(ps *ps, int num)
 
 static void emitpushi(ps *ps, int v)
 {
-	emitstep(ps, (step)pushi);
-	emitstep(ps, (step)v);
+	emitfunc(ps, pushi);
+	emitint(ps, v);
+}
+
+static void emitpushea(ps *ps, int v)
+{
+	emitfunc(ps, pushea);
+	emitint(ps, v);
 }
 
 static void emitrjmp(ps *ps, int delta)
@@ -408,10 +425,12 @@ statement:
 	| NEXT optforvar
 	| GOSUB INTEGER {lineref(PS);emitrcall(PS, $2.value.integer)}
 	| RETURN {emitfunc(PS, ret)}
+	| REM {/* do nothing */}
 	| RANDOM
-	| REM
-	| ON numexpr GOTO intlist
-	| ON numexpr GOSUB intlist
+	| ON numexpr GOTO linelist {emitpushi(PS, $4.value.count);
+			emitfunc(PS, ongoto)}
+	| ON numexpr GOSUB linelist {emitpushi(PS, $4.value.count);
+			emitfunc(PS, ongosub)}
 	| RESTORE
 	| INPUT inputlist
 	| READ varlist
@@ -489,6 +508,12 @@ dimarrayvar:
 
 intlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
 	| intlist ',' INTEGER {++$$.value.count;emitpushi(PS, $3.value.integer)}
+	;
+
+linelist: INTEGER {$$.value.count = 1;lineref(PS);
+				emitpushea(PS, $1.value.integer)}
+	| linelist ',' INTEGER {++$$.value.count;lineref(PS);
+				emitpushea(PS, $3.value.integer)}
 	;
 
 datalist:

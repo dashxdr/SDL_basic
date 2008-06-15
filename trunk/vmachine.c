@@ -46,6 +46,7 @@ void checkdone(bc *bc)
 
 void pushd(bc *bc){bc->vsp++->d = bc->vip++->d;}
 void pushi(bc *bc){bc->vsp++->i = bc->vip++->i;}
+void pushea(bc *bc){bc->vsp++->p = bc->vip -1 + bc->vip->i;++bc->vip;}
 void performend(bc *bc){bc->vdone = 1;}
 void rjmp(bc *bc)
 {
@@ -64,11 +65,10 @@ void rcall(bc *bc)
 	{
 		verror(bc, -1, "Gosub stack overflow");
 		++bc->vip;
-	}
-	else
+	} else
 	{
 		bc->gosubs[bc->gosubsp++] = bc->vip+1;
-		bc->vip += bc->vip->i - 1;
+		bc->vip += bc->vip->i -1;
 	}
 }
 
@@ -472,6 +472,29 @@ void performline(bc *bc)
 	stroke(bc, bc->vsp[-2].d, bc->vsp[-1].d);
 	bc->vsp -= 2;
 }
+
+void ongoto(bc *bc)
+{
+int num;
+int want;
+	num = (--bc->vsp)->i;
+	bc->vsp -= num+1;
+	want = bc->vsp->d;
+	if(want<1 || want>num)
+		verror(bc, -1, "ON index out of range: %d, must be 1-%d", want, num);
+	else
+		bc->vip = bc->vsp[want].p;
+}
+
+void ongosub(bc *bc)
+{
+	if(bc->gosubsp == GOSUBMAX)
+		verror(bc, -1, "Gosub stack overflow");
+	else
+		bc->gosubs[bc->gosubsp++] = bc->vip;
+	ongoto(bc);
+}
+
 
 void vmachine(bc *bc, step *program, step *stack)
 {
