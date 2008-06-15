@@ -52,7 +52,7 @@ int v1,v2;
 		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
 		exit(1);
 	}
-	videoflags = 0;
+	videoflags = 0; // SDL_RESIZABLE
 	thescreen = SDL_SetVideoMode(xsize, ysize, 32, videoflags);
 	if ( thescreen == NULL )
 	{
