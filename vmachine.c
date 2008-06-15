@@ -130,8 +130,8 @@ int rank;
 int i;
 int t;
 	v=bc->vvars+bc->vsp[-1].i;
-	rank = bc->vsp[-2].i;
-	bc->vsp -= rank+2;
+	rank = (bc->vip++)->i;
+	bc->vsp -= rank+1;
 	if(v->rank)
 	{
 		verror(bc, -1, "Dumplicate dimension variable '%s'", v->name);
@@ -173,8 +173,8 @@ int j;
 int t;
 
 	v=bc->vvars+bc->vsp[-1].i;
-	rank = bc->vsp[-2].i;
-	bc->vsp -= rank+2;
+	rank = (bc->vip++)->i;
+	bc->vsp -= rank+1;
 	if(v->rank != rank)
 	{
 		verror(bc, -1, "Wrong number of array dimensions on '%s'\n", v->name);
@@ -467,7 +467,7 @@ void ongoto(bc *bc)
 {
 int num;
 int want;
-	num = (--bc->vsp)->i;
+	num = (bc->vip++)->i;
 	bc->vsp -= num+1;
 	want = bc->vsp->d;
 	if(want<1 || want>num)
@@ -481,7 +481,7 @@ void ongosub(bc *bc)
 	if(bc->gosubsp == GOSUBMAX)
 		verror(bc, -1, "Gosub stack overflow");
 	else
-		bc->gosubs[bc->gosubsp++] = bc->vip;
+		bc->gosubs[bc->gosubsp++] = bc->vip+1;
 	ongoto(bc);
 }
 
