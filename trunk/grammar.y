@@ -33,6 +33,27 @@ typedef struct parse_state {
 	int numlinerefs, linerefs[MAXLINEREFS];
 } ps;
 
+static int get_istring(char *put, step *s)
+{
+int len;
+int i;
+int need=1;
+	len = s->str[0];
+	i=1;
+	while(len--)
+	{
+		if(i==STEPSIZE)
+		{
+			++s;
+			i=0;
+			++need;
+		}
+		*put++ = s->str[i++];
+	}
+	*put = 0;
+	return need;
+}
+
 static void disassemble(ps *ps)
 {
 step *s, *e;
@@ -63,6 +84,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "readd\n");
 		else if(s->func == evald)
 			tprintf(bc, "evald\n");
+		else if(s->func == evals)
+			tprintf(bc, "evals\n");
 		else if(s->func == assignd)
 			tprintf(bc, "assignd\n", name);
 		else if(s->func == assigns)
@@ -102,6 +125,12 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 		}
 		else if(s->func == ongoto)
 			tprintf(bc, "ongoto %d\n", (++s)->i);
+		else if(s->func == pushs)
+		{
+			char temp[257];
+			s += get_istring(temp, s+1);
+			tprintf(bc, "pushs \"%s\"\n", temp);
+		}
 		else if(s->func == ongosub)
 			tprintf(bc, "ongosub %d\n", (++s)->i);
 		else if(s->func == ret)
@@ -112,6 +141,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "eqs\n");
 		else if(s->func == nes)
 			tprintf(bc, "nes\n");
+		else if(s->func == adds)
+			tprintf(bc, "adds\n");
 		else if(s->func == eqd)
 			tprintf(bc, "eqd\n");
 		else if(s->func == ned)
@@ -160,6 +191,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "sleepd\n");
 		else if(s->func == printd)
 			tprintf(bc, "printd\n");
+		else if(s->func == prints)
+			tprintf(bc, "prints\n");
 		else if(s->func == lf)
 			tprintf(bc, "lf\n");
 		else if(s->func == tab)
@@ -341,6 +374,28 @@ static void emitpushi(ps *ps, int v)
 {
 	emitfunc(ps, pushi);
 	emitint(ps, v);
+}
+
+static void emitpushs(ps *ps, char *s)
+{
+int len=strlen(s);
+step ts;
+int i;
+	emitfunc(ps, pushs);
+	i=0;
+	ts.str[i++]=len;
+	do
+	{
+		if(*s)
+			ts.str[i++] = *s++;
+		if(i==STEPSIZE || !*s)
+		{
+			while(i<STEPSIZE)
+				ts.str[i++] = 0;
+			*ps->nextstep++ = ts;
+			i=0;
+		}
+	} while(*s);
 }
 
 static void emitdims(ps *ps, int v)
@@ -613,7 +668,7 @@ numvar:
 	;
 
 stringvar:
-	STRINGSYMBOL
+	STRINGSYMBOL {emitpushv(PS, $1.value.integer)}
 	| STRINGSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
 					emitarrays(PS, $3.value.count)}
 	;
@@ -636,7 +691,7 @@ printsep: ';'
 printitem:
 	'@' numexpr
 	| numexpr {emitfunc(PS, printd);}
-	| stringexpr
+	| stringexpr {emitfunc(PS, prints);}
 	;
 
 singlenumpar:
@@ -732,15 +787,15 @@ specialstr:
 
 stringexpr:
 	sitem
-	| stringexpr '+' sitem
-	| stringexpr sitem
+	| stringexpr '+' sitem {emitfunc(PS, adds)}
+	| stringexpr sitem {emitfunc(PS, adds)}
 	;
 
 sitem:
-	STRING
+	STRING {emitpushs(PS, $1.value.string)}
 	| specialstr
 	| stringfunc
-	| stringvar
+	| stringvar {emitfunc(PS, evals)}
 	| TAB singlenumpar
 	;
 

@@ -439,5 +439,9 @@ DECLARE(ongosub)
 DECLARE(pushea)
 DECLARE(datad)
 DECLARE(readd)
+DECLARE(pushs)
+DECLARE(adds)
+DECLARE(evals)
+DECLARE(prints)
 
 void vmachine(bc *bc, step *program, step *stack);
