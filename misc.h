@@ -182,11 +182,10 @@ typedef struct basic_context {
 	step *vip;
 	step *vsp;
 	step vstack[512];
-	int vdone;
 	int numvars;
 	variable vvars[MAXVARIABLES];
 	linemap lm[MAX_PROGRAM_LINES];
-	int xcount;
+	int takeaction;
 
 } bc;
 

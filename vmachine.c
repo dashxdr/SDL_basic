@@ -23,7 +23,7 @@ int line;
 	vsnprintf(temp, sizeof(temp), s, ap);
 	va_end(ap);
 	tprintf(bc, "\nLine %d: %s\n", bc->lm[line-1].linenumber, temp);
-	bc->vdone = 1;
+	bc->takeaction = 1;
 }
 
 void nomem(bc *bc, int ipfix)
@@ -37,26 +37,13 @@ void nomem(bc *bc, int ipfix)
           low level generic functions
 **************************************************************************/
 
-void checkdone(bc *bc)
-{
-	if(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
-		 BF_STOPHIT | BF_QUIT))
-		bc->vdone = 1;
-}
-
 void pushd(bc *bc){bc->vsp++->d = bc->vip++->d;}
 void pushi(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void pushea(bc *bc){bc->vsp++->p = bc->vip -1 + bc->vip->i;++bc->vip;}
-void performend(bc *bc){bc->vdone = 1;}
+void performend(bc *bc){bc->flags|=BF_ENDHIT;bc->takeaction = 1;}
 void rjmp(bc *bc)
 {
 	bc->vip += bc->vip->i - 1;
-	if(!(++bc->xcount&0xff))
-	{
-		update(bc);
-		checkdone(bc);
-		scaninput(bc);
-	}
 }
 
 void rcall(bc *bc)
@@ -347,7 +334,7 @@ double d;
 	d=(--bc->vsp)->d;
 
 	if(d<0) return;
-	if(d>2.0) d=2.0;
+	if(d>1.0) d=1.0;
 
 	until=bc->waitbase + d*1000;
 
@@ -361,8 +348,6 @@ double d;
 			break;
 		}
 		SDL_Delay(1);
-		scaninput(bc);
-		checkdone(bc);
 	}
 }
 
@@ -518,15 +503,26 @@ void readd(bc *bc)
 
 void vmachine(bc *bc, step *program, step *stack)
 {
-	bc->vdone = 0;
 	bc->vip = program;
 	bc->vsp = stack;
 	bc->base = program;
 	bc->datanum = 0;
 	bc->datapull = 0;
 
-	while(!bc->vdone)
+	for(;;)
+	{
+		if(bc->takeaction)
+		{
+			bc->takeaction = 0;
+			update(bc);
+			scaninput(bc);
+			if(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
+				 BF_STOPHIT | BF_QUIT))
+				break;
+		}
 		(bc->vip++ -> func)(bc);
+	}
+	resetupdate(bc);
 	tprintf(bc, "Elapsed time %.3f seconds.\n",
 		(SDL_GetTicks()-bc->starttime)/1000.0);
 

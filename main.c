@@ -15,10 +15,37 @@
 #define MAXXSIZE 2048
 #define MAXYSIZE 2048
 
+
+bc mybc;
+
+Uint32 mytimer(Uint32 interval, void *param)
+{
+	mybc.takeaction = 1;
+	return 10;
+}
+
+void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
+{
+	memset(bc, 0, sizeof(mybc));
+	bc->lastcode = -1;
+	bc->xsize = xsize;
+	bc->ysize = ysize;
+	bc->txpos = 0;
+	bc->typos = 0;
+	bc->cursorstate = 0;
+	bc->thescreen = surf;
+	bc->white = SDL_MapRGB(bc->thescreen->format, 255, 255, 255);
+	bc->black = SDL_MapRGB(bc->thescreen->format, 0, 0, 0);
+	bc->cursorcolor = SDL_MapRGB(bc->thescreen->format, 255, 0, 0);
+	inittext(bc);
+	runinit(bc);
+}
+
+
 int main(int argc,char **argv)
 {
 int videoflags;
-bc mybc, *bc;
+bc *bc;
 SDL_Surface *thescreen;
 int xsize, ysize;
 int i;
@@ -47,7 +74,7 @@ int v1,v2;
 		}
 	}
 
-	if ( SDL_Init(SDL_INIT_VIDEO) < 0 )
+	if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0 )
 	{
 		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
 		exit(1);
@@ -62,20 +89,9 @@ int v1,v2;
 	}
 
 	bc=&mybc;
-	memset(bc, 0, sizeof(mybc));
-	bc->lastcode = -1;
-	bc->xsize = xsize;
-	bc->ysize = ysize;
-	bc->txpos = 0;
-	bc->typos = 0;
-	bc->cursorstate = 0;
-	bc->thescreen = thescreen;
-	bc->white = SDL_MapRGB(bc->thescreen->format, 255, 255, 255);
-	bc->black = SDL_MapRGB(bc->thescreen->format, 0, 0, 0);
-	bc->cursorcolor = SDL_MapRGB(bc->thescreen->format, 255, 0, 0);
-	inittext(bc);
+	initbc(bc, thescreen, xsize, ysize);
 
-	runinit(bc);
+	SDL_AddTimer(0, mytimer, bc);
 
 	for(;;)
 	{
