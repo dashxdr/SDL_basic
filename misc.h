@@ -429,5 +429,8 @@ DECLARE(performnext)
 DECLARE(performnext1)
 DECLARE(rcall)
 DECLARE(ret)
+DECLARE(ongoto)
+DECLARE(ongosub)
+DECLARE(pushea)
 
 void vmachine(bc *bc, step *program, step *stack);
