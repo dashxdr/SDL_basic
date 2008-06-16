@@ -130,7 +130,7 @@
 1300 next i
 1310 return
 1320 rem ************************ setup asteroids
-1330 anum = 6
+1330 anum = 4
 1340 amin = 15
 1350 for i = 1 to anum
 1360 tx = rnd(xsize)
@@ -184,13 +184,13 @@
 1840 r = sqr(tx*tx + ty*ty)
 1850 if r>rs(j) then 2030
 1860 gosub 2280
-1870 rs(j) = rs(j)*.5
-1880 if rs(j) < amin then rs(j) = 0:goto 2030
-1890 s=sqr(rdx(j)*rdx(j) + rdy(j)*rdy(j))
-1900 s = s * 2
-1910 tx = s * tx/r
-1920 ty = s * ty/r
-1930 misst(i) = 0
+1870 misst(i) = 0
+1880 rs(j) = rs(j)*.5
+1890 if rs(j) < amin then rs(j) = 0:goto 2030
+1900 s=sqr(rdx(j)*rdx(j) + rdy(j)*rdy(j))
+1910 s = s * 2
+1920 tx = s * tx/r
+1930 ty = s * ty/r
 1940 rdx(j) = -ty
 1950 rdy(j) = tx
 1960 anum = anum+1
