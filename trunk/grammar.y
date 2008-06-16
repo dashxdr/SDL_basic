@@ -1274,6 +1274,7 @@ ps *ps;
 		{
 			bc->flags &= ~BF_RUNNING;
 //			disassemble(ps);
+			reset_waitbase(bc);
 			vmachine(bc, ps->steps, bc->vstack);
 		}
 		free(ps);
