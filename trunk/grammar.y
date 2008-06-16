@@ -271,6 +271,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "dimd %d\n", (++s)->i);
 		else if(s->func == dims)
 			tprintf(bc, "dims %d\n", (++s)->i);
+		else if(s->func == inkey)
+			tprintf(bc, "inkey\n");
 		else if(s->func == mousexd)
 			tprintf(bc, "mousex\n");
 		else if(s->func == mouseyd)
@@ -819,7 +821,7 @@ special:
 	| TICKS {emitfunc(PS, ticksd)}
 	;
 specialstr:
-	INKEYSTR
+	INKEYSTR {emitfunc(PS, inkey)}
 	;
 
 stringexpr:
