@@ -3,254 +3,264 @@
 30 dim rx(100), ry(100), rdx(100), rdy(100), rs(100)
 40 dim ex(100), ey(100), edx(100), edy(100), et(100)
 50 rem ****** restart here
-60 dead = 0
-70 dx = 0: dy = 0
-80 emax = 100 : rem max explosion dots
-90 for i=1 to emax:et(i) = 0: next i
-100 missnum = 0
-110 starnum = 60
-120 for i=1 to starnum
-130 sx(i) = rnd(xsize)
-140 sy(i) = rnd(ysize)
-150 next i
-160 pi2=3.1415928*2.0
-170 shipx = xsize/2 : rem x position of ship
-180 shipy = ysize/2 : rem y position of ship
-190 thrust=.2 : rem thrust
-200 v=0: rem velocity
-210 mv=7 : rem max velocity
-220 da = .1: rem rotation speed
-230 a=3.1415928/2
-240 gosub 1310
-250 rem ************************   Main loop
-260 cls
-270 print wt
-280 fc=fc+1
-290 gosub 1250: rem stars
-300 gosub 400: rem handle ship
-310 gosub 850: rem hacks
-320 gosub 910: rem missiles
-330 gosub 1490: rem asteroids
-340 gosub 1740: rem missiles hitting asteroids
-350 gosub 2140: rem handle explosion dots
-360 gosub 2430: rem check if ship destroyed
-370 update
-380 wt = sleep(.02)
-390 goto 250
-400 rem ************************   Handle ship movement
-410 if dead<>0 then 650
-420 fire=0
-430 if key(402)=0 then 490
-440 dx = dx + thrust*cos(a)
-450 dy = dy - thrust*sin(a)
-460 v = sqr(dx*dx + dy*dy)
-470 if v>mv then v=mv/v:dx = dx*v : dy = dy*v
-480 fire = 1
-490 if key(400) then a=a+da:if(a<0.0) then a=a+pi2
-500 if key(401) then a=a-da:if(a>pi2) then a=a-pi2
-510 shipx=shipx+dx
-520 if shipx<0 then shipx=shipx+xsize
-530 if shipx>= xsize then shipx=shipx-xsize
-540 shipy=shipy+dy
-550 if shipy<0 then shipy=shipy+ysize
-560 if shipy>=ysize then shipy=shipy-ysize
-570 x = shipx
-580 y = shipy
-590 gosub 660
-600 if x>xsize/2 then fx=-xsize else fx=xsize
-610 if y>ysize/2 then fy=-ysize else fy=ysize
-620 x=x+fx:gosub 660
-630 y=y+fy:gosub 660
-640 x=x-fx:gosub 660
-650 return
-660 rem ************************   Draw ship
-670 pen 2
-680 as=2.5
-690 r=20
-700 r2=r*.8
-710 color 255,255,255
-720 move x+r*cos(a), y-r*sin(a)
-730 line x+r2*cos(a+as), y-r2*sin(a+as)
-740 line x+r2*cos(a-as), y-r2*sin(a-as)
-750 line x+r*cos(a), y-r*sin(a)
-760 if fire=0 then 840
-770 if fc&1 = 0 then 840
-780 r2=r*.7
-790 move x-r2*cos(a), y+r2*sin(a)
-800 r2=r2*2
-810 color 255,190,0
-820 pen 4
-830 line x-r2*cos(a), y+r2*sin(a)
-840 return
-850 rem ************************  Hacks
-860 code = keycode
-870 if code=13 then x=xsize/2:y=ysize/2:dx=0:dy=0
-880 if code=410 then gosub 1160
-890 if code=32 then 50
+60 restart = 0
+70 dead = 0
+80 wantm = 0
+90 fc = 0
+100 lastm = -20
+110 dx = 0: dy = 0
+120 emax = 100 : rem max explosion dots
+130 for i=1 to emax:et(i) = 0: next i
+140 missnum = 0
+150 starnum = 60
+160 for i=1 to starnum
+170 sx(i) = rnd(xsize)
+180 sy(i) = rnd(ysize)
+190 next i
+200 pi2=3.1415928*2.0
+210 shipx = xsize/2 : rem x position of ship
+220 shipy = ysize/2 : rem y position of ship
+230 thrust=.2 : rem thrust
+240 v=0: rem velocity
+250 mv=7 : rem max velocity
+260 da = .1: rem rotation speed
+270 a=3.1415928/2
+280 gosub 1410
+290 rem ************************   Main loop
+300 cls
+310 print wt
+320 fc=fc+1
+330 gosub 1340: rem stars
+340 gosub 460: rem handle ship
+350 gosub 910: rem hacks
+360 gosub 970: rem missiles
+370 gosub 1220: rem handle firing missiles
+380 gosub 1590: rem asteroids
+390 gosub 1840: rem missiles hitting asteroids
+400 gosub 2240: rem handle explosion dots
+410 gosub 2530: rem check if ship destroyed
+420 update
+430 wt = sleep(.02)
+440 if restart=1 then 50
+450 goto 290
+460 rem ************************   Handle ship movement
+470 if dead<>0 then 710
+480 fire=0
+490 if key(402)=0 then 550
+500 dx = dx + thrust*cos(a)
+510 dy = dy - thrust*sin(a)
+520 v = sqr(dx*dx + dy*dy)
+530 if v>mv then v=mv/v:dx = dx*v : dy = dy*v
+540 fire = 1
+550 if key(400) then a=a+da:if(a<0.0) then a=a+pi2
+560 if key(401) then a=a-da:if(a>pi2) then a=a-pi2
+570 shipx=shipx+dx
+580 if shipx<0 then shipx=shipx+xsize
+590 if shipx>= xsize then shipx=shipx-xsize
+600 shipy=shipy+dy
+610 if shipy<0 then shipy=shipy+ysize
+620 if shipy>=ysize then shipy=shipy-ysize
+630 x = shipx
+640 y = shipy
+650 gosub 720
+660 if x>xsize/2 then fx=-xsize else fx=xsize
+670 if y>ysize/2 then fy=-ysize else fy=ysize
+680 x=x+fx:gosub 720
+690 y=y+fy:gosub 720
+700 x=x-fx:gosub 720
+710 return
+720 rem ************************   Draw ship
+730 pen 2
+740 as=2.5
+750 r=20
+760 r2=r*.8
+770 color 255,255,255
+780 move x+r*cos(a), y-r*sin(a)
+790 line x+r2*cos(a+as), y-r2*sin(a+as)
+800 line x+r2*cos(a-as), y-r2*sin(a-as)
+810 line x+r*cos(a), y-r*sin(a)
+820 if fire=0 then 900
+830 if fc&1 = 0 then 900
+840 r2=r*.7
+850 move x-r2*cos(a), y+r2*sin(a)
+860 r2=r2*2
+870 color 255,190,0
+880 pen 4
+890 line x-r2*cos(a), y+r2*sin(a)
 900 return
-910 rem ************************ Handle missiles
-920 if missnum = 0 then 1150
-930 for i = 1 to missnum
-940 if misst(i) <= 0 then 1040
-950 missx(i) = missx(i) + missdx(i)
-960 if missx(i)<0 then missx(i) = missx(i) + xsize
-970 if missx(i)>=xsize then missx(i) = missx(i) - xsize
-980 missy(i) = missy(i) + missdy(i)
-990 if missy(i)<0 then missy(i) = missy(i) + ysize
-1000 if missy(i)>=ysize then missy(i) = missy(i) - ysize
-1010 color 255,255,255
-1020 disc missx(i), missy(i), 2
-1030 misst(i) = misst(i) - 1
-1040 next i
-1050 if misst(1) > 0 then 1150
-1060 missnum = missnum - 1
-1070 if missnum = 0 then 1150
-1080 for i = 1 to missnum
-1090 missx(i) = missx(i+1)
-1100 missy(i) = missy(i+1)
-1110 missdx(i) = missdx(i+1)
-1120 missdy(i) = missdy(i+1)
-1130 misst(i) = misst(i+1)
-1140 next i
-1150 return
-1160 rem ************************   Fire missile
-1170 missnum = missnum + 1
-1180 misst(missnum) = 80
-1190 missx(missnum) = x
-1200 missy(missnum) = y
-1210 mspeed = mv*1.2
-1220 missdx(missnum) = dx + mspeed*cos(a)
-1230 missdy(missnum) = dy - mspeed*sin(a)
-1240 return
-1250 rem ************************  Stars
-1260 color 255,255,255
-1270 for i=1 to starnum
-1280 disc sx(i),sy(i),1
-1290 next i
-1300 return
-1310 rem ************************ setup asteroids
-1320 anum = 4
-1330 amin = 15
-1340 for i = 1 to anum
-1350 tx = rnd(xsize)
-1360 ty = rnd(ysize)
-1370 tx2 = tx - shipx:ty2 = ty - shipy
-1380 r=sqr(tx2*tx2 + ty2*ty2)
-1390 if r < xsize/2 or r < ysize/2 then 1350
-1400 rx(i) = tx
-1410 ry(i) = ty
-1420 ta = rnd(360) * 3.1415928/180.0
-1430 r = 1: rem asteroid initial speed
-1440 rdx(i) = r*cos(ta)
-1450 rdy(i) = r*sin(ta)
-1460 rs(i) = amin*4
-1470 next i
-1480 return
-1490 rem ************************ handle asteroids
-1500 if anum = 0 then 1710
-1510 color 255,255,255
-1520 for i = 1 to anum
-1530 rx(i) = rx(i) + rdx(i)
-1540 if rx(i) < 0 then rx(i) = rx(i) + xsize
-1550 if rx(i) >= xsize then rx(i) = rx(i) - xsize
-1560 ry(i) = ry(i) + rdy(i)
-1570 if ry(i) < 0 then ry(i) = ry(i) + ysize
-1580 if ry(i) >= ysize then ry(i) = ry(i) - ysize
-1590 x = rx(i): y = ry(i) : s = rs(i)
-1600 if x>xsize/2 then fx=-xsize else fx=xsize
-1610 if y>ysize/2 then fy=-ysize else fy=ysize
-1620 pen rs(i)*.2
-1630 gosub 1720
-1640 x=x+fx
-1650 gosub 1720
-1660 y=y+fy
-1670 gosub 1720
-1680 x=x-fx
-1690 gosub 1720
-1700 next i
-1710 return
-1720 circle x,y,s
-1730 return
-1740 rem *********************** handle missiles hitting asteroids
-1750 if missnum = 0 or anum = 0 then 2130
-1760 for i=1 to missnum
-1770 x = missx(i):y=missy(i)
-1780 if misst(i) <= 0 then 2030
-1790 for j=1 to anum
-1800 if rs(j) = 0 then 2020
-1810 tx = rx(j) - x
-1820 ty = ry(j) - y
-1830 r = sqr(tx*tx + ty*ty)
-1840 if r>rs(j) then 2020
-1850 gosub 2270
-1860 misst(i) = 0
-1870 rs(j) = rs(j)*.5
-1880 if rs(j) < amin then rs(j) = 0:goto 2020
-1890 s=sqr(rdx(j)*rdx(j) + rdy(j)*rdy(j))
-1900 s = s * 2
-1910 tx = s * tx/r
-1920 ty = s * ty/r
-1930 rdx(j) = -ty
-1940 rdy(j) = tx
-1950 anum = anum+1
-1960 rx(anum) = rx(j)
-1970 ry(anum) = ry(j)
-1980 rdx(anum) = -rdx(j)
-1990 rdy(anum) = -rdy(j)
-2000 rs(anum) = rs(j)
-2010 goto 2030
-2020 next j
-2030 next i
-2040 i=1: goto 2120
-2050 if rs(i) > 0 then i=i+1: goto 2120
-2060 rx(i) = rx(anum)
-2070 ry(i) = ry(anum)
-2080 rdx(i) = rdx(anum)
-2090 rdy(i) = rdy(anum)
-2100 rs(i) = rs(anum)
-2110 anum = anum - 1
-2120 if i<= anum then 2050
-2130 return
-2140 rem ************************* handle explosion dots
-2150 for i=1 to emax
-2160 if et(i) <= 0 then 2250
-2170 ex(i) = ex(i) + edx(i)
-2180 if ex(i)<0 then ex(i) = ex(i) + xsize
-2190 if ex(i)>=xsize then ex(i) = ex(i) - xsize
-2200 ey(i) = ey(i) + edy(i)
-2210 if ey(i)<0 then ey(i) = ey(i) + ysize
-2220 if ey(i)>=ysize then ey(i) = ey(i) - ysize
-2230 et(i) = et(i) - 1
-2240 disc ex(i), ey(i), 1.5
-2250 next i
-2260 return
-2270 rem *********************** Add some explosion dots
-2280 rem x, y is coord
-2290 uc=15
-2300 for u = 1 to emax
-2310 if et(u) >0 then 2410
-2320 et(u) = 50
-2330 ex(u) = x
-2340 ey(u) = y
-2350 ur = rnd(0)*2 + 1
-2360 ut = rnd(360)*3.1415928/180
-2370 edx(u) = ur*cos(ut)
-2380 edy(u) = ur*sin(ut)
-2390 uc = uc - 1
-2400 if uc = 0 then 2420
-2410 next u
-2420 return
-2430 rem ********************* Check if ship destroyed
-2440 if dead<>0 then 2560
-2450 if anum = 0 then 2560
-2460 for i = 1 to anum
-2470 tx = shipx - rx(i)
-2480 ty = shipy - ry(i)
-2490 r = sqr(tx*tx+ty*ty)
-2500 if r > rs(i) then 2550
-2510 dead=1
-2520 x=shipx
-2530 y=shipy
-2540 gosub 2270: gosub 2270: gosub 2270
-2550 next i
-2560 return
+910 rem ************************  Hacks
+920 code = keycode
+930 if code=13 then x=xsize/2:y=ysize/2:dx=0:dy=0
+940 if code=410 then wantm=1: rem want to fire a missile
+950 if code=32 then restart=1
+960 return
+970 rem ************************ Handle missiles
+980 if missnum = 0 then 1210
+990 for i = 1 to missnum
+1000 if misst(i) <= 0 then 1100
+1010 missx(i) = missx(i) + missdx(i)
+1020 if missx(i)<0 then missx(i) = missx(i) + xsize
+1030 if missx(i)>=xsize then missx(i) = missx(i) - xsize
+1040 missy(i) = missy(i) + missdy(i)
+1050 if missy(i)<0 then missy(i) = missy(i) + ysize
+1060 if missy(i)>=ysize then missy(i) = missy(i) - ysize
+1070 color 255,255,255
+1080 disc missx(i), missy(i), 2
+1090 misst(i) = misst(i) - 1
+1100 next i
+1110 if misst(1) > 0 then 1210
+1120 missnum = missnum - 1
+1130 if missnum = 0 then 1210
+1140 for i = 1 to missnum
+1150 missx(i) = missx(i+1)
+1160 missy(i) = missy(i+1)
+1170 missdx(i) = missdx(i+1)
+1180 missdy(i) = missdy(i+1)
+1190 misst(i) = misst(i+1)
+1200 next i
+1210 return
+1220 rem ************************   Fire missile
+1230 if wantm = 0 then 1330
+1240 if lastm+8 > fc then 1330
+1250 lastm = fc
+1260 missnum = missnum + 1
+1270 misst(missnum) = 60
+1280 missx(missnum) = x
+1290 missy(missnum) = y
+1300 mspeed = mv*1.2
+1310 missdx(missnum) = dx + mspeed*cos(a)
+1320 missdy(missnum) = dy - mspeed*sin(a)
+1330 return
+1340 rem ************************  Stars
+1350 color 255,255,255
+1360 wantm = 0
+1370 for i=1 to starnum
+1380 disc sx(i),sy(i),1
+1390 next i
+1400 return
+1410 rem ************************ setup asteroids
+1420 anum = 4
+1430 amin = 15
+1440 for i = 1 to anum
+1450 tx = rnd(xsize)
+1460 ty = rnd(ysize)
+1470 tx2 = tx - shipx:ty2 = ty - shipy
+1480 r=sqr(tx2*tx2 + ty2*ty2)
+1490 if r < xsize/2 or r < ysize/2 then 1450
+1500 rx(i) = tx
+1510 ry(i) = ty
+1520 ta = rnd(360) * 3.1415928/180.0
+1530 r = 1: rem asteroid initial speed
+1540 rdx(i) = r*cos(ta)
+1550 rdy(i) = r*sin(ta)
+1560 rs(i) = amin*4
+1570 next i
+1580 return
+1590 rem ************************ handle asteroids
+1600 if anum = 0 then 1810
+1610 color 255,255,255
+1620 for i = 1 to anum
+1630 rx(i) = rx(i) + rdx(i)
+1640 if rx(i) < 0 then rx(i) = rx(i) + xsize
+1650 if rx(i) >= xsize then rx(i) = rx(i) - xsize
+1660 ry(i) = ry(i) + rdy(i)
+1670 if ry(i) < 0 then ry(i) = ry(i) + ysize
+1680 if ry(i) >= ysize then ry(i) = ry(i) - ysize
+1690 x = rx(i): y = ry(i) : s = rs(i)
+1700 if x>xsize/2 then fx=-xsize else fx=xsize
+1710 if y>ysize/2 then fy=-ysize else fy=ysize
+1720 pen rs(i)*.2
+1730 gosub 1820
+1740 x=x+fx
+1750 gosub 1820
+1760 y=y+fy
+1770 gosub 1820
+1780 x=x-fx
+1790 gosub 1820
+1800 next i
+1810 return
+1820 circle x,y,s
+1830 return
+1840 rem *********************** handle missiles hitting asteroids
+1850 if missnum = 0 or anum = 0 then 2230
+1860 for i=1 to missnum
+1870 x = missx(i):y=missy(i)
+1880 if misst(i) <= 0 then 2130
+1890 for j=1 to anum
+1900 if rs(j) = 0 then 2120
+1910 tx = rx(j) - x
+1920 ty = ry(j) - y
+1930 r = sqr(tx*tx + ty*ty)
+1940 if r>rs(j) then 2120
+1950 gosub 2370
+1960 misst(i) = 0
+1970 rs(j) = rs(j)*.5
+1980 if rs(j) < amin then rs(j) = 0:goto 2120
+1990 s=sqr(rdx(j)*rdx(j) + rdy(j)*rdy(j))
+2000 s = s * 2
+2010 tx = s * tx/r
+2020 ty = s * ty/r
+2030 rdx(j) = -ty
+2040 rdy(j) = tx
+2050 anum = anum+1
+2060 rx(anum) = rx(j)
+2070 ry(anum) = ry(j)
+2080 rdx(anum) = -rdx(j)
+2090 rdy(anum) = -rdy(j)
+2100 rs(anum) = rs(j)
+2110 goto 2130
+2120 next j
+2130 next i
+2140 i=1: goto 2220
+2150 if rs(i) > 0 then i=i+1: goto 2220
+2160 rx(i) = rx(anum)
+2170 ry(i) = ry(anum)
+2180 rdx(i) = rdx(anum)
+2190 rdy(i) = rdy(anum)
+2200 rs(i) = rs(anum)
+2210 anum = anum - 1
+2220 if i<= anum then 2150
+2230 return
+2240 rem ************************* handle explosion dots
+2250 for i=1 to emax
+2260 if et(i) <= 0 then 2350
+2270 ex(i) = ex(i) + edx(i)
+2280 if ex(i)<0 then ex(i) = ex(i) + xsize
+2290 if ex(i)>=xsize then ex(i) = ex(i) - xsize
+2300 ey(i) = ey(i) + edy(i)
+2310 if ey(i)<0 then ey(i) = ey(i) + ysize
+2320 if ey(i)>=ysize then ey(i) = ey(i) - ysize
+2330 et(i) = et(i) - 1
+2340 disc ex(i), ey(i), 1.5
+2350 next i
+2360 return
+2370 rem *********************** Add some explosion dots
+2380 rem x, y is coord
+2390 uc=15
+2400 for u = 1 to emax
+2410 if et(u) >0 then 2510
+2420 et(u) = 50
+2430 ex(u) = x
+2440 ey(u) = y
+2450 ur = rnd(0)*2 + 1
+2460 ut = rnd(360)*3.1415928/180
+2470 edx(u) = ur*cos(ut)
+2480 edy(u) = ur*sin(ut)
+2490 uc = uc - 1
+2500 if uc = 0 then 2520
+2510 next u
+2520 return
+2530 rem ********************* Check if ship destroyed
+2540 if dead<>0 then 2660
+2550 if anum = 0 then 2660
+2560 for i = 1 to anum
+2570 tx = shipx - rx(i)
+2580 ty = shipy - ry(i)
+2590 r = sqr(tx*tx+ty*ty)
+2600 if r > rs(i) then 2650
+2610 dead=1
+2620 x=shipx
+2630 y=shipy
+2640 gosub 2370: gosub 2370: gosub 2370
+2650 next i
+2660 return
