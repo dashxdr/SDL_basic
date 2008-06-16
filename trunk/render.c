@@ -32,6 +32,67 @@ Uint32 a;
 	}
 }
 
+void myspanner(int y, int count, FT_Span *spans, void *user)
+{
+bc *bc=user;
+int x, w;
+Uint32 color;
+SDL_Surface *surf = bc->thescreen;
+Uint32 r,g,b,a, f, fi;
+Uint32 *p, t;
+
+#if 0
+int coverage;
+
+// renders spans in reverse order, but why not? They don't overlap
+	spans += count;
+	color = bc->temp;
+	while(count--)
+	{
+		--spans;
+		x=spans->x;
+		w=spans->len;
+		coverage=spans->coverage;
+		while(w--)
+			colordot_32(surf, x++, y, color, coverage);
+	}
+#else
+// renders spans in reverse order, but why not? They don't overlap
+	spans += count;
+	color = bc->temp;
+	r=color&0xff;
+	g=color & 0xff00;
+	b=color & 0xff0000;
+	a=(color>>24)&255;
+	p=(Uint32 *)(surf->pixels)+y * (surf->pitch>>2);
+	while(count--)
+	{
+		--spans;
+		x=spans->x;
+		w=spans->len;
+		f = ((spans->coverage+1)*a)>>8;
+
+		if(f==0xff)
+		{
+			while(w--)
+				p[x++] = color;
+		} else
+		{
+			fi=f^255;
+			while(w--)
+			{
+				t=p[x];
+				p[x++] = ((f*r + fi*(t&0xff))>>8) |
+					(((f*g + fi*(t&0xff00))&0xff0000)>>8) |
+					(((f*b + fi*(t&0xff0000))&0xff000000)>>8);
+			}
+		}
+	}
+#endif
+
+}
+
+
 void fillscreen(bc *bc, int r, int g, int b, int a)
 {
 int i;
@@ -233,28 +294,6 @@ void disc(bc *bc, double cx, double cy, double radius)
 	arc_piece(bc, cx, cy, radius, 0, 360);
 	shape_done(bc);
 }
-
-void myspanner(int y, int count, FT_Span *spans, void *user)
-{
-bc *bc=user;
-int x, w, coverage;
-Uint32 color;
-SDL_Surface *surf = bc->thescreen;
-
-// renders spans in reverse order, but why not? They don't overlap
-	spans += count;
-	color = bc->temp;
-	while(count--)
-	{
-		--spans;
-		x=spans->x;
-		w=spans->len;
-		coverage=spans->coverage;
-		while(w--)
-			colordot_32(surf, x++, y, color, coverage);
-	}
-}
-
 
 #define IFACTOR 64  // used to fix coords to the grays rendering engine 
 

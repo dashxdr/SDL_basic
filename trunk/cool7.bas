@@ -12,7 +12,7 @@
 100 disc xsize/2+r*cos(a),ysize/2-r*sin(a),16
 110 a=a+1/a
 120 r=5*a
-130 if r<200 then 60
+130 if r<300 then 60
 135 update
 136 sleep .02
 140 goto 30
