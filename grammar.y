@@ -235,6 +235,28 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "circle\n");
 		else if(s->func == performpen)
 			tprintf(bc, "pen\n");
+		else if(s->func == lend)
+			tprintf(bc, "lend\n");
+		else if(s->func == vald)
+			tprintf(bc, "vald\n");
+		else if(s->func == ascd)
+			tprintf(bc, "ascd\n");
+		else if(s->func == leftstr)
+			tprintf(bc, "leftstr\n");
+		else if(s->func == rightstr)
+			tprintf(bc, "rightstr\n");
+		else if(s->func == midstr)
+			tprintf(bc, "midstr\n");
+		else if(s->func == chrstr)
+			tprintf(bc, "chrstr\n");
+		else if(s->func == performstrstr)
+			tprintf(bc, "strstr\n");
+		else if(s->func == stringstr)
+			tprintf(bc, "stringstr\n");
+		else if(s->func == tabstr)
+			tprintf(bc, "tabstr\n");
+		else if(s->func == printat)
+			tprintf(bc, "printat\n");
 		else if(s->func == spot)
 			tprintf(bc, "spot\n");
 		else if(s->func == forceupdate)
@@ -706,9 +728,9 @@ printsep: ';'
 	;
 
 printitem:
-	'@' numexpr
-	| numexpr {emitfunc(PS, printd);}
-	| stringexpr {emitfunc(PS, prints);}
+	'@' numexpr {emitfunc(PS, printat)}
+	| numexpr {emitfunc(PS, printd)}
+	| stringexpr {emitfunc(PS, prints)}
 	;
 
 singlenumpar:
@@ -787,9 +809,9 @@ numfunc:
 	| ATN2 doublenumpar {emitfunc(PS, atn2d)}
 	| ABS singlenumpar {emitfunc(PS, absd)}
 	| SQR singlenumpar {emitfunc(PS, sqrd)}
-	| LEN singlestringpar
-	| VAL singlestringpar
-	| ASC singlestringpar
+	| LEN singlestringpar {emitfunc(PS, lend)}
+	| VAL singlestringpar {emitfunc(PS, vald)}
+	| ASC singlestringpar {emitfunc(PS, ascd)}
 	;
 
 special:
@@ -815,16 +837,17 @@ sitem:
 	| specialstr
 	| stringfunc
 	| stringvar {emitfunc(PS, evals)}
-	| TAB singlenumpar
+	| TAB singlenumpar {emitfunc(PS, tabstr)}
 	;
 
 stringfunc:
-	LEFTSTR '(' stringexpr ',' numexpr ')'
-	| RIGHTSTR '(' stringexpr ',' numexpr ')'
+	LEFTSTR '(' stringexpr ',' numexpr ')' {emitfunc(PS, leftstr)}
+	| RIGHTSTR '(' stringexpr ',' numexpr ')' {emitfunc(PS, rightstr)}
 	| MIDSTR '(' stringexpr ',' numexpr ',' numexpr ')'
-	| CHRSTR singlenumpar
-	| STRSTR singlenumpar
-	| STRINGSTR '(' numexpr ',' stringexpr ')'
+			 {emitfunc(PS, midstr)}
+	| CHRSTR singlenumpar {emitfunc(PS, chrstr)}
+	| STRSTR singlenumpar {emitfunc(PS, performstrstr)}
+	| STRINGSTR '(' numexpr ',' stringexpr ')' {emitfunc(PS, stringstr)}
 	;
 
 %%
