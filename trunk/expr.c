@@ -127,7 +127,7 @@ int res;
 	return ei->flags_out & EXPR_ERROR;
 }
 
-void trythunk(ee *thing)
+void trythunk(ec *ec, ee *thing)
 {
 	if(thing->type == OT_PDOUBLE)
 	{
@@ -137,7 +137,7 @@ void trythunk(ee *thing)
 	{
 		bstring *bs;
 		bs = *(bstring **)thing->indirect;
-		thing->string = make_bstring(bs->string, bs->length);
+		thing->string = make_bstring(ec->bc, bs->string, bs->length);
 		thing->type = OT_BSTRING;
 	}
 }
@@ -171,7 +171,7 @@ int flag_save;
 	}
 	--ec->exprsp;
 	if(!(ec->ei->flags_in & EXPR_LVALUE))
-		trythunk(&ec->tos);
+		trythunk(ec, &ec->tos);
 	ec->ei->string = ec->tos.string;
 	ec->ei->value = ec->tos.value;
 	ec->ei->type = ec->tos.type;
@@ -183,7 +183,7 @@ int flag_save;
 			expr_error(ec, EXPR_ERR_NUMERIC);
 			if(ec->ei->type == OT_BSTRING)
 			{
-				free_bstring(ec->ei->string);
+				free_bstring(ec->bc, ec->ei->string);
 				ec->ei->value = 0.0;
 				ec->ei->type = OT_DOUBLE;
 			}
@@ -215,7 +215,7 @@ int res;
 	return left->length < right->length ? -1 : 1;
 }
 
-int string_comps(ee *left, ee *right)
+int string_comps(ec *ec, ee *left, ee *right)
 {
 int res=0;
 	if(left->type == OT_BSTRING && right->type == OT_BSTRING)
@@ -225,7 +225,7 @@ int res=0;
 		right->value = 0;
 	if(right->type == OT_BSTRING);
 	{
-		free_bstring(right->string);
+		free_bstring(ec->bc, right->string);
 		right->string = 0;
 	}
 	right->type = OT_DOUBLE;
@@ -261,9 +261,9 @@ double t;
 		if(is_string_type(left->type) ^ is_string_type(right->type))
 			expr_error(ec, EXPR_ERR_MISMATCH);
 
-		trythunk(right);
+		trythunk(ec, right);
 		if(left->operation != oper_assign)
-			trythunk(left);
+			trythunk(ec, left);
 
 		if(right->type == OT_DOUBLE)
 			switch(left->operation)
@@ -356,9 +356,10 @@ double t;
 					{
 						bstring *bs;
 						bs = *(bstring **)left->indirect;
-						free_bstring(bs);
+						free_bstring(ec->bc, bs);
 						bs = right->string;
-						*(bstring **)left->indirect = dup_bstring(bs);
+						*(bstring **)left->indirect =
+							dup_bstring(ec->bc, bs);
 
 						right->type=OT_BSTRING;
 					}
@@ -367,34 +368,35 @@ double t;
 					if(left->type == OT_BSTRING && right->type == OT_BSTRING)
 					{
 						bstring *bs;
-						bs = make_raw_bstring(left->string->length +
+						bs = make_raw_bstring(ec->bc,
+								left->string->length +
 								right->string->length);
 						memcpy(bs->string, left->string->string,
 								left->string->length);
 						memcpy(bs->string + left->string->length,
 								right->string->string,
 								right->string->length);
-						free_bstring(right->string);
+						free_bstring(ec->bc, right->string);
 						right->string = bs;
 					}
 					break;
 				case oper_eq: // comparison =
-					right->value = !string_comps(left, right) ? 1.0 : 0;
+					right->value = !string_comps(ec, left, right) ? 1.0 : 0;
 					break;
 				case oper_lt: // comparison <
-					right->value = string_comps(left, right)<0 ? 1.0 : 0;
+					right->value = string_comps(ec, left, right)<0 ? 1.0 : 0;
 					break;
 				case oper_gt: // comparison >
-					right->value = string_comps(left, right)>0 ? 1.0 : 0;
+					right->value = string_comps(ec, left, right)>0 ? 1.0 : 0;
 					break;
 				case oper_le: // comparison <=
-					right->value = string_comps(left, right)<=0 ? 1.0 : 0;
+					right->value = string_comps(ec, left, right)<=0 ? 1.0 : 0;
 					break;
 				case oper_ge: // comparison >=
-					right->value = string_comps(left, right)>=0 ? 1.0 : 0;
+					right->value = string_comps(ec, left, right)>=0 ? 1.0 : 0;
 					break;
 				case oper_ne: // comparison <>
-					right->value = string_comps(left, right) ? 1.0 : 0;
+					right->value = string_comps(ec, left, right) ? 1.0 : 0;
 					break;
 				default:
 					expr_error(ec, EXPR_ERR_INVALID);
@@ -407,7 +409,7 @@ double t;
 
 		if(left->type == OT_BSTRING)
 		{
-			free_bstring(left->string);
+			free_bstring(ec->bc, left->string);
 			left->string = 0;
 		}
 
@@ -595,7 +597,7 @@ int type=0;
 	return type;
 }
 
-bstring *make_raw_bstring(int length)
+bstring *make_raw_bstring(bc *bc, int length)
 {
 bstring *bs;
 	bs=malloc(length + sizeof(bstring) + 1);
@@ -607,10 +609,10 @@ bstring *bs;
 	return bs;
 }
 
-bstring *make_bstring(char *string, int length)
+bstring *make_bstring(bc *bc, char *string, int length)
 {
 bstring *bs;
-	bs=make_raw_bstring(length);
+	bs=make_raw_bstring(bc, length);
 #warning check for allocation failure
 	if(bs)
 	{
@@ -628,12 +630,12 @@ struct variable *v;
 }
 
 
-bstring *dup_bstring(bstring *bs)
+bstring *dup_bstring(bc *bc, bstring *bs)
 {
-	return make_bstring(bs->string, bs->length);
+	return make_bstring(bc, bs->string, bs->length);
 }
 
-void free_bstring(bstring *bs)
+void free_bstring(bc *bc, bstring *bs)
 {
 	if(bs) free(bs);
 }
@@ -658,7 +660,7 @@ char ch;
 		if(in<sizeof(tmp))
 			tmp[in++] = ch;
 	}
-	return make_bstring(tmp, in);
+	return make_bstring(ec->bc, tmp, in);
 }
 
 /* fills in operval and opertype, leaves pointer on character stopped on */
@@ -866,7 +868,7 @@ int res;
 					ind = (bstring **)v->array + j;
 					newop->indirect = ind;
 					if(!*ind)
-						*ind = make_bstring("",0);
+						*ind = make_bstring(ec->bc, "",0);
 					newop->type = OT_PBSTRING;
 				} else
 				{
@@ -878,7 +880,7 @@ int res;
 				if(type & RANK_STRING)
 				{
 					if(!v->string)
-						v->string = make_bstring("", 0);
+						v->string = make_bstring(ec->bc, "", 0);
 					newop->indirect = &v->string;
 					newop->type = OT_PBSTRING;
 				} else

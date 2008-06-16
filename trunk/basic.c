@@ -679,7 +679,7 @@ einfo einfo, *ei=&einfo;
 	ei->flags_in = EXPR_LET;
 	res = expr(bc, take, ei);
 	if(ei->type == OT_BSTRING)
-		free_bstring(ei->string);
+		free_bstring(bc, ei->string);
 }
 
 void doprint(bc *bc, char **take)
@@ -742,7 +742,7 @@ int newline=1;
 				bstring *bs = ei->string;
 				if(bs)
 					tprintf(bc, "%s", bs->string);
-				free_bstring(bs);
+				free_bstring(bc, bs);
 			}
 		}
 
@@ -843,8 +843,8 @@ int res;
 	{
 		bstring *bs;
 		bs = *(bstring **)ei->indirect;
-		free_bstring(bs);
-		bs = make_bstring(bc->debline, strlen(bc->debline));
+		free_bstring(bc, bs);
+		bs = make_bstring(bc, bc->debline, strlen(bc->debline));
 		*(bstring **)ei->indirect = bs;
 	} else if(ei->type == OT_PDOUBLE)
 	{
@@ -862,7 +862,7 @@ int res;
 	res = expr(bc, take, ei);
 	if(ei->type == OT_BSTRING)
 	{
-		free_bstring(ei->string);
+		free_bstring(bc, ei->string);
 		run_error(bc, SYNTAX_ERROR);
 	}
 	if(ei->value != 0.0) // take the true side
@@ -1039,7 +1039,7 @@ struct forinfo *fi;
 	res = expr(bc, take, ei);
 	if(ei->type == OT_BSTRING)
 	{
-		free_bstring(ei->string);
+		free_bstring(bc, ei->string);
 		run_error(bc, SYNTAX_ERROR);
 		return;
 	}
@@ -1056,7 +1056,7 @@ struct forinfo *fi;
 	res = expr(bc, take, ei);
 	if(ei->type == OT_BSTRING)
 	{
-		free_bstring(ei->string);
+		free_bstring(bc, ei->string);
 		run_error(bc, SYNTAX_ERROR);
 		return;
 	}
@@ -1069,7 +1069,7 @@ struct forinfo *fi;
 		res = expr(bc, take, ei);
 		if(ei->type == OT_BSTRING)
 		{
-			free_bstring(ei->string);
+			free_bstring(bc, ei->string);
 			run_error(bc, SYNTAX_ERROR);
 			return;
 		}
@@ -1188,7 +1188,7 @@ int res;
 		run_error(bc, INVALID_DATA "(line %d)",
 			bc->lps[bc->dataline].linenum);
 		if(ei->type == OT_BSTRING)
-			free_bstring(ei->string);
+			free_bstring(bc, ei->string);
 		return 0.0;
 	}
 	if(*bc->datatake == ',')
@@ -1215,8 +1215,8 @@ int res;
 		{
 			bstring *bs;
 			bs = *(bstring **)ei->indirect;
-			free_bstring(bs);
-			bs = make_bstring("foo", 3);
+			free_bstring(bc, bs);
+			bs = make_bstring(bc, "foo", 3);
 			*(bstring **)ei->indirect = bs;
 		} else if(ei->type == OT_PDOUBLE)
 		{
@@ -1635,7 +1635,7 @@ int res;
 	if(ei->type == OT_BSTRING)
 	{
 		gfr->value = ei->string->length;
-			free_bstring(ei->string);
+			free_bstring(bc, ei->string);
 	}
 	else
 		gfr->value = 0.0;
@@ -1700,13 +1700,13 @@ int v1, v2;
 			start = s1->length - len;
 	}
 
-	s2 = make_bstring(s1->string + start, len);
+	s2 = make_bstring(bc, s1->string + start, len);
 #warning check if string was allocated
 
 	gfr->string = s2;
 	gfr->type = OT_BSTRING;
 err:
-	free_bstring(s1);
+	free_bstring(bc, s1);
 }
 
 void doleftstring(bc *bc, struct gen_func_ret *gfr)
@@ -1753,7 +1753,7 @@ einfo einfo, *ei=&einfo;
 			else
 				snprintf(t, sizeof(t), "%d", (int)ei->value);
 		}
-		gfr->string = make_bstring(t, strlen(t));
+		gfr->string = make_bstring(bc, t, strlen(t));
 	}
 }
 
@@ -1795,11 +1795,11 @@ int len;
 		error(bc, BADVALUE);
 	else
 	{
-		gfr->string = make_raw_bstring(len);
+		gfr->string = make_raw_bstring(bc, len);
 		memset(gfr->string->string, ei->string->string[0], len);
 		gfr->type = OT_BSTRING;
 	}
-	free_bstring(ei->string);
+	free_bstring(bc, ei->string);
 }
 
 
@@ -1831,7 +1831,7 @@ int len;
 	} else if(len>0)
 		gfr->value = s1->string[0];
 err:
-	free_bstring(s1);
+	free_bstring(bc, s1);
 }
 
 void doval(bc *bc, struct gen_func_ret *gfr)
