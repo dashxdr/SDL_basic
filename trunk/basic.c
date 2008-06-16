@@ -530,6 +530,7 @@ struct cmd *cmd;
 			deleteline(bc, atoi(line));
 	} else if(*line)
 	{
+/*
 		char tokenized[1024], *p=tokenized;
 		convertline(bc, tokenized, line);
 
@@ -539,7 +540,8 @@ struct cmd *cmd;
 			bc->flags ^= BF_RUNERROR;
 			tprintf(bc, "%s\n", bc->lineerror);
 		}
-//		unknown_command(bc, line);
+*/
+		parseline(bc, line);
 	} else
 		bc->flags |= BF_NOPROMPT;
 }
