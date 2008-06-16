@@ -326,7 +326,6 @@ int line;
 		at=findline(ps, ps->steps[o+1].i);
 		if(at<0)
 		{
-#warning fix me up
 			for(line=0;line<bc->numlines;++line)
 				if(bc->lm[line].step > o)
 					break;
@@ -534,8 +533,8 @@ statement:
 		{$4.value.step[1].i = $7.value.step - $4.value.step;
 		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
 	| GOTO INTEGER {lineref(PS);emitrjmp(PS, $2.value.integer)}
-	| LET assignexpr
-	| assignexpr
+	| LET assignexpr {/* implemented */}
+	| assignexpr {/* implemented */}
 	| PRINT printlist {if($2.value.integer) emitfunc(PS, lf)}
 	| DIM dimarraylist
 	| END {emitfunc(PS, performend)}
@@ -561,13 +560,13 @@ statement:
 	| GOSUB INTEGER {lineref(PS);emitrcall(PS, $2.value.integer)}
 	| RETURN {emitfunc(PS, ret)}
 	| REM {/* do nothing */}
-	| RANDOM
 	| ON numexpr GOTO linelist {emitongoto(PS, $4.value.count)}
 	| ON numexpr GOSUB linelist {emitongosub(PS, $4.value.count)}
-	| RESTORE
 	| INPUT inputlist {emitinput(PS, $2.value.count)}
-	| READ readlist
-	| DATA datalist
+	| READ readlist {/* implemented */}
+	| DATA datalist {/* implemented */}
+	| RANDOM
+	| RESTORE
 	| CLEAR num1
 	| TEST
 	;
