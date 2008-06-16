@@ -62,6 +62,7 @@ int needstop(bc *bc)
           low level generic functions
 **************************************************************************/
 
+void pop(bc *bc){--bc->vsp;}
 void pushd(bc *bc){bc->vsp++->d = bc->vip++->d;}
 void pushi(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void pushea(bc *bc){bc->vsp++->p = bc->vip -1 + bc->vip->i;++bc->vip;}
@@ -679,9 +680,12 @@ void sleepd(bc *bc)
 {
 int until, diff;
 double d;
+int now;
+
+	now = SDL_GetTicks();
 	d=(--bc->vsp)->d;
 
-	if(d<0) return;
+	if(d<0) d = 0.0;
 	if(d>10.0) d=10.0;
 
 	until=bc->waitbase + d*1000;
@@ -699,6 +703,7 @@ double d;
 		scaninput(bc);
 		SDL_Delay(1);
 	}
+	(bc->vsp++) -> d = (SDL_GetTicks() - now)*.001;
 }
 
 void mousexd(bc *bc){(bc->vsp++)->d = bc->mousex;}
