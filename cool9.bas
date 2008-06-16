@@ -63,37 +63,38 @@
 630 rem ************************  Hacks
 640 code = keycode
 650 if code=13 then x=xsize/2:y=ysize/2:dx=0:dy=0
-660 if code=32 then gosub 910
+660 if code=32 then gosub 920
 670 return
 680 rem ************************ Handle missiles
-690 for i = 1 to missnum
-700 missx(i) = missx(i) + missdx(i)
-710 if missx(i)<0 then missx(i) = missx(i) + xsize
-720 if missx(i)>=xsize then missx(i) = missx(i) - xsize
-730 missy(i) = missy(i) + missdy(i)
-740 if missy(i)<0 then missx(i) = missx(i) + ysize
-750 if missy(i)>=ysize then missy(i) = missy(i) - ysize
-760 color 255,255,255
-770 disc missx(i), missy(i), 5
-780 misst(i) = misst(i) - 1
-790 next i
-800 if misst(1) >= 0 then 900
-810 missnum = nissnum - 1
-820 if missnum = 0 then 900
-830 for i = 1 to missnum
-840 missx(i) = missx(i+1)
-850 missy(i) = missy(i+1)
-860 missdx(i) = missdx(i+1)
-870 missdy(i) = missdy(i+1)
-880 misst(i) = misst(i+1)
-890 next i
-900 return
-910 rem ************************   Fire missile
-920 missnum = missnum + 1
-930 misst(missnum) = 50
-940 missx(missnum) = x
-950 missy(missnum) = y
-960 mspeed = mv*1.2
-970 missdx(missnum) = dx + mspeed*cos(a)
-980 missdy(missnum) = dy - mspeed*sin(a)
-990 return
+690 if missnum = 0 then 910
+700 for i = 1 to missnum
+710 missx(i) = missx(i) + missdx(i)
+720 if missx(i)<0 then missx(i) = missx(i) + xsize
+730 if missx(i)>=xsize then missx(i) = missx(i) - xsize
+740 missy(i) = missy(i) + missdy(i)
+750 if missy(i)<0 then missx(i) = missx(i) + ysize
+760 if missy(i)>=ysize then missy(i) = missy(i) - ysize
+770 color 255,255,255
+780 disc missx(i), missy(i), 2
+790 misst(i) = misst(i) - 1
+800 next i
+810 if misst(1) >= 0 then 910
+820 missnum = missnum - 1
+830 if missnum = 0 then 910
+840 for i = 1 to missnum
+850 missx(i) = missx(i+1)
+860 missy(i) = missy(i+1)
+870 missdx(i) = missdx(i+1)
+880 missdy(i) = missdy(i+1)
+890 misst(i) = misst(i+1)
+900 next i
+910 return
+920 rem ************************   Fire missile
+930 missnum = missnum + 1
+940 misst(missnum) = 50
+950 missx(missnum) = x
+960 missy(missnum) = y
+970 mspeed = mv*1.2
+980 missdx(missnum) = dx + mspeed*cos(a)
+990 missdy(missnum) = dy - mspeed*sin(a)
+1000 return
