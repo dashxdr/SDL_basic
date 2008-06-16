@@ -1074,7 +1074,7 @@ printf("here:%s\n", ps->yypntr);
 			if(!isalpha(ch) && !isdigit(ch))
 				break;
 			if(t<sizeof(name)-2)
-				name[t++] = ch;
+				name[t++] = tolower(ch);
 		}
 		if(ch=='$')
 		{
