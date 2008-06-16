@@ -493,10 +493,10 @@ struct cmd commandlist[]={
 {"new", donew},
 {"scr", donew},
 {"exit", doexit},
-{"run", dorun},
+{"run", dopr},
+{"oldrun", dorun},
 {"ren", doren},
 {"parse", doparse},
-{"pr", dopr},
 {0, 0}};
 
 void processline(bc *bc, char *line)
