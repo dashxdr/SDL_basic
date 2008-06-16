@@ -695,11 +695,6 @@ readvar:
 	numvar {emitfunc(PS, readd)}
 	| stringvar;
 
-var:
-	numvar
-	| stringvar;
-	;
-
 numvar:
 	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
@@ -749,12 +744,13 @@ inputlist:
 	;
 
 inputlist2:
-	lvalue {$$.value.count = 1}
-	| inputlist2 ',' lvalue {$$.value.count = $1.value.count + 1}
+	inputvar {$$.value.count = 1}
+	| inputlist2 ',' inputvar {$$.value.count = $1.value.count + 1}
 	;
 
-lvalue:
-	var
+inputvar:
+	numvar {emitpushi(PS, 0)}
+	| stringvar {emitpushi(PS, 1)}
 	;
 
 assignexpr:

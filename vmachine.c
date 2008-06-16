@@ -553,12 +553,39 @@ int res;
           BASIC high level commands, for the most part...
 **************************************************************************/
 
+// each input has on the stack 2 steps:
+// 1) the pointer to its value
+// 2) the type (0 = double, 1 = string)
 void input(bc *bc)
 {
 int n;
+int i;
+double *d;
+bstring **bs;
+
 	n=(bc->vip++)->i;
-	bc->vsp -= n;
-	lf(bc);
+	bc->vsp -= n*2;
+
+	for(i=0;i<n;++i)
+	{
+		tprintf(bc, "? ");
+		typeline(bc, "", 1);
+		if(bc->vsp[i*2+1].i == 0) // double
+		{
+			d = (double *)bc->vsp[i*2].p;
+			if(sscanf(bc->debline, "%lf", d) != 1)
+				*d = 0.0;
+		} else
+		{
+			bs = (bstring **)bc->vsp[i*2].p;
+			if(*bs)
+				free_bstring(bc, *bs);
+			*bs=make_bstring(bc, bc->debline, strlen(bc->debline));
+		}
+	}
+
+	reset_waitbase(bc);
+
 }
 
 void printat(bc *bc)
