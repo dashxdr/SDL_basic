@@ -1219,7 +1219,7 @@ int res=0;
 //printf("numvars = %d\n", bc->numvars);
 	if(!res)
 	{
-		tprintf(bc, "Program parsed correctly\n");
+		if(!runit) tprintf(bc, "Program parsed correctly\n");
 		emitfunc(ps, performend);
 		dump_data_finish(ps);
 
