@@ -20,7 +20,7 @@
 200 dy=yc-mousey
 210 if dx or dy then a=atn2(dy, dx) else a=0.0
 220 pen 5
-230 da=.5
+230 da=.7
 240 r=20
 250 r2=r*.5
 260 color 255,255,255
