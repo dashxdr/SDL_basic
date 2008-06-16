@@ -27,6 +27,17 @@ int line;
 	takeaction(bc);
 }
 
+void vardump(bc *bc)
+{
+variable *v;
+int i;
+	for(i=0;i<bc->numvars;++i)
+	{
+		v=bc->vvars + i;
+		tprintf(bc, "---- Variable %s\n", v->name);
+	}
+}
+
 void nomem(bc *bc, int ipfix)
 {
 	verror(bc, ipfix, "Out of memory");
