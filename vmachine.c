@@ -603,6 +603,7 @@ int i;
 double *d;
 bstring **bs;
 
+	bc->flags |= BF_INPUT;
 	n=(bc->vip++)->i;
 	bc->vsp -= n*2;
 
@@ -623,6 +624,7 @@ bstring **bs;
 			*bs=make_bstring(bc, bc->debline, strlen(bc->debline));
 		}
 	}
+	bc->flags &= ~BF_INPUT;
 
 	reset_waitbase(bc);
 
