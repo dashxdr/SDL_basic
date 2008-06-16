@@ -299,11 +299,53 @@ forstate *fs;
           string functions
 **************************************************************************/
 
-TD(stringstr)
-TD(tabstr)
-TD(lend)
-TD(vald)
-TD(ascd)
+void tabstr(bc *bc)
+{
+char temp[32];
+	sprintf(temp, "\033%dx", (int)bc->vsp[-1].d);
+	bc->vsp[-1].bs = make_bstring(bc, temp, strlen(temp));
+}
+
+void stringstr(bc *bc)
+{
+bstring *bs;
+int len;
+	len = bc->vsp[-2].d;
+	if(len<0) len=0;
+	bs = make_raw_bstring(bc, len);
+	memset(bs->string, bc->vsp[-1].bs->string[0], len);
+	free_bstring(bc, bc->vsp[-1].bs);
+	--bc->vsp;
+	bc->vsp[-1].bs = bs;
+}
+
+
+#define TLEN 0
+#define TASC 1
+#define TVAL 2
+static void lenascval(bc *bc, int type)
+{
+bstring *bs;
+	bs = bc->vsp[-1].bs;
+	if(type == TLEN)
+		bc->vsp[-1].d = bs->length;
+	else if(type == TASC)
+	{
+		if(bs->length>0)
+			bc->vsp[-1].d = bs->string[0];
+		else
+			bc->vsp[-1].d = 0.0;
+	} else
+	{
+		bc->vsp[-1].d = 0.0;
+		sscanf(bs->string, "%lf", &bc->vsp[-1].d);
+	}
+	free_bstring(bc, bs);
+}
+
+void lend(bc *bc){lenascval(bc, TLEN);}
+void ascd(bc *bc){lenascval(bc, TASC);}
+void vald(bc *bc){lenascval(bc, TVAL);}
 
 
 #define SLEFT 0
