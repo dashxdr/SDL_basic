@@ -347,7 +347,7 @@ bstring *bs;
 	else if(type == TASC)
 	{
 		if(bs->length>0)
-			bc->vsp[-1].d = bs->string[0];
+			bc->vsp[-1].d = bs->string[0] & 255;
 		else
 			bc->vsp[-1].d = 0.0;
 	} else
@@ -581,6 +581,16 @@ char s[2];
 		s[1]=0;
 		(bc->vsp++)->bs = make_bstring(bc, s, 1);
 	}
+}
+
+void keyd(bc *bc)
+{
+	bc->vsp[-1].d = checkpressed(bc, (int)bc->vsp[-1].d);
+}
+
+void keycoded(bc *bc)
+{
+	(bc->vsp++)->d = takedown(bc);
 }
 
 // each input has on the stack 2 steps:

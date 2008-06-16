@@ -265,6 +265,7 @@ void typeline(bc *bc, char *prompt,int echocr);
 void scaninput(bc *bc);
 void flushinput(bc *bc);
 int takedown(bc *bc);
+int checkpressed(bc *bc, int code);
 
 // basic.c
 
@@ -462,5 +463,7 @@ DECLARE(tabstr)
 DECLARE(printat)
 DECLARE(inkey)
 DECLARE(pop)
+DECLARE(keyd)
+DECLARE(keycoded)
 
 void vmachine(bc *bc, step *program, step *stack);

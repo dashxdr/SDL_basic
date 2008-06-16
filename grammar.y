@@ -193,6 +193,10 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "end\n");
 		else if(s->func == sleepd)
 			tprintf(bc, "sleepd\n");
+		else if(s->func == keyd)
+			tprintf(bc, "keyd\n");
+		else if(s->func == keycoded)
+			tprintf(bc, "keycoded\n");
 		else if(s->func == pop)
 			tprintf(bc, "pop\n");
 		else if(s->func == printd)
@@ -514,7 +518,7 @@ void yyerror(char *s);
 %token RESTORE
 %token INT FIX SGN SIN COS RND POW LOG EXP TAN ATN2 ATN ABS SQR LEN
 %token LEFTSTR MIDSTR RIGHTSTR CHRSTR STRSTR STRINGSTR VAL ASC TAB
-%token MOUSEX MOUSEY MOUSEB XSIZE YSIZE TICKS
+%token MOUSEX MOUSEY MOUSEB XSIZE YSIZE TICKS KEY KEYCODE
 %token INKEYSTR
 %token MOVE PEN LINE COLOR CLEAR RANDOM CLS FILL HOME
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
@@ -561,7 +565,7 @@ statement:
 	| GOTO INTEGER {lineref(PS);emitrjmp(PS, $2.value.integer)}
 	| LET assignexpr {/* implemented */}
 	| assignexpr {/* implemented */}
-	| PRINT printlist {if($2.value.integer) emitfunc(PS, lf)}
+	| print printlist {if($2.value.integer) emitfunc(PS, lf)}
 	| DIM dimarraylist
 	| END {emitfunc(PS, performend)}
 	| STOP {emitfunc(PS, performstop)}
@@ -595,6 +599,10 @@ statement:
 	| RESTORE
 	| CLEAR num1
 	| TEST
+	;
+
+print: PRINT
+	| '?'
 	;
 
 fixif: /* nothing */ {emitfunc(PS, skip2ne);
@@ -810,6 +818,7 @@ numfunc:
 	| ABS singlenumpar {emitfunc(PS, absd)}
 	| SQR singlenumpar {emitfunc(PS, sqrd)}
 	| SLEEP singlenumpar {emitfunc(PS, sleepd)}
+	| KEY singlenumpar {emitfunc(PS, keyd)}
 	| LEN singlestringpar {emitfunc(PS, lend)}
 	| VAL singlestringpar {emitfunc(PS, vald)}
 	| ASC singlestringpar {emitfunc(PS, ascd)}
@@ -822,6 +831,7 @@ special:
 	| XSIZE {emitpushd(PS, PS->bc->xsize)}
 	| YSIZE {emitpushd(PS, PS->bc->ysize)}
 	| TICKS {emitfunc(PS, ticksd)}
+	| KEYCODE {emitfunc(PS, keycoded)}
 	;
 specialstr:
 	INKEYSTR {emitfunc(PS, inkey)}
@@ -926,7 +936,7 @@ printf("here:%s\n", ps->yypntr);
 *p = csave;
 }
 
-// alphabetized for readability -- but atn2 must be before atn
+// alphabetized for readability -- but atn2 must be before atn, keycode < key
 	if(iskeyword(ps, "abs")) return ABS;
 	if(iskeyword(ps, "and")) return ANDAND;
 	if(iskeyword(ps, "asc")) return ASC;
@@ -955,6 +965,8 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "inkey$")) return INKEYSTR;
 	if(iskeyword(ps, "input")) return INPUT;
 	if(iskeyword(ps, "int")) return INT;
+	if(iskeyword(ps, "keycode")) return KEYCODE;
+	if(iskeyword(ps, "key")) return KEY;
 	if(iskeyword(ps, "left$")) return LEFTSTR;
 	if(iskeyword(ps, "len")) return LEN;
 	if(iskeyword(ps, "let")) return LET;
@@ -1008,6 +1020,7 @@ printf("here:%s\n", ps->yypntr);
 	ch=get(ps);
 	switch(ch)
 	{
+	case '?': return ch;
 	case '@': return ch;
 	case ',': return ch;
 	case ';': return ch;
