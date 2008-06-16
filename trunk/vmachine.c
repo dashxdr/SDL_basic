@@ -292,6 +292,68 @@ forstate *fs;
           string functions
 **************************************************************************/
 
+TD(chrstr)
+TD(performstrstr)
+TD(stringstr)
+TD(tabstr)
+TD(lend)
+TD(vald)
+TD(ascd)
+
+
+#define SLEFT 0
+#define SMID 1
+#define SRIGHT 2
+static void leftmidrightstr(bc *bc, int type)
+{
+bstring *s1=0, *s2;
+int start=0, len=0;
+int v1, v2;
+
+	if(type == SMID)
+	{
+		s1 = bc->vsp[-3].bs;
+		v1 = bc->vsp[-2].d;
+		v2 = bc->vsp[-1].d;
+		len = v2;
+	} else
+	{
+		s1 = bc->vsp[-2].bs;
+		v1 = bc->vsp[-1].d;
+		len = v1;
+	}
+
+	if(len > s1->length)
+		len = s1->length;
+	if(len<0)
+		len = 0;
+
+	if(type==SLEFT)
+			start = 0;
+	else if(type==SRIGHT)
+		start = s1->length - len;
+	else
+	{
+		start = v1-1;
+		if(start<0)
+			start=0;
+		if(start+len > s1->length)
+			start = s1->length - len;
+	}
+
+	s2 = make_bstring(bc, s1->string + start, len);
+	free_bstring(bc, s1);
+	if(type == SMID)
+		bc->vsp -= 2;
+	else
+		--bc->vsp;
+	bc->vsp[-1].bs = s2;
+}
+
+void leftstr(bc *bc){leftmidrightstr(bc, SLEFT);}
+void midstr(bc *bc){leftmidrightstr(bc, SMID);}
+void rightstr(bc *bc){leftmidrightstr(bc, SRIGHT);}
+
 void arrays(bc *bc)
 {
 bstring *s;
@@ -424,6 +486,12 @@ int n;
 	n=(bc->vip++)->i;
 	bc->vsp -= n;
 	lf(bc);
+}
+
+void printat(bc *bc)
+{
+int v=(--bc->vsp)->d;
+	tprintf(bc, "\033%dx\033%dy", (v&63), (v>>6)&15);
 }
 
 void printd(bc *bc)
