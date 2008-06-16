@@ -12,7 +12,7 @@
 120 xc=x(i):yc=y(i):gosub 190
 130 next i
 140 color 0,0,255
-150 disc mousex, mousey, 10
+150 disc mousex, mousey, 20
 160 home: print sleep(.02)
 170 update
 180 goto 100
