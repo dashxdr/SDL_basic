@@ -637,12 +637,14 @@ dimarrayvar:
 	;
 
 dimlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
-	| dimlist ',' INTEGER {++$$.value.count;emitpushi(PS, $3.value.integer)}
+	| dimlist ',' INTEGER {$$.value.count = $1.value.count + 1;
+				emitpushi(PS, $3.value.integer)}
 	;
 
 linelist: INTEGER {$$.value.count = 1;lineref(PS);
 				emitpushea(PS, $1.value.integer)}
-	| linelist ',' INTEGER {++$$.value.count;lineref(PS);
+	| linelist ',' INTEGER {$$.value.count = $1.value.count + 1;
+				lineref(PS);
 				emitpushea(PS, $3.value.integer)}
 	;
 
@@ -690,7 +692,7 @@ stringvar:
 
 numlist:
 	numexpr {$$.value.count = 1}
-	| numlist ',' numexpr {++$$.value.count}
+	| numlist ',' numexpr {$$.value.count = $1.value.count + 1}
 	;
 
 printlist: /* nothing */ {$$.value.integer = 1} // want newline
@@ -719,13 +721,14 @@ doublenumpar:
 
 inputlist:
 	inputlist2
-	| STRING ';' inputlist2 {emitpushs(PS, $1.value.string);
+	| STRING ';' inputlist2 {$$.value.count = $3.value.count;
+				emitpushs(PS, $1.value.string);
 				emitfunc(PS, prints)}
 	;
 
 inputlist2:
 	lvalue {$$.value.count = 1}
-	| inputlist2 ',' lvalue {++$$.value.count}
+	| inputlist2 ',' lvalue {$$.value.count = $1.value.count + 1}
 	;
 
 lvalue:
