@@ -3,20 +3,11 @@
 #include "misc.h"
 
 #define TD(name) void name(bc *bc){}
-TD(arrays)
-TD(assigns)
-TD(eqs)
-TD(nes)
-TD(pushs)
-TD(adds)
-TD(evals)
-TD(prints)
 
 void takeaction(bc *bc)
 {
 	bc->takeaction = 0;
 }
-
 
 void verror(bc *bc, int ipfix, char *s, ...)
 {
@@ -89,7 +80,7 @@ void xord(bc *bc){--bc->vsp;bc->vsp[-1].d = (int)bc->vsp[-1].d ^ (int)bc->vsp[0]
 void andandd(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d && bc->vsp[0].d;}
 void orord(bc *bc){--bc->vsp;bc->vsp[-1].d = bc->vsp[-1].d || bc->vsp[0].d;}
 
-void pushv(bc *bc){bc->vsp++ -> p = &bc->vvars[bc->vip++ -> i].value.d;}
+void pushvd(bc *bc){bc->vsp++ -> p = &bc->vvars[bc->vip++ -> i].value.d;}
 void pushav(bc *bc){bc->vsp++->i = bc->vip++->i;}
 void evald(bc *bc){	bc->vsp[-1].d = *(double *)bc->vsp[-1].p;}
  // skip next 2 steps if TOS != 0
@@ -168,7 +159,7 @@ void dims(bc *bc)
 	dim(bc, sizeof(bstring *));
 }
 
-void arrayd(bc *bc)
+static void *array(bc *bc, int size)
 {
 variable *v;
 int rank;
@@ -182,7 +173,7 @@ int t;
 	if(v->rank != rank)
 	{
 		verror(bc, -1, "Wrong number of array dimensions on '%s'\n", v->name);
-		return;
+		return 0;
 	}
 	j=0;
 	for(i=0;i<rank;++i)
@@ -192,10 +183,19 @@ int t;
 		if(t<0 || j>=v->dimensions[i+1])
 		{
 			verror(bc, -1, "Subscript out of range");
-			break;
+			return 0;
 		}
 	}
-	(bc->vsp++)->p = (double *)v->pointer + j;
+	return (char *)v->pointer + j * size;
+}
+
+void arrayd(bc *bc)
+{
+double *d;
+
+	d = array(bc, sizeof(double *));
+	if(d)
+		(bc->vsp++)->p = d;
 }
 
 forstate *getfor(bc *bc, variable *v)
@@ -282,6 +282,73 @@ forstate *fs;
 		verror(bc, -1, "NEXT without FOR, '%s'", v->name);
 }
 
+/**************************************************************************
+          string functions
+**************************************************************************/
+TD(eqs)
+TD(nes)
+TD(adds)
+
+void arrays(bc *bc)
+{
+bstring *s;
+
+	s = array(bc, sizeof(bstring **));
+	if(s)
+		(bc->vsp++)->p = s;
+}
+
+void assigns(bc *bc)
+{
+	if(*(bstring **)bc->vsp[-2].p)
+		free_bstring(bc, *(bstring **)bc->vsp[-2].p);
+	*(bstring **)bc->vsp[-2].p = bc->vsp[-1].bs;
+	bc->vsp -= 2;
+}
+
+void pushvs(bc *bc)
+{
+	bc->vsp++ -> p = &bc->vvars[bc->vip++ -> i].value.s;
+}
+
+void evals(bc *bc)
+{
+	bc->vsp[-1].bs = dup_bstring(bc, *(bstring **)bc->vsp[-1].p);
+}
+
+void pushs(bc *bc)
+{
+int len;
+bstring *bs;
+char *p;
+int i;
+
+	len = bc->vip->ustr[0];
+	bs=make_raw_bstring(bc, len);
+	i=1;
+	p=bs->string;
+	while(len--)
+	{
+		*p++ = bc->vip->str[i++];
+		if(i==STEPSIZE)
+		{
+			i=0;
+			++bc->vip;
+		}
+	}
+	if(i)
+		++bc->vip;
+	(bc->vsp++)->bs = bs;
+}
+
+void prints(bc *bc)
+{
+bstring *bs;
+printf("%x\n", bc->vsp);
+	bs=(--bc->vsp)->bs;
+	tprintf(bc, "%s", bs->string);
+	free_bstring(bc, bs);
+}
 
 
 /**************************************************************************

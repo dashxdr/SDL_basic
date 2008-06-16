@@ -90,8 +90,10 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "assignd\n", name);
 		else if(s->func == assigns)
 			tprintf(bc, "assigns\n", name);
-		else if(s->func == pushv)
-			tprintf(bc, "pushv %s\n", bc->vvars[(++s)->i].name);
+		else if(s->func == pushvd)
+			tprintf(bc, "pushvd %s\n", bc->vvars[(++s)->i].name);
+		else if(s->func == pushvs)
+			tprintf(bc, "pushvs %s\n", bc->vvars[(++s)->i].name);
 		else if(s->func == pushav)
 			tprintf(bc, "pushav %s\n", bc->vvars[(++s)->i].name);
 		else if(s->func == addd)
@@ -358,9 +360,15 @@ static void emitpushd(ps *ps, double val)
 	emitdouble(ps, val);
 }
 
-static void emitpushv(ps *ps, int num)
+static void emitpushvd(ps *ps, int num)
 {
-	emitfunc(ps, pushv);
+	emitfunc(ps, pushvd);
+	emitint(ps, num);
+}
+
+static void emitpushvs(ps *ps, int num)
+{
+	emitfunc(ps, pushvs);
 	emitint(ps, num);
 }
 
@@ -662,13 +670,13 @@ var:
 	;
 
 numvar:
-	NUMSYMBOL {emitpushv(PS, $1.value.integer)}
+	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
 					emitarrayd(PS, $3.value.count)}
 	;
 
 stringvar:
-	STRINGSYMBOL {emitpushv(PS, $1.value.integer)}
+	STRINGSYMBOL {emitpushvs(PS, $1.value.integer)}
 	| STRINGSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
 					emitarrays(PS, $3.value.count)}
 	;
@@ -1090,7 +1098,7 @@ variable *v;
 			size=v->dimensions[v->rank];
 			for(j=0;j<size;++j)
 				if(s[j])
-					free_bstring(s[j]);
+					free_bstring(bc, s[j]);
 		}
 		free(v->pointer);
 		v->pointer = 0;
@@ -1125,6 +1133,7 @@ void pruninit(bc *bc)
 	freeold(bc);
 	bc->numstatements=0;
 	bc->starttime = SDL_GetTicks();
+	memset(bc->vvars, sizeof(bc->vvars), 0);
 	reset_waitbase(bc);
 }
 
