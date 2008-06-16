@@ -1094,11 +1094,17 @@ variable *v;
 			continue;
 		if(index(v->name, '$'))
 		{
-			s=v->pointer;
-			size=v->dimensions[v->rank];
-			for(j=0;j<size;++j)
-				if(s[j])
-					free_bstring(bc, s[j]);
+			if(v->rank)
+			{
+				s=v->pointer;
+				size=v->dimensions[v->rank];
+				for(j=0;j<size;++j)
+					if(s[j])
+						free_bstring(bc, s[j]);
+			} else
+				if(v->value.s)
+					free_bstring(bc, v->value.s);
+			v->value.s = 0;
 		}
 		free(v->pointer);
 		v->pointer = 0;
