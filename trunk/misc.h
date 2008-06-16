@@ -181,6 +181,7 @@ typedef struct basic_context {
 	int starttime;
 	int waitbase;
 	step *base;
+	step *lastip;
 	step *vip;
 	step *vsp;
 	step vstack[512];

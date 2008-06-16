@@ -9,20 +9,27 @@ void takeaction(bc *bc)
 	bc->takeaction = 0;
 }
 
-void verror(bc *bc, int ipfix, char *s, ...)
+static int online(bc *bc)
 {
-va_list ap;
-char temp[1024];
-int n;
-int line;
-	n=bc->vip - bc->base + ipfix; // ipfix takes us back to inst. start
+int n, line;
+	n=bc->lastip - bc->base;
 	for(line=0;line<bc->numlines;++line)
 		if(bc->lm[line].step > n)
 			break;
+	if(line)
+		return bc->lm[line-1].linenumber;
+	else return 0;
+}
+
+void verror(bc *bc, char *s, ...)
+{
+va_list ap;
+char temp[1024];
+int line = online(bc);
 	va_start(ap, s);
 	vsnprintf(temp, sizeof(temp), s, ap);
 	va_end(ap);
-	tprintf(bc, "\nLine %d: %s\n", bc->lm[line-1].linenumber, temp);
+	tprintf(bc, "\nLine %d: %s\n", line, temp);
 	bc->flags |= BF_RUNERROR;
 	takeaction(bc);
 }
@@ -38,9 +45,9 @@ int i;
 	}
 }
 
-void nomem(bc *bc, int ipfix)
+void nomem(bc *bc)
 {
-	verror(bc, ipfix, "Out of memory");
+	verror(bc, "Out of memory");
 }
 
 int needstop(bc *bc)
@@ -68,7 +75,7 @@ void rcall(bc *bc)
 {
 	if(bc->gosubsp == GOSUBMAX)
 	{
-		verror(bc, -1, "Gosub stack overflow");
+		verror(bc, "Gosub stack overflow"); // ipfix = -1
 		++bc->vip;
 	} else
 	{
@@ -80,7 +87,7 @@ void rcall(bc *bc)
 void ret(bc *bc)
 {
 	if(!bc->gosubsp)
-		verror(bc, -1, "Return outside of subroutine");
+		verror(bc, "Return outside of subroutine"); // ipfix = -1
 	else
 		bc->vip = bc->gosubs[--bc->gosubsp];
 }
@@ -147,7 +154,7 @@ int t;
 	bc->vsp -= rank+1;
 	if(v->rank)
 	{
-		verror(bc, -1, "Dumplicate dimension variable '%s'", v->name);
+		verror(bc, "Dumplicate dimension variable '%s'", v->name); // ipfix=-1
 		return;
 	}
 	v->dimensions[0]=1;
@@ -157,14 +164,14 @@ int t;
 		t=bc->vsp[i].i;
 		if(t<1)
 		{
-			verror(bc, -1, "Invalid dimension size on '%s'", v->name);
+			verror(bc, "Invalid dimension size on '%s'", v->name);//ipfix=-1
 			return;
 		}
 		v->dimensions[i+1] = v->dimensions[i] * t;
 	}
 	v->pointer = calloc(v->dimensions[rank], size);
 	if(!v->pointer)
-		nomem(bc, -1);
+		nomem(bc); // ipfix=-1
 }
 
 void dimd(bc *bc)
@@ -190,13 +197,13 @@ int t;
 	bc->vsp -= rank+1;
 	if(!v->rank)
 	{
-		verror(bc, -1, "Must use DIM before referencing array '%s'\n",
+		verror(bc, "Must use DIM before referencing array '%s'\n", // ipfx=-1
 			v->name);
 		return 0;
 	}
 	if(v->rank != rank)
 	{
-		verror(bc, -1, "Wrong number of array dimensions on '%s'\n", v->name);
+		verror(bc,"Wrong number of array dimensions on '%s'\n", v->name);//-1
 		return 0;
 	}
 	j=0;
@@ -206,7 +213,7 @@ int t;
 		j += t*v->dimensions[i];
 		if(t<0 || j>=v->dimensions[i+1])
 		{
-			verror(bc, -1, "Subscript out of range");
+			verror(bc, "Subscript out of range");//ipfix=-1
 			return 0;
 		}
 	}
@@ -238,7 +245,7 @@ forstate *addfor(bc *bc)
 {
 	if(bc->numfors == MAX_FORS)
 	{
-		verror(bc, -1, "Too many for statements. Limit %d.\n", MAX_FORS);
+		verror(bc,"Too many for statements. Limit %d.\n", MAX_FORS); //fix-1
 		return 0;
 	}
 	return bc->forstates + bc->numfors++;
@@ -254,7 +261,7 @@ variable *v;
 	{
 		if(bc->numfors == MAX_FORS)
 		{
-			verror(bc, -1, "Too many for statements. Limit %d.\n", MAX_FORS);
+			verror(bc,"Too many for statements. Limit %d.\n", MAX_FORS);//-1
 			return;
 		}
 		fs = bc->forstates + bc->numfors++;
@@ -292,7 +299,7 @@ void performnext(bc *bc)
 	if(bc->numfors)
 		lownext(bc, bc->forstates + bc->numfors - 1);
 	else
-		verror(bc, -1, "NEXT without FOR");
+		verror(bc, "NEXT without FOR");//ipfix= -1
 }
 
 void performnext1(bc *bc)
@@ -303,7 +310,7 @@ forstate *fs;
 	if(fs)
 		lownext(bc, fs);
 	else
-		verror(bc, -1, "NEXT without FOR, '%s'", v->name);
+		verror(bc, "NEXT without FOR, '%s'", v->name); // ipfix=-1
 }
 
 /**************************************************************************
@@ -764,7 +771,7 @@ void performpen(bc *bc)
 void performstop(bc *bc)
 {
 	bc->flags |= BF_STOPHIT;
-	verror(bc, -1, "STOP");
+	verror(bc, "STOP"); // ipfix=-1
 }
 
 void performfill(bc *bc)
@@ -794,7 +801,7 @@ int want;
 	bc->vsp -= num+1;
 	want = bc->vsp->d;
 	if(want<1 || want>num)
-		verror(bc, -1, "ON index out of range: %d, must be 1-%d", want, num);
+		verror(bc, "ON index out of range: %d, must be 1-%d", want, num);//-1
 	else
 		bc->vip = bc->vsp[want].p;
 }
@@ -802,7 +809,7 @@ int want;
 void ongosub(bc *bc)
 {
 	if(bc->gosubsp == GOSUBMAX)
-		verror(bc, -1, "Gosub stack overflow");
+		verror(bc, "Gosub stack overflow"); // -1
 	else
 		bc->gosubs[bc->gosubsp++] = bc->vip+1;
 	ongoto(bc);
@@ -814,7 +821,7 @@ void datad(bc *bc)
 		bc->data[bc->datanum++] = (bc->vip++)->d;
 	else
 	{
-		verror(bc, -1, "Too much data in program");
+		verror(bc, "Too much data in program"); // ipfix=-1
 		++bc->vip;
 	}
 }
@@ -825,7 +832,7 @@ void readd(bc *bc)
 	if(bc->datapull < bc->datanum)
 		*(double *)bc->vsp->p = bc->data[bc->datapull++];
 	else
-		verror(bc, -1, "Ran out of data");
+		verror(bc, "Ran out of data"); // ipfix=-1
 }
 
 
@@ -836,10 +843,11 @@ void vmachine(bc *bc, step *program, step *stack)
 	bc->base = program;
 	bc->datanum = 0;
 	bc->datapull = 0;
-
+	bc->flags |= BF_RUNNING;
 	for(;;)
 	{
 //printf("%d\n", bc->vip - bc->base);
+		bc->lastip = bc->vip;
 		(bc->vip++ -> func)(bc);
 		if(bc->takeaction != globaltime)
 		{
@@ -853,5 +861,13 @@ void vmachine(bc *bc, step *program, step *stack)
 	resetupdate(bc);
 	tprintf(bc, "Elapsed time %.3f seconds.\n",
 		(SDL_GetTicks()-bc->starttime)/1000.0);
+	bc->flags &= ~BF_RUNNING;
+
+	if(bc->flags & BF_CCHIT)
+	{
+		tprintf(bc, "\nControl-C stopped on line %d\n", online(bc));
+		bc->flags &= ~BF_CCHIT;
+		flushinput(bc);
+	}
 
 }
