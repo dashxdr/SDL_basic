@@ -239,7 +239,7 @@
 2390 uc=15
 2400 for u = 1 to emax
 2410 if et(u) >0 then 2510
-2420 et(u) = 50
+2420 et(u) = 50 + rnd(10)
 2430 ex(u) = x
 2440 ey(u) = y
 2450 ur = rnd(0)*2 + 1
