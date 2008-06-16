@@ -63,7 +63,7 @@
 630 rem ************************  Hacks
 640 code = keycode
 650 if code=13 then x=xsize/2:y=ysize/2:dx=0:dy=0
-660 if code=32 then gosub 920
+660 if code=410 then gosub 920
 670 return
 680 rem ************************ Handle missiles
 690 if missnum = 0 then 910
@@ -72,7 +72,7 @@
 720 if missx(i)<0 then missx(i) = missx(i) + xsize
 730 if missx(i)>=xsize then missx(i) = missx(i) - xsize
 740 missy(i) = missy(i) + missdy(i)
-750 if missy(i)<0 then missx(i) = missx(i) + ysize
+750 if missy(i)<0 then missy(i) = missy(i) + ysize
 760 if missy(i)>=ysize then missy(i) = missy(i) - ysize
 770 color 255,255,255
 780 disc missx(i), missy(i), 2
@@ -91,7 +91,7 @@
 910 return
 920 rem ************************   Fire missile
 930 missnum = missnum + 1
-940 misst(missnum) = 50
+940 misst(missnum) = 80
 950 missx(missnum) = x
 960 missy(missnum) = y
 970 mspeed = mv*1.2
