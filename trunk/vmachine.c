@@ -285,8 +285,6 @@ forstate *fs;
 /**************************************************************************
           string functions
 **************************************************************************/
-TD(eqs)
-TD(nes)
 
 void arrays(bc *bc)
 {
@@ -367,10 +365,60 @@ bstring *left, *right, *new;
 	--bc->vsp;
 }
 
+static int bstring_comp(bc *bc)
+{
+int min,max;
+int res;
+bstring *left, *right;
+	left = bc->vsp[-2].bs;
+	right = bc->vsp[-1].bs;
+	--bc->vsp;
+
+	min=left->length;
+	max=right->length;
+	if(max<min)
+		res=min,min=max,max=res;
+
+	res=memcmp(left->string, right->string, min);
+	if(!res)
+	{
+		if(min!=max)
+			res = left->length < right->length ? -1 : 1;
+	}
+	free_bstring(bc, left);
+	free_bstring(bc, right);
+
+	return res;
+
+}
+
+void eqs(bc *bc)
+{
+int res;
+	res = bstring_comp(bc);
+	bc->vsp[-1].d = !res;
+}
+
+void nes(bc *bc)
+{
+int res;
+	res = bstring_comp(bc);
+	bc->vsp[-1].d = !!res;
+}
+
+
 
 /**************************************************************************
           BASIC high level commands, for the most part...
 **************************************************************************/
+
+void input(bc *bc)
+{
+int n;
+	n=(bc->vip++)->i;
+	bc->vsp -= n;
+	lf(bc);
+}
 
 void printd(bc *bc)
 {
@@ -604,6 +652,7 @@ void vmachine(bc *bc, step *program, step *stack)
 
 	for(;;)
 	{
+//printf("%d\n", bc->vip - bc->base);
 		(bc->vip++ -> func)(bc);
 		if(bc->takeaction != globaltime)
 		{

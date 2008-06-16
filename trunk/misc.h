@@ -446,5 +446,6 @@ DECLARE(adds)
 DECLARE(evals)
 DECLARE(prints)
 DECLARE(pushvs)
+DECLARE(input)
 
 void vmachine(bc *bc, step *program, step *stack);
