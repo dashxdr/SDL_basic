@@ -235,27 +235,16 @@ forstate *getfor(bc *bc, variable *v)
 int i;
 forstate *fs;
 	for(i=bc->numfors, fs=bc->forstates+i-1;i;--i, --fs)
-	{
 		if(fs->v == v)
 			return fs;
-	}
 	return 0;	
-}
-
-forstate *addfor(bc *bc)
-{
-	if(bc->numfors == MAX_FORS)
-	{
-		verror(bc,"Too many for statements. Limit %d.\n", MAX_FORS); //fix-1
-		return 0;
-	}
-	return bc->forstates + bc->numfors++;
 }
 
 void performfor(bc *bc)
 {
 forstate *fs;
 variable *v;
+int i;
 	v=bc->vvars + bc->vsp[-1].i;
 	fs = getfor(bc, v);
 	if(!fs)
@@ -267,6 +256,13 @@ variable *v;
 		}
 		fs = bc->forstates + bc->numfors++;
 		fs->v = v;
+	} else if((i = bc->numfors - 1 - (fs-bc->forstates)))
+	{
+		forstate t;
+		t=*fs;
+		while(i--)
+			*fs = fs[1], ++fs;
+		*fs = t;
 	}
 	fs->delta = bc->vsp[-2].d;
 	fs->end = bc->vsp[-3].d;
