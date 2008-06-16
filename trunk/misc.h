@@ -19,6 +19,7 @@
 #define BF_ENDHIT      32 // End
 #define BF_STOPHIT     64 // Stop
 #define BF_RUNNING    128 // program is running
+#define BF_INPUT      256 // we're in input
 
 struct linepointer {
 int linenum;

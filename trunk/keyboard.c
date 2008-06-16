@@ -182,7 +182,8 @@ int i,j;
 		if(time>=bc->nexttime)
 		{
 			bc->nexttime+=REPEATRATE;
-			return bc->lastcode;
+			if((bc->flags & BF_INPUT) || (~bc->flags & BF_RUNNING))
+				return bc->lastcode;
 		}
 	} else
 		bc->lastcode=-1;
