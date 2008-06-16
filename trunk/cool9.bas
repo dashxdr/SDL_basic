@@ -1,100 +1,113 @@
-10 dim missx(100),missy(100), missdx(100), missdy(100), misst(100)
-20 missnum = 0
-30 pi2=3.1415928*2.0
-40 x = xsize/2 : rem x position of ship
-50 y = ysize/2 : rem y position of ship
-60 thrust=.2 : rem thrust
-70 v=0: rem velocity
-80 mv=7 : rem max velocity
-90 da = .1: rem rotation speed
-100 a=3.1415928/2
-110 rem ************************   Main loop
-120 cls
-130 fc=fc+1
-140 gosub 200: rem handle ship
-150 gosub 630: rem hacks
-160 gosub 680: rem missiles
-170 print sleep(.02);
-180 update
-190 goto 110
-200 rem ************************   Handle ship movement
-210 fire=0
-220 if key(402)=0 then 280
-230 dx = dx + thrust*cos(a)
-240 dy = dy - thrust*sin(a)
-250 v = sqr(dx*dx + dy*dy)
-260 if v>mv then v=mv/v:dx = dx*v : dy = dy*v
-270 fire = 1
-280 if key(400) then a=a+da:if(a<0.0) then a=a+pi2
-290 if key(401) then a=a-da:if(a>pi2) then a=a-pi2
-300 x=x+dx
-310 if x<0 then x=x+xsize
-320 if x>= xsize then x=x-xsize
-330 y=y+dy
-340 if y<0 then y=y+ysize
-350 if y>=ysize then y=y-ysize
-360 gosub 440
-370 if x>xsize/2 then fx=-xsize else fx=xsize
-380 if y>ysize/2 then fy=-ysize else fy=ysize
-390 x=x+fx:gosub 440
-400 y=y+fy:gosub 440
-410 x=x-fx:gosub 440
-420 y=y-fy
-430 return
-440 rem ************************   Draw ship
-450 pen 2
-460 as=2.5
-470 r=20
-480 r2=r*.8
-490 color 255,255,255
-500 move x+r*cos(a), y-r*sin(a)
-510 line x+r2*cos(a+as), y-r2*sin(a+as)
-520 line x+r2*cos(a-as), y-r2*sin(a-as)
-530 line x+r*cos(a), y-r*sin(a)
-540 if fire=0 then 620
-550 if fc&1 = 0 then 620
-560 r2=r*.7
-570 move x-r2*cos(a), y+r2*sin(a)
-580 r2=r2*2
-590 color 255,190,0
-600 pen 4
-610 line x-r2*cos(a), y+r2*sin(a)
-620 return
-630 rem ************************  Hacks
-640 code = keycode
-650 if code=13 then x=xsize/2:y=ysize/2:dx=0:dy=0
-660 if code=410 then gosub 920
-670 return
-680 rem ************************ Handle missiles
-690 if missnum = 0 then 910
-700 for i = 1 to missnum
-710 missx(i) = missx(i) + missdx(i)
-720 if missx(i)<0 then missx(i) = missx(i) + xsize
-730 if missx(i)>=xsize then missx(i) = missx(i) - xsize
-740 missy(i) = missy(i) + missdy(i)
-750 if missy(i)<0 then missy(i) = missy(i) + ysize
-760 if missy(i)>=ysize then missy(i) = missy(i) - ysize
-770 color 255,255,255
-780 disc missx(i), missy(i), 2
-790 misst(i) = misst(i) - 1
-800 next i
-810 if misst(1) >= 0 then 910
-820 missnum = missnum - 1
-830 if missnum = 0 then 910
-840 for i = 1 to missnum
-850 missx(i) = missx(i+1)
-860 missy(i) = missy(i+1)
-870 missdx(i) = missdx(i+1)
-880 missdy(i) = missdy(i+1)
-890 misst(i) = misst(i+1)
-900 next i
-910 return
-920 rem ************************   Fire missile
-930 missnum = missnum + 1
-940 misst(missnum) = 80
-950 missx(missnum) = x
-960 missy(missnum) = y
-970 mspeed = mv*1.2
-980 missdx(missnum) = dx + mspeed*cos(a)
-990 missdy(missnum) = dy - mspeed*sin(a)
-1000 return
+10 dim missx(100),missy(100), missdx(100), missdy(100), misst(100): rem *** missiles
+20 dim sx(100), sy(100):rem *** stars
+30 missnum = 0
+40 starnum = 60
+50 for i=1 to starnum
+60 sx(i) = rnd(xsize)
+70 sy(i) = rnd(ysize)
+80 next i
+90 pi2=3.1415928*2.0
+100 x = xsize/2 : rem x position of ship
+110 y = ysize/2 : rem y position of ship
+120 thrust=.2 : rem thrust
+130 v=0: rem velocity
+140 mv=7 : rem max velocity
+150 da = .1: rem rotation speed
+160 a=3.1415928/2
+170 rem ************************   Main loop
+180 cls
+190 print sleep(.02);
+200 fc=fc+1
+210 gosub 1080: rem stars
+220 gosub 270: rem handle ship
+230 gosub 700: rem hacks
+240 gosub 750: rem missiles
+250 update
+260 goto 170
+270 rem ************************   Handle ship movement
+280 fire=0
+290 if key(402)=0 then 350
+300 dx = dx + thrust*cos(a)
+310 dy = dy - thrust*sin(a)
+320 v = sqr(dx*dx + dy*dy)
+330 if v>mv then v=mv/v:dx = dx*v : dy = dy*v
+340 fire = 1
+350 if key(400) then a=a+da:if(a<0.0) then a=a+pi2
+360 if key(401) then a=a-da:if(a>pi2) then a=a-pi2
+370 x=x+dx
+380 if x<0 then x=x+xsize
+390 if x>= xsize then x=x-xsize
+400 y=y+dy
+410 if y<0 then y=y+ysize
+420 if y>=ysize then y=y-ysize
+430 gosub 510
+440 if x>xsize/2 then fx=-xsize else fx=xsize
+450 if y>ysize/2 then fy=-ysize else fy=ysize
+460 x=x+fx:gosub 510
+470 y=y+fy:gosub 510
+480 x=x-fx:gosub 510
+490 y=y-fy
+500 return
+510 rem ************************   Draw ship
+520 pen 2
+530 as=2.5
+540 r=20
+550 r2=r*.8
+560 color 255,255,255
+570 move x+r*cos(a), y-r*sin(a)
+580 line x+r2*cos(a+as), y-r2*sin(a+as)
+590 line x+r2*cos(a-as), y-r2*sin(a-as)
+600 line x+r*cos(a), y-r*sin(a)
+610 if fire=0 then 690
+620 if fc&1 = 0 then 690
+630 r2=r*.7
+640 move x-r2*cos(a), y+r2*sin(a)
+650 r2=r2*2
+660 color 255,190,0
+670 pen 4
+680 line x-r2*cos(a), y+r2*sin(a)
+690 return
+700 rem ************************  Hacks
+710 code = keycode
+720 if code=13 then x=xsize/2:y=ysize/2:dx=0:dy=0
+730 if code=410 then gosub 990
+740 return
+750 rem ************************ Handle missiles
+760 if missnum = 0 then 980
+770 for i = 1 to missnum
+780 missx(i) = missx(i) + missdx(i)
+790 if missx(i)<0 then missx(i) = missx(i) + xsize
+800 if missx(i)>=xsize then missx(i) = missx(i) - xsize
+810 missy(i) = missy(i) + missdy(i)
+820 if missy(i)<0 then missy(i) = missy(i) + ysize
+830 if missy(i)>=ysize then missy(i) = missy(i) - ysize
+840 color 255,255,255
+850 disc missx(i), missy(i), 2
+860 misst(i) = misst(i) - 1
+870 next i
+880 if misst(1) >= 0 then 980
+890 missnum = missnum - 1
+900 if missnum = 0 then 980
+910 for i = 1 to missnum
+920 missx(i) = missx(i+1)
+930 missy(i) = missy(i+1)
+940 missdx(i) = missdx(i+1)
+950 missdy(i) = missdy(i+1)
+960 misst(i) = misst(i+1)
+970 next i
+980 return
+990 rem ************************   Fire missile
+1000 missnum = missnum + 1
+1010 misst(missnum) = 80
+1020 missx(missnum) = x
+1030 missy(missnum) = y
+1040 mspeed = mv*1.2
+1050 missdx(missnum) = dx + mspeed*cos(a)
+1060 missdy(missnum) = dy - mspeed*sin(a)
+1070 return
+1080 rem ************************  Stars
+1090 color 255,255,255
+1100 for i=1 to starnum
+1110 disc sx(i),sy(i),1
+1120 next i
+1130 return
