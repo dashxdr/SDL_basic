@@ -571,6 +571,21 @@ int res;
           BASIC high level commands, for the most part...
 **************************************************************************/
 
+void inkey(bc *bc)
+{
+int t;
+char s[2];
+	t=takedown(bc);
+	if(t<0)
+		(bc->vsp++)->bs = make_raw_bstring(bc, 0);
+	else
+	{
+		s[0]=t;
+		s[1]=0;
+		(bc->vsp++)->bs = make_bstring(bc, s, 1);
+	}
+}
+
 // each input has on the stack 2 steps:
 // 1) the pointer to its value
 // 2) the type (0 = double, 1 = string)

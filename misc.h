@@ -264,6 +264,7 @@ void markkey(bc *bc, int code, int mod, int downup);
 void typeline(bc *bc, char *prompt,int echocr);
 void scaninput(bc *bc);
 void flushinput(bc *bc);
+int takedown(bc *bc);
 
 // basic.c
 
@@ -459,5 +460,6 @@ DECLARE(performstrstr)
 DECLARE(stringstr)
 DECLARE(tabstr)
 DECLARE(printat)
+DECLARE(inkey)
 
 void vmachine(bc *bc, step *program, step *stack);
