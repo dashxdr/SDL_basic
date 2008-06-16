@@ -991,6 +991,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "sqr")) return SQR;
 	if(iskeyword(ps, "step")) return STEP;
 	if(iskeyword(ps, "stop")) return STOP;
+	if(iskeyword(ps, "str$")) return STRSTR;
 	if(iskeyword(ps, "string$")) return STRINGSTR;
 	if(iskeyword(ps, "tab")) return TAB;
 	if(iskeyword(ps, "tan")) return TAN;

@@ -23,6 +23,7 @@ int line;
 	vsnprintf(temp, sizeof(temp), s, ap);
 	va_end(ap);
 	tprintf(bc, "\nLine %d: %s\n", bc->lm[line-1].linenumber, temp);
+	bc->flags |= BF_RUNERROR;
 	takeaction(bc);
 }
 
@@ -176,6 +177,12 @@ int t;
 	v=bc->vvars+bc->vsp[-1].i;
 	rank = (bc->vip++)->i;
 	bc->vsp -= rank+1;
+	if(!v->rank)
+	{
+		verror(bc, -1, "Must use DIM before referencing array '%s'\n",
+			v->name);
+		return 0;
+	}
 	if(v->rank != rank)
 	{
 		verror(bc, -1, "Wrong number of array dimensions on '%s'\n", v->name);
@@ -292,8 +299,6 @@ forstate *fs;
           string functions
 **************************************************************************/
 
-TD(chrstr)
-TD(performstrstr)
 TD(stringstr)
 TD(tabstr)
 TD(lend)
@@ -353,6 +358,32 @@ int v1, v2;
 void leftstr(bc *bc){leftmidrightstr(bc, SLEFT);}
 void midstr(bc *bc){leftmidrightstr(bc, SMID);}
 void rightstr(bc *bc){leftmidrightstr(bc, SRIGHT);}
+
+#define TYPE_CHR 0
+#define TYPE_STR 1
+void chrstrstring(bc *bc, int type)
+{
+char t[128];
+double d=bc->vsp[-1].d;
+	if(type == TYPE_CHR)
+	{
+		t[0] = d;
+		t[1]=0;
+	} else
+	{
+		if(d != (int)d)
+			snprintf(t, sizeof(t), "%.2lf", d);
+		else
+			snprintf(t, sizeof(t), "%d", (int)d);
+	}
+	bc->vsp[-1].bs = make_bstring(bc, t, strlen(t));
+}
+
+void chrstr(bc *bc){chrstrstring(bc,TYPE_CHR);}
+void performstrstr(bc *bc){chrstrstring(bc, TYPE_STR);}
+
+
+
 
 void arrays(bc *bc)
 {
