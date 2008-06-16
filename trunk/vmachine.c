@@ -667,7 +667,7 @@ double d;
 	d=(--bc->vsp)->d;
 
 	if(d<0) return;
-	if(d>1.0) d=1.0;
+	if(d>10.0) d=10.0;
 
 	until=bc->waitbase + d*1000;
 
@@ -675,7 +675,7 @@ double d;
 	while(!needstop(bc))
 	{
 		diff = until - SDL_GetTicks();
-		if(diff<0 || diff>2000)
+		if(diff<0 || diff>10000)
 		{
 //printf("%s: diff out of range! %d\n", __FUNCTION__, diff);
 			reset_waitbase(bc);
