@@ -106,6 +106,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "divd\n");
 		else if(s->func == powerd)
 			tprintf(bc, "powerd\n");
+		else if(s->func == input)
+			tprintf(bc, "input %d\n", (++s)->i);
 		else if(s->func == arrayd)
 			tprintf(bc, "arrayd %d\n", (++s)->i);
 		else if(s->func == arrays)
@@ -366,6 +368,12 @@ static void emitpushvd(ps *ps, int num)
 	emitint(ps, num);
 }
 
+static void emitinput(ps *ps, int num)
+{
+	emitfunc(ps, input);
+	emitint(ps, num);
+}
+
 static void emitpushvs(ps *ps, int num)
 {
 	emitfunc(ps, pushvs);
@@ -557,7 +565,7 @@ statement:
 	| ON numexpr GOTO linelist {emitongoto(PS, $4.value.count)}
 	| ON numexpr GOSUB linelist {emitongosub(PS, $4.value.count)}
 	| RESTORE
-	| INPUT inputlist
+	| INPUT inputlist {emitinput(PS, $2.value.count)}
 	| READ readlist
 	| DATA datalist
 	| CLEAR num1
@@ -712,12 +720,13 @@ doublenumpar:
 
 inputlist:
 	inputlist2
-	| STRING ';' inputlist2
+	| STRING ';' inputlist2 {emitpushs(PS, $1.value.string);
+				emitfunc(PS, prints)}
 	;
 
 inputlist2:
-	lvalue
-	| inputlist2 ',' lvalue
+	lvalue {$$.value.count = 1}
+	| inputlist2 ',' lvalue {++$$.value.count}
 	;
 
 lvalue:
