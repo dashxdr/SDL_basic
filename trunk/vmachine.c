@@ -287,7 +287,6 @@ forstate *fs;
 **************************************************************************/
 TD(eqs)
 TD(nes)
-TD(adds)
 
 void arrays(bc *bc)
 {
@@ -313,7 +312,12 @@ void pushvs(bc *bc)
 
 void evals(bc *bc)
 {
-	bc->vsp[-1].bs = dup_bstring(bc, *(bstring **)bc->vsp[-1].p);
+bstring *bs;
+	bs=*(bstring **)bc->vsp[-1].p;
+	if(bs)
+		bc->vsp[-1].bs = dup_bstring(bc, bs);
+	else
+		bc->vsp[-1].bs = make_bstring(bc, "", 0);
 }
 
 void pushs(bc *bc)
@@ -344,10 +348,23 @@ int i;
 void prints(bc *bc)
 {
 bstring *bs;
-printf("%x\n", bc->vsp);
 	bs=(--bc->vsp)->bs;
 	tprintf(bc, "%s", bs->string);
 	free_bstring(bc, bs);
+}
+
+void adds(bc *bc)
+{
+bstring *left, *right, *new;
+	left = bc->vsp[-2].bs;
+	right = bc->vsp[-1].bs;
+	new = make_raw_bstring(bc, left->length + right->length);
+	memcpy(new->string, left->string, left->length);
+	memcpy(new->string + left->length, right->string, right->length);
+	free_bstring(bc, left);
+	free_bstring(bc, right);
+	bc->vsp[-2].bs = new;
+	--bc->vsp;
 }
 
 
