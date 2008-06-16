@@ -871,7 +871,6 @@ void vmachine(bc *bc, step *program, step *stack)
 	bc->base = program;
 	bc->datanum = 0;
 	bc->datapull = 0;
-	bc->flags |= BF_RUNNING;
 	for(;;)
 	{
 //printf("%d\n", bc->vip - bc->base);
@@ -887,15 +886,18 @@ void vmachine(bc *bc, step *program, step *stack)
 		}
 	}
 	resetupdate(bc);
-	tprintf(bc, "Elapsed time %.3f seconds.\n",
-		(SDL_GetTicks()-bc->starttime)/1000.0);
-	bc->flags &= ~BF_RUNNING;
-
+	if(bc->flags & BF_RUNNING)
+	{
+		tprintf(bc, "Elapsed time %.3f seconds.\n",
+			(SDL_GetTicks()-bc->starttime)/1000.0);
+		bc->flags &= ~BF_RUNNING;
+	}
 	if(bc->flags & BF_CCHIT)
 	{
 		tprintf(bc, "\nControl-C stopped on line %d\n", online(bc));
 		bc->flags &= ~BF_CCHIT;
 		flushinput(bc);
 	}
+	bc->flags &= ~(BF_RUNERROR | BF_ENDHIT);
 
 }

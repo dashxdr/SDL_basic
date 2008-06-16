@@ -25,7 +25,9 @@ typedef struct tokeninfo {
 #define MAXLINEREFS 65536
 typedef struct parse_state {
 	bc *bc;
+	int res;
 	char *yypntr;
+	char *yystart;
 	char *yylast;
 	char *linestart;
 	step *nextstep;
@@ -540,6 +542,7 @@ void yyerror(char *s);
 program:
 	/* nothing */
 	| prog2
+	| statements
 	;
 
 prog2:
@@ -1164,6 +1167,7 @@ variable *v;
 
 void pruninit(bc *bc)
 {
+	bc->numvars = 0;
 	bc->datanum=0;
 	bc->datapull=0;
 	bc->numlines=0;
@@ -1211,53 +1215,40 @@ int i;
 	emitfunc(ps, ret);
 }
 
-
-void parse(bc *bc, int runit)
+ps *newps(bc *bc, char *take)
 {
 struct parse_state *ps;
-int res=0;
 	ps = malloc(sizeof(struct parse_state));
 	if(!ps)
 	{
 		tprintf(bc, "Out of memory.\n");
-		return;
+		return 0;
 	}
 	memset(ps, 0, sizeof(*ps));
 	ps->bc = bc;
 	ps->nextstep = ps->steps;
 	bc->base = ps->steps;
-	ps->yypntr = bc->program;
+	ps->yypntr = take;
+	ps->yystart = take;
 	ps->linestart = ps->yypntr;
-	bc->numvars = 0;
-
-	pruninit(bc);
 	dump_data_init(ps);
-	res=yyparse(ps);
 
-//printf("numvars = %d\n", bc->numvars);
-	if(!res)
+
+	ps->res=yyparse(ps);
+
+	if(!ps->res)
 	{
-		if(!runit) tprintf(bc, "Program parsed correctly\n");
 		emitfunc(ps, performend);
 		dump_data_finish(ps);
-
-		res = fixuplinerefs(ps);
-		if(res) return;
-		if(!runit)
-			disassemble(ps);
-		else 
-			vmachine(bc, ps->steps, bc->vstack);
-		free(ps);
-		return;
-	}
-	tprintf(bc, "yyparse returned %d\n", res);
-	if(res)
+		ps->res = fixuplinerefs(ps);
+	} else
 	{
 		char linecopy[1024];
 		int n;
 		char *p;
+		tprintf(bc, "Parse error\n");
 		p = ps->yylast;
-		while(p>bc->program && p[-1] != '\n') --p;
+		while(p>ps->yystart && p[-1] != '\n') --p;
 		n=0;
 		for(n=0;p[n] && p[n]!='\n' && n<sizeof(linecopy)-1;++n)
 			linecopy[n] = p[n];
@@ -1270,8 +1261,48 @@ int res=0;
 		linecopy[n]=0;
 		tprintf(bc, "%s^\n", linecopy);
 	}
+	return ps;
+}
 
-	free(ps);
+void parseline(bc *bc, char *line)
+{
+ps *ps;
+	ps = newps(bc, line);
+	if(ps)
+	{
+		if(!ps->res)
+		{
+			bc->flags &= ~BF_RUNNING;
+//			disassemble(ps);
+			vmachine(bc, ps->steps, bc->vstack);
+		}
+		free(ps);
+	}
+}
+
+void parse(bc *bc, int runit)
+{
+ps *ps;
+
+	pruninit(bc);
+	ps = newps(bc, bc->program);
+
+	if(ps)
+	{
+		if(!ps->res)
+		{
+			if(!runit)
+			{
+				tprintf(bc, "Program parsed correctly\n");
+				disassemble(ps);
+			} else
+			{
+				bc->flags |= BF_RUNNING;
+				vmachine(bc, ps->steps, bc->vstack);
+			}
+		}
+		free(ps);
+	}
 }
 
 
