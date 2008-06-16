@@ -31,6 +31,12 @@ void nomem(bc *bc, int ipfix)
 	verror(bc, ipfix, "Out of memory");
 }
 
+int needstop(bc *bc)
+{
+	return !!(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
+				 BF_STOPHIT | BF_QUIT));
+}
+
 
 
 /**************************************************************************
@@ -479,7 +485,8 @@ double d;
 
 	until=bc->waitbase + d*1000;
 
-	for(;;)
+
+	while(!needstop(bc))
 	{
 		diff = until - SDL_GetTicks();
 		if(diff<0 || diff>2000)
@@ -488,6 +495,7 @@ double d;
 			reset_waitbase(bc);
 			break;
 		}
+		scaninput(bc);
 		SDL_Delay(1);
 	}
 }
@@ -659,8 +667,7 @@ void vmachine(bc *bc, step *program, step *stack)
 			bc->takeaction = globaltime;
 			update(bc);
 			scaninput(bc);
-			if(bc->flags & (BF_CCHIT | BF_RUNERROR | BF_ENDHIT |
-				 BF_STOPHIT | BF_QUIT))
+			if(needstop(bc))
 				break;
 		}
 	}
