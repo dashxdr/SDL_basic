@@ -230,7 +230,7 @@ double *d;
 		(bc->vsp++)->p = d;
 }
 
-forstate *getfor(bc *bc, variable *v)
+static forstate *getfor(bc *bc, variable *v)
 {
 int i;
 forstate *fs;
