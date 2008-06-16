@@ -193,6 +193,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "end\n");
 		else if(s->func == sleepd)
 			tprintf(bc, "sleepd\n");
+		else if(s->func == pop)
+			tprintf(bc, "pop\n");
 		else if(s->func == printd)
 			tprintf(bc, "printd\n");
 		else if(s->func == prints)
@@ -563,7 +565,7 @@ statement:
 	| DIM dimarraylist
 	| END {emitfunc(PS, performend)}
 	| STOP {emitfunc(PS, performstop)}
-	| SLEEP num1 {emitfunc(PS, sleepd)}
+	| SLEEP num1 {emitfunc(PS, sleepd);emitfunc(PS, pop)}
 	| PEN num1 {emitfunc(PS, performpen)}
 	| COLOR num34 {if($2.value.count==3) emitfunc(PS, color3);
 			else emitfunc(PS, color4)}
@@ -807,6 +809,7 @@ numfunc:
 	| ATN2 doublenumpar {emitfunc(PS, atn2d)}
 	| ABS singlenumpar {emitfunc(PS, absd)}
 	| SQR singlenumpar {emitfunc(PS, sqrd)}
+	| SLEEP singlenumpar {emitfunc(PS, sleepd)}
 	| LEN singlestringpar {emitfunc(PS, lend)}
 	| VAL singlestringpar {emitfunc(PS, vald)}
 	| ASC singlestringpar {emitfunc(PS, ascd)}

@@ -497,6 +497,7 @@ struct cmd commandlist[]={
 {"oldrun", dorun},
 {"ren", doren},
 {"parse", doparse},
+{"pr", dopr},
 {0, 0}};
 
 void processline(bc *bc, char *line)

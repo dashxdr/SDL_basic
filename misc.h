@@ -461,5 +461,6 @@ DECLARE(stringstr)
 DECLARE(tabstr)
 DECLARE(printat)
 DECLARE(inkey)
+DECLARE(pop)
 
 void vmachine(bc *bc, step *program, step *stack);
