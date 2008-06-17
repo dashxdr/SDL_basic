@@ -1,0 +1,95 @@
+Basic interpreter commands. Commands can be shortened
+
+edit #             = edit line, arrow keys, delete, backspace, always in
+                     insert mode
+del #              = delete line
+ren #[,#]          = renumber lines with optional step count (default 10)
+save filename      = save out program to file (appends .bas automatically)
+load filename      = load program from file (appends .bas automatically)
+run                = Initialize everything run program
+cont               = continue running program from last line
+quit               = quit
+dir [directory]    = list directory
+<statement>        = Can execute any statement
+list [#[,#]]
+new
+info
+
+Statements
+
+One statement per line, no ':' separaters (has to do with "cont" statement)
+Variables are any string starting with a-z. Case is not sensitive. Can
+contain numbers. Any length. Can't use keywords.
+
+[let] variable = expression
+goto #
+gosub #
+return
+on expr goto #, ...          ;one based
+rem <comment>
+dim variable(#[,...])  ; arrays are one based
+for variable = expression to espression [step expression]
+next [variable]
+print string|expression[,|;][...][,|;]
+plot  <x>,<y>
+color <r>,<g>,<b>[,<alpha>]   ; range 0-255 each
+clear  ; clear screen to black
+fill ; fill screen with current pen color
+pen <radius> ; always circular for now, defaults to '1'
+move <x>,<y>
+line <x>,<y>
+flood <x>,<y> ; does flood fill
+arc <radius>,<start>,<end> ; in radians
+darc <radius>,<start>,<end> ; in degrees
+curve <cx>,<cy>,<x>,<y>  ; bezier curve
+rectangle <x1>,<y1>,<width>,<height>
+box <x1>,<y1>,<width>,<height>
+circle <x1>,<y1>,<radius>
+disc <x1>,<y1>,<radius>
+text <x1>,<y1>,<string>
+randomize
+clear   ; clear screen
+input variable|string
+wait <time>  ; in seconds
+if ifexpr then statement|#
+tone <frequency>,<volume>,<duration>[,array] ;freq hz, vol 0-100,
+   ; dur in seconds. Array is optional waveform array, each entry -1 to +1
+quiet
+data expression[,...]
+read variable[,...]
+end
+
+
+
+
+Functions:
+
+int(expr)
+sgn(expr)
+sqrt(expr)
+sin(expr)
+cos(expr)
+log(expr) (base 10)
+exp(expr) (base 10)
+pow(expr,expr)  (pow(x,y) = x^y
+rnd(expr)  (random number between 0 and expr-1)
+
+Expressions:
++, -, *, /  ; obvious
+(expr)
+and ; same priority as * /
+or, xor ; same priority as + -
+func(expr[,...])
+
+If expressions:
+variable=expr
+variable<>expr
+ifexpression and ifexpression
+ifexpression or ifexpression
+
+String expressions:
+variable$
+variable$ + variable$
+mid$(variable$, start, end)
+left$(variable$, length)
+right$(variable$, length)
