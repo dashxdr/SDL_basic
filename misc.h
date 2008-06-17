@@ -364,6 +364,7 @@ void set_variable(bc *bc, char *name, double value);
 
 void parse(bc *bc, int runit);
 void parseline(bc *bc, char *line);
+void renumber(bc *bc, int delta, int start);
 
 // vmachine.c
 

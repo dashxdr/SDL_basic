@@ -19,6 +19,10 @@ typedef struct tokeninfo {
 	} value;
 } tokeninfo;
 
+typedef struct {
+	int stepoff;
+	char *at;
+} lineref;
 
 
 #define MAXSTEPS 100000
@@ -32,7 +36,8 @@ typedef struct parse_state {
 	char *linestart;
 	step *nextstep;
 	step steps[MAXSTEPS];
-	int numlinerefs, linerefs[MAXLINEREFS];
+	int numlinerefs;
+	lineref linerefs[MAXLINEREFS];
 } ps;
 
 static int get_istring(char *put, step *s)
@@ -301,9 +306,10 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 	}
 }
 
-static void lineref(ps *ps)
+static void addlineref(ps *ps, char *at)
 {
-	ps->linerefs[ps->numlinerefs++] = ps->nextstep - ps->steps;
+	ps->linerefs[ps->numlinerefs].at = at;
+	ps->linerefs[ps->numlinerefs++].stepoff = ps->nextstep - ps->steps;
 }
 
 static void addline(ps *ps, int number, int stepnum)
@@ -321,13 +327,14 @@ static void adddata(ps *ps, double v)
 		ps->bc->data[ps->bc->datanum++] = v;
 }
 
-static int findline(ps *ps, int want)
+// returns linemap associated with this line
+static linemap *findlinemap(ps *ps, int want)
 {
 int low, high, mid;
 bc *bc=ps->bc;
 	low = 0;
 	high=bc->numlines;
-	if(!high) return -1;
+	if(!high) return 0;
 	for(;;)
 	{
 		mid = (low+high) >> 1;
@@ -338,11 +345,22 @@ bc *bc=ps->bc;
 			low=mid;
 	}
 	if(want == bc->lm[mid].linenumber)
-		return bc->lm[mid].step;
+		return bc->lm + mid;
 	else
-		return -1;
-
+		return 0;
 }
+
+// returns program step associated with this line
+static int findline(ps *ps, int want)
+{
+linemap *lm;
+	lm = findlinemap(ps, want);
+	if(!lm)
+		return -1;
+	else
+		return lm->step;
+}
+
 
 static int fixuplinerefs(ps *ps)
 {
@@ -354,7 +372,7 @@ int line;
 
 	for(i=0;i<ps->numlinerefs;++i)
 	{
-		o=ps->linerefs[i];
+		o=ps->linerefs[i].stepoff;
 		at=findline(ps, ps->steps[o+1].i);
 		if(at<0)
 		{
@@ -565,7 +583,7 @@ statement:
 	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
 		{$4.value.step[1].i = $7.value.step - $4.value.step;
 		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
-	| GOTO INTEGER {lineref(PS);emitrjmp(PS, $2.value.integer)}
+	| GOTO INTEGER {addlineref(PS, $2.at);emitrjmp(PS, $2.value.integer)}
 	| LET assignexpr {/* implemented */}
 	| assignexpr {/* implemented */}
 	| print printlist {if($2.value.integer) emitfunc(PS, lf)}
@@ -590,7 +608,7 @@ statement:
 	| FOR forvar '=' numexpr TO numexpr optstep
 		{emitpushav(PS, $2.value.integer);emitfunc(PS, performfor)}
 	| NEXT optforvar
-	| GOSUB INTEGER {lineref(PS);emitrcall(PS, $2.value.integer)}
+	| GOSUB INTEGER {addlineref(PS, $2.at);emitrcall(PS, $2.value.integer)}
 	| RETURN {emitfunc(PS, ret)}
 	| REM {/* do nothing */}
 	| ON numexpr GOTO linelist {emitongoto(PS, $4.value.count)}
@@ -634,7 +652,7 @@ forvar:
 
 stint:
 	statements
-	| INTEGER {lineref(PS);emitrjmp(PS, $1.value.integer)}
+	| INTEGER {addlineref(PS, $1.at);emitrjmp(PS, $1.value.integer)}
 	;
 
 optthen: /* nothing */
@@ -678,10 +696,10 @@ dimlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
 				emitpushi(PS, $3.value.integer)}
 	;
 
-linelist: INTEGER {$$.value.count = 1;lineref(PS);
+linelist: INTEGER {$$.value.count = 1;addlineref(PS, $1.at);
 				emitpushea(PS, $1.value.integer)}
 	| linelist ',' INTEGER {$$.value.count = $1.value.count + 1;
-				lineref(PS);
+				addlineref(PS, $1.at);
 				emitpushea(PS, $3.value.integer)}
 	;
 
@@ -1170,7 +1188,6 @@ void pruninit(bc *bc)
 	bc->numvars = 0;
 	bc->datanum=0;
 	bc->datapull=0;
-	bc->numlines=0;
 	bc->flags = 0;
 	bc->dataline = 0;
 	bc->datatake = 0;
@@ -1233,6 +1250,8 @@ struct parse_state *ps;
 	ps->linestart = ps->yypntr;
 	dump_data_init(ps);
 
+	bc->numlines=0;
+
 
 	ps->res=yyparse(ps);
 
@@ -1279,6 +1298,91 @@ ps *ps;
 		}
 		free(ps);
 	}
+}
+
+// I think it's an insertion sort, works great if they're already sorted
+void sortlinerefs(ps *ps)
+{
+lineref *p1, *p2, *s, *e, t;
+	s=ps->linerefs;
+	e = s + ps->numlinerefs;
+	for(p1 = s+1;p1<e;++p1)
+	{
+		t=*p1;
+		p2=p1;
+		while(p2>s && p2[-1].at > t.at)
+		{
+			*p2 = p2[-1];
+			--p2;
+		}
+		*p2=t;
+	}
+}
+
+void renumber(bc *bc, int delta, int start)
+{
+ps *ps;
+int len;
+char *put;
+char *take, *end;
+lineref *lr, *s;
+int n;
+int v;
+char temp[32];
+linemap *lm;
+
+	ps = newps(bc, bc->program);
+	if(!ps || ps->res)
+		return;
+// we know all the line references are good, the parser has to fix them
+	sortlinerefs(ps); // just to be safe...we work 'em from back to front
+
+// pass 1, replace all the references with the new values
+	put = bc->program + sizeof(bc->program);
+	*--put = 0;
+	end = bc->program + strlen(bc->program);
+	s = ps->linerefs;
+	lr = ps->linerefs + ps->numlinerefs;
+	while(lr > s)
+	{
+		--lr;
+		take = lr->at;
+		v=0;
+		while(isdigit(*take))
+			v=v*10 + *take++ - '0';
+		len = end - take;
+		put -= len;
+		memmove(put, take, len);
+		end = lr->at;
+		lm=findlinemap(ps, v); // we know we find it...
+		if(!lm)
+		{
+			tprintf(bc, "The world is insane...giving up.\n");
+			free(ps);
+			return;
+		}
+		n = lm - bc->lm;
+		len = sprintf(temp, "%d", start+n*delta);
+		put -= len;
+		memcpy(put, temp, len);
+	}
+	len = end - bc->program;
+	put -= len;
+	memmove(put, bc->program, len);
+
+// pass 2, fix up the line numbers themselves
+	take = put;
+	n = start;
+	put = bc->program;
+	while(*take)
+	{
+		while(isdigit(*take)) ++take;
+		put += sprintf(put, "%d", n);
+		n += delta;
+		while((*put++ = *take) && *take++ != '\n');
+	}
+	*put = 0;
+	free(ps);
 }
 
 void parse(bc *bc, int runit)
