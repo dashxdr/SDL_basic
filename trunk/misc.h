@@ -28,46 +28,13 @@ char *line;
 
 #define GOSUBMAX   10000
 
-#define MAX_VARIABLES 2048 // a, b, c, i, j, a(10,20), etc max
-#define RANK_VARIABLE  0
-#define RANK_ARRAY     1 // and 2, 3, 4, etc.
-#define RANK_INVALID   -50
-#define RANK_MASK     0xff
-
-#define RANK_STRING   0x100 // mask
-
 typedef struct bstring {
 	int length;
 	char string[];
 } bstring;
 
-struct forinfo {
-	char name[16];
-	double step;
-	double end;
-	int nextline;
-	int nextbyte;
-};
 #define MAX_FORS 100
 
-struct variable {
-	char name[16];
-	int rank; // RANK_*
-	int dimensions[20];
-	void *array; // pointer to doubles or bstrings
-	double value;
-	bstring *string;
-};
-
-struct varname {
-	char name[16];
-	struct variable *var;
-};
-
-struct gosubentry {
-	int nextline;
-	int nextbyte;
-};
 
 struct basic_context;
 #define STEPSIZE sizeof(double)
@@ -141,28 +108,14 @@ typedef struct basic_context {
 	char workspace[1024];
 	int scrollhistoryin;
 	char *scrollhistory;
-	int let_code;
-	char lineerror[256];
 	char program[1000000]; // 1M ought to be big enough...
-	char runnable[1000000];
 	int numlines;
 	struct linepointer lps[MAX_PROGRAM_LINES]; // 100K lines
-	int online, nextline, nextbyte;
-	int execute_count;
-	int numvariables;
-	struct variable vars[MAX_VARIABLES];
-	struct varname varnames[MAX_VARIABLES];
 
-	int tokenmap[256];
 	int numfors;
-	struct forinfo fors[MAX_FORS];
 	forstate forstates[MAX_FORS];
-	int dataline;
-	char *datatake;
 	int gosubsp;
-	struct gosubentry gosubstack[GOSUBMAX];
 	step *gosubs[GOSUBMAX];
-	int numstatements;
 	Uint32 temp;
 // graphics rendering state
 	double gx, gy; // position
@@ -192,37 +145,6 @@ typedef struct basic_context {
 	int takeaction;
 
 } bc;
-
-#define MYF1 0x180
-#define MYF2 0x181
-#define MYF3 0x182
-#define MYF4 0x183
-#define MYF5 0x184
-#define MYF6 0x185
-#define MYF7 0x186
-#define MYF8 0x187
-#define MYF9 0x188
-#define MYF10 0x189
-#define MYLEFT 0x190
-#define MYRIGHT 0x191
-#define MYUP 0x192
-#define MYDOWN 0x193
-#define MYPAGEUP 0x194
-#define MYPAGEDOWN 0x195
-#define MYHOME 0x196
-#define MYEND 0x197
-#define MYALTL 0x198
-#define MYALTR 0x199
-#define MYCTRLL 0x19a
-#define MYCTRLR 0x19b
-#define MYSHIFTL 0x19c
-#define MYSHIFTR 0x19d
-
-#define MYDELETE 0x7f
-#define MYSHIFTED 0x40
-#define MYALTED 0x200
-
-
 
 // main.c
 
@@ -268,81 +190,38 @@ void flushinput(bc *bc);
 int takedown(bc *bc);
 int checkpressed(bc *bc, int code);
 
+#define MYF1 0x180
+#define MYF2 0x181
+#define MYF3 0x182
+#define MYF4 0x183
+#define MYF5 0x184
+#define MYF6 0x185
+#define MYF7 0x186
+#define MYF8 0x187
+#define MYF9 0x188
+#define MYF10 0x189
+#define MYLEFT 0x190
+#define MYRIGHT 0x191
+#define MYUP 0x192
+#define MYDOWN 0x193
+#define MYPAGEUP 0x194
+#define MYPAGEDOWN 0x195
+#define MYHOME 0x196
+#define MYEND 0x197
+#define MYALTL 0x198
+#define MYALTR 0x199
+#define MYCTRLL 0x19a
+#define MYCTRLR 0x19b
+#define MYSHIFTL 0x19c
+#define MYSHIFTR 0x19d
+
+#define MYDELETE 0x7f
+#define MYSHIFTED 0x40
+#define MYALTED 0x200
+
 // basic.c
 
-void runinit(bc *bc);
 void processline(bc *bc, char *line);
-void run_error(bc *bc, char *s, ...);
-int token_flags(bc *bc, unsigned char val);
-void execute(bc *bc, char **p);
-int is_numeric_function(bc *bc, int token); // all parameters #'s, returns #
-int is_general_function(bc *bc, int token); // anything goes
-int function_parameter_count(bc *bc, int token);
-void (*statement_handler(bc *bc, int token))();
-int is_status(bc *bc, int token);
-
-
-// expr.c
-
-#define EXPR_IF            1 // it's an IF expression
-#define EXPR_ERROR         2 // an error occured
-#define EXPR_NOSTRING      4 // expression can't be a string
-#define EXPR_LET           8 // it's part of an assignment
-#define EXPR_LVALUE       16 // no operations, just an lvalue
-#define EXPR_DIDLET       32 // actually did a let
-#define EXPR_NUMERIC      64 // need numeric expression
-#define EXPR_STRING      128 // expression must be a string
-
-#define OT_DOUBLE   1
-#define OT_BSTRING  2
-#define OT_PDOUBLE  3
-#define OT_PBSTRING 4
-
-#define EXPR_ERR_MISMATCH   "Type mismatch -- can't mix strings and numbers"
-#define EXPR_ERR_INVALID    "Illegal operation"
-#define EXPR_ERR_BAD_LVALUE "Illegal item on left side of '='"
-#define EXPR_ERR_BAD_INDEX  "Illegal array index"
-#define EXPR_ERR_RANGE_ERROR "Array index out of range"
-#define EXPR_ERR_MISCOUNT   "Incorrect number of indexes on array"
-#define EXPR_ERR_NO_ARRAY   "Array must be declared first"
-#define EXPR_ERR_MISSING    "Missing operand in expression"
-#define EXPR_ERR_NOOP       "Expression has no effect"
-#define EXPR_ERR_OPENPAR    "Missing '('"
-#define EXPR_ERR_CLOSEPAR   "Missing ')'"
-#define EXPR_ERR_PAR_COUNT  "Incorrect number of parameters to function"
-#define EXPR_ERR_NUMERIC    "String expression not allowed"
-#define EXPR_ERR_STRING     "String expression required"
-#define EXPR_ERR_DIVIDE0    "Divide by zero"
-
-typedef struct expr_info {
-	int flags_in;
-	int flags_out;
-// results
-	bstring *string;
-	void *indirect;
-	double value;
-	int type;
-	char *error;
-} einfo;
-
-struct gen_func_ret {
-	char **take;
-	bstring *string;
-	double value;
-	int type;
-	char error[128];
-};
-
-
-int expr(bc *bc, char **take, einfo *ei);
-int gather_variable_name(bc *bc, char *put, char **take);
-struct variable *find_variable(bc *bc, char *name);
-struct variable *add_variable(bc *bc, char *name);
-void free_bstring(bc *bc, bstring *bs);
-bstring *make_bstring(bc *bc, char *string, int length);
-bstring *dup_bstring(bc *bc, bstring *bs);
-bstring *make_raw_bstring(bc *bc, int length);
-void set_variable(bc *bc, char *name, double value);
 
 // parse.c, generated by bison from grammar.y
 
@@ -456,3 +335,7 @@ DECLARE(keycoded)
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);
+void free_bstring(bc *bc, bstring *bs);
+bstring *make_bstring(bc *bc, char *string, int length);
+bstring *dup_bstring(bc *bc, bstring *bs);
+bstring *make_raw_bstring(bc *bc, int length);

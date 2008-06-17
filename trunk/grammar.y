@@ -1188,14 +1188,8 @@ void pruninit(bc *bc)
 	bc->datanum=0;
 	bc->datapull=0;
 	bc->flags = 0;
-	bc->dataline = 0;
-	bc->datatake = 0;
 	bc->gosubsp = 0;
 	bc->numfors = 0;
-	bc->online = 0;
-	bc->nextline = 0;
-	bc->nextbyte = 0;
-	bc->execute_count = 0;
 	bc->gx=0;
 	bc->gy=0;
 	bc->gred=255;
@@ -1206,7 +1200,6 @@ void pruninit(bc *bc)
 	bc->shape_numpoints = 0;
 	bc->shape_numcontours = 0;
 	freeold(bc);
-	bc->numstatements=0;
 	bc->starttime = SDL_GetTicks();
 	memset(bc->vvars, sizeof(bc->vvars), 0);
 	reset_waitbase(bc);
