@@ -1082,16 +1082,17 @@ printf("here:%s\n", ps->yypntr);
 		int isreal = (ch=='.');
 
 		intpart = 0.0;
-		while(isdigit(ch=get(ps))) {intpart*=10;intpart+=ch-'0';}
+		while(isdigit(ch=get(ps))) {intpart=intpart*10 + ch - '0';}
 		if(ch=='.')
 		{
-			double digit=0.1;
+			double power = 1;
 			isreal = 1;
 			while(isdigit(ch=get(ps)))
 			{
-				fracpart += digit * (ch - '0');
-				digit /= 10.0;
+				fracpart = fracpart*10 + ch - '0';
+				power *= 10;
 			}
+			fracpart /= power;
 		}
 		back(ps);
 		if(isreal)
