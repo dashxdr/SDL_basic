@@ -318,7 +318,7 @@ void donew(bc *bc, char *text)
 
 void doren(bc *bc, char *text)
 {
-int v1, v2;
+int v1=10, v2=10;
 int n=0;
 	if(sscanf(text, "%d,%d", &v1, &v2) == 2)
 		n=2;
@@ -330,7 +330,8 @@ int n=0;
 		error(bc, "Values must range from 1 to 1000");
 		return;
 	}
-	if(n==1) v2=v1;
+	if(n<1) v1=10;
+	if(n<2) v2=v1;
 	renumber(bc, v1, v2);
 }
 
