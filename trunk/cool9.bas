@@ -25,7 +25,7 @@
 250 v=0: rem velocity
 260 mv=7 : rem max velocity
 270 da = .1: rem rotation speed
-280 a=3.1415928/2
+280 shipa=3.1415928/2: rem Angle ship is facing
 290 gosub 1430
 300 rem ************************   Main loop
 310 cls
@@ -54,14 +54,15 @@
 540 v = sqr(dx*dx + dy*dy)
 550 if v>mv then v=mv/v:dx = dx*v : dy = dy*v
 560 fire = 1
-570 if key(400) then a=a+da:if(a<0.0) then a=a+pi2
-580 if key(401) then a=a-da:if(a>pi2) then a=a-pi2
+570 if key(400) then shipa=shipa+da:if(shipa<0.0) then shipa=shipa+pi2
+580 if key(401) then shipa=shipa-da:if(shipa>pi2) then shipa=shipa-pi2
 590 shipx=shipx+dx
 600 if shipx<0 then shipx=shipx+xsize
 610 if shipx>= xsize then shipx=shipx-xsize
 620 shipy=shipy+dy
 630 if shipy<0 then shipy=shipy+ysize
 640 if shipy>=ysize then shipy=shipy-ysize
+645 a = shipa
 650 x = shipx
 660 y = shipy
 670 gosub 740
@@ -130,8 +131,8 @@
 1300 missx(missnum) = x
 1310 missy(missnum) = y
 1320 mspeed = mv*1.2
-1330 missdx(missnum) = dx + mspeed*cos(a)
-1340 missdy(missnum) = dy - mspeed*sin(a)
+1330 missdx(missnum) = dx + mspeed*cos(shopa)
+1340 missdy(missnum) = dy - mspeed*sin(shipa)
 1350 return
 1360 rem ************************  Stars
 1370 color 255,255,255
