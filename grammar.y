@@ -33,7 +33,6 @@ typedef struct parse_state {
 	char *yypntr;
 	char *yystart;
 	char *yylast;
-	char *linestart;
 	step *nextstep;
 	step steps[MAXSTEPS];
 	int numlinerefs;
@@ -312,12 +311,11 @@ static void addlineref(ps *ps, char *at)
 	ps->linerefs[ps->numlinerefs++].stepoff = ps->nextstep - ps->steps;
 }
 
-static void addline(ps *ps, int number, int stepnum)
+static void addline(ps *ps, int number, int stepnum, char *at)
 {
 bc *bc = ps->bc;
 	bc->lm[bc->numlines].step = stepnum;
-	bc->lm[bc->numlines].src = ps->linestart;
-	ps->linestart = ps->yypntr;
+	bc->lm[bc->numlines].src = at;
 	bc->lm[bc->numlines++].linenumber = number;
 }
 
@@ -570,7 +568,8 @@ prog2:
 
 line:
 	mark INTEGER statements LF {addline(PS, $2.value.integer,
-					$1.value.step - PS->steps)}
+					$1.value.step - PS->steps,
+					$2.at)}
 	;
 
 statements:
@@ -1247,7 +1246,6 @@ struct parse_state *ps;
 	bc->base = ps->steps;
 	ps->yypntr = take;
 	ps->yystart = take;
-	ps->linestart = ps->yypntr;
 	dump_data_init(ps);
 
 	bc->numlines=0;
