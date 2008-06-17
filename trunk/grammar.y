@@ -118,9 +118,9 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 		else if(s->func == input)
 			tprintf(bc, "input %d\n", (++s)->i);
 		else if(s->func == arrayd)
-			tprintf(bc, "arrayd %d\n", (++s)->i);
+			tprintf(bc, "arrayd %s\n", bc->vvars[(++s)->i].name);
 		else if(s->func == arrays)
-			tprintf(bc, "arrays %d\n", (++s)->i);
+			tprintf(bc, "arrays %s\n", bc->vvars[(++s)->i].name);
 		else if(s->func == pushi)
 			tprintf(bc, "pushi %d\n", (++s)->i);
 		else if(s->func == pushea)
@@ -735,16 +735,14 @@ readvar:
 numvar:
 	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')'
-			{emitpushav(PS, $1.value.integer);
-			emitarrayd(PS, $3.value.count);
+			{emitarrayd(PS, $1.value.integer);
 			rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
 stringvar:
 	STRINGSYMBOL {emitpushvs(PS, $1.value.integer)}
 	| STRINGSYMBOL '(' numlist ')'
-			{emitpushav(PS, $1.value.integer);
-			emitarrays(PS, $3.value.count);
+			{emitarrays(PS, $1.value.integer);
 			rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 

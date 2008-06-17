@@ -233,20 +233,15 @@ int i;
 int j;
 int t;
 
-	v=bc->vvars+bc->vsp[-1].i;
-	rank = (bc->vip++)->i;
-	bc->vsp -= rank+1;
+	v=bc->vvars + (bc->vip++)->i;
+	rank = v->rank;
 	if(!v->rank)
 	{
 		verror(bc, "Must use DIM before referencing array '%s'\n", // ipfx=-1
 			v->name);
 		return 0;
 	}
-	if(v->rank != rank)
-	{
-		verror(bc,"Wrong number of array dimensions on '%s'\n", v->name);//-1
-		return 0;
-	}
+	bc->vsp -= rank;
 	j=0;
 	for(i=0;i<rank;++i)
 	{
