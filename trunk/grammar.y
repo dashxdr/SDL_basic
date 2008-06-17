@@ -698,7 +698,7 @@ dimlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
 linelist: INTEGER {$$.value.count = 1;addlineref(PS, $1.at);
 				emitpushea(PS, $1.value.integer)}
 	| linelist ',' INTEGER {$$.value.count = $1.value.count + 1;
-				addlineref(PS, $1.at);
+				addlineref(PS, $3.at);
 				emitpushea(PS, $3.value.integer)}
 	;
 
