@@ -456,6 +456,9 @@ int n=0;
 		error(bc, "Values must range from 1 to 1000");
 		return;
 	}
+	if(n==1) v2=v1;
+	renumber(bc, v1, v2);
+#if 0
 	p=bc->program;
 	if(n>0) lc = v1;
 	else lc=10;
@@ -470,6 +473,7 @@ int n=0;
 	}
 	if(i)
 		renumber_lines(bc, io, i);
+#endif
 }
 
 void doparse(bc *bc, char *text)
