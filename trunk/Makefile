@@ -8,7 +8,7 @@ CFLAGS += -D_STANDALONE_
 
 
 all: basic
-basic: main.o basic.o font.o render.o keyboard.o expr.o ftgrays.o parse.o \
+basic: main.o basic.o font.o render.o keyboard.o ftgrays.o parse.o \
 	vmachine.o
 
 main.o: main.c misc.h
@@ -16,7 +16,6 @@ basic.o: basic.c misc.h
 font.o: font.c misc.h
 render.o: render.c misc.h
 keyboard.o: keyboard.c misc.h
-expr.o: expr.c misc.h
 parse.o: parse.c
 parse.c: grammar.y misc.h
 	bison -o $@ $< -v
