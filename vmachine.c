@@ -4,6 +4,46 @@
 
 #define TD(name) void name(bc *bc){}
 
+void reset_waitbase(bc *bc)
+{
+	bc->waitbase = SDL_GetTicks();
+}
+
+bstring *make_raw_bstring(bc *bc, int length)
+{
+bstring *bs;
+	bs=malloc(length + sizeof(bstring) + 1);
+	if(bs)
+	{
+		bs->length = length;
+		bs->string[length]=0;
+	}
+	return bs;
+}
+
+bstring *make_bstring(bc *bc, char *string, int length)
+{
+bstring *bs;
+	bs=make_raw_bstring(bc, length);
+#warning check for allocation failure
+	if(bs)
+	{
+		memcpy(bs->string, string, length);
+	}
+	return bs;
+}
+
+void free_bstring(bc *bc, bstring *bs)
+{
+	if(bs) free(bs);
+}
+
+bstring *dup_bstring(bc *bc, bstring *bs)
+{
+	return make_bstring(bc, bs->string, bs->length);
+}
+
+
 void takeaction(bc *bc)
 {
 	bc->takeaction = 0;

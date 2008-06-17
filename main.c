@@ -42,7 +42,7 @@ void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
 	bc->black = SDL_MapRGB(bc->thescreen->format, 0, 0, 0);
 	bc->cursorcolor = SDL_MapRGB(bc->thescreen->format, 255, 0, 0);
 	inittext(bc);
-	runinit(bc);
+	pruninit(bc);
 }
 
 

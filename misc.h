@@ -270,7 +270,6 @@ int checkpressed(bc *bc, int code);
 
 // basic.c
 
-void reset_waitbase(bc *bc);
 void runinit(bc *bc);
 void processline(bc *bc, char *line);
 void run_error(bc *bc, char *s, ...);
@@ -281,21 +280,6 @@ int is_general_function(bc *bc, int token); // anything goes
 int function_parameter_count(bc *bc, int token);
 void (*statement_handler(bc *bc, int token))();
 int is_status(bc *bc, int token);
-
-
-extern int token_then;
-extern int token_to;
-extern int token_else;
-extern int token_if;
-extern int token_to;
-extern int token_step;
-extern int token_data;
-extern int token_and;
-extern int token_or;
-extern int token_mod;
-extern int token_goto;
-extern int token_gosub;
-extern int token_tab;
 
 
 // expr.c
@@ -365,6 +349,7 @@ void set_variable(bc *bc, char *name, double value);
 void parse(bc *bc, int runit);
 void parseline(bc *bc, char *line);
 void renumber(bc *bc, int delta, int start);
+void pruninit(bc *bc);
 
 // vmachine.c
 
@@ -470,3 +455,4 @@ DECLARE(keyd)
 DECLARE(keycoded)
 
 void vmachine(bc *bc, step *program, step *stack);
+void reset_waitbase(bc *bc);
