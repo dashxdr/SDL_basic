@@ -131,7 +131,7 @@
 1300 missx(missnum) = x
 1310 missy(missnum) = y
 1320 mspeed = mv*1.2
-1330 missdx(missnum) = dx + mspeed*cos(shopa)
+1330 missdx(missnum) = dx + mspeed*cos(shipa)
 1340 missdy(missnum) = dy - mspeed*sin(shipa)
 1350 return
 1360 rem ************************  Stars
