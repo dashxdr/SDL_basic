@@ -36,8 +36,11 @@ typedef struct parse_state {
 	step *nextstep;
 	step steps[MAXSTEPS];
 	int numlinerefs;
+	variable *rankfailure;
 	lineref linerefs[MAXLINEREFS];
 } ps;
+
+static void rankcheck(ps *ps, int var, int rank);
 
 static int get_istring(char *put, step *s)
 {
@@ -685,9 +688,11 @@ dimarraylist:
 
 dimarrayvar:
 	NUMSYMBOL '(' dimlist ')' {emitpushav(PS, $1.value.integer);
-				emitdimd(PS, $3.value.count)}
+				emitdimd(PS, $3.value.count);
+				rankcheck(PS, $1.value.integer, $3.value.count)}
 	| STRINGSYMBOL '(' dimlist ')' {emitpushav(PS, $1.value.integer);
-				emitdims(PS, $3.value.count)}
+				emitdims(PS, $3.value.count);
+				rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
 dimlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
@@ -729,14 +734,18 @@ readvar:
 
 numvar:
 	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
-	| NUMSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
-					emitarrayd(PS, $3.value.count)}
+	| NUMSYMBOL '(' numlist ')'
+			{emitpushav(PS, $1.value.integer);
+			emitarrayd(PS, $3.value.count);
+			rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
 stringvar:
 	STRINGSYMBOL {emitpushvs(PS, $1.value.integer)}
-	| STRINGSYMBOL '(' numlist ')' {emitpushav(PS, $1.value.integer);
-					emitarrays(PS, $3.value.count)}
+	| STRINGSYMBOL '(' numlist ')'
+			{emitpushav(PS, $1.value.integer);
+			emitarrays(PS, $3.value.count);
+			rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
 numlist:
@@ -886,6 +895,18 @@ stringfunc:
 void yyerror(char *s)
 {
 }
+
+static void rankcheck(ps *ps, int var, int rank)
+{
+variable *v;
+	v=ps->bc->vvars + var;
+	if(!v->rank)
+		v->rank = rank;
+	else
+		if(v->rank != rank)
+			ps->rankfailure = v;
+}
+
 
 int findvar(ps *ps, char *name)
 {
@@ -1228,6 +1249,7 @@ int i;
 ps *newps(bc *bc, char *take)
 {
 struct parse_state *ps;
+int i;
 	ps = malloc(sizeof(struct parse_state));
 	if(!ps)
 	{
@@ -1252,6 +1274,16 @@ struct parse_state *ps;
 		emitfunc(ps, performend);
 		dump_data_finish(ps);
 		ps->res = fixuplinerefs(ps);
+		if(!ps->res && ps->rankfailure)
+		{
+			tprintf(bc, "Array variable '%s' changes "
+					"rank within program\n",
+					ps->rankfailure->name);
+			ps->res = -1;
+		}
+		for(i=0;i<bc->numvars;++i)	// clear out all the ranks
+			bc->vvars[i].rank = 0;
+
 	} else
 	{
 		char linecopy[1024];

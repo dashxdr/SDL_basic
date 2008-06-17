@@ -195,7 +195,7 @@ int t;
 	bc->vsp -= rank+1;
 	if(v->rank)
 	{
-		verror(bc, "Dumplicate dimension variable '%s'", v->name); // ipfix=-1
+		verror(bc, "Duplicate dimension variable '%s'", v->name); // ipfix=-1
 		return;
 	}
 	v->dimensions[0]=1;
