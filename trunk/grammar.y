@@ -621,7 +621,7 @@ statement:
 	| RANDOM
 	| RESTORE
 	| CLEAR num1
-	| TEST
+	| TEST {rendertest(PS->bc)}
 	;
 
 print: PRINT
