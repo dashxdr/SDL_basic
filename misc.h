@@ -82,6 +82,7 @@ typedef struct {
 typedef struct {
 	int flags;
 	double frequency;
+	double fmul;
 	double volume;
 	double duration;
 	double time;
@@ -355,6 +356,7 @@ DECLARE(vol)
 DECLARE(dur)
 DECLARE(soundgo)
 DECLARE(note)
+DECLARE(fmul)
 
 
 void vmachine(bc *bc, step *program, step *stack);
