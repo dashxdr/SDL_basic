@@ -269,11 +269,10 @@ double a;
 		shape_add(bc, bc->gx+dy, bc->gy-dx, TAG_ONPATH);
 		arc_piece(bc, bc->gx, bc->gy, pen2, a+90, -180);
 		shape_done(bc);
-	}
-
-
-	bc->gx = x;
-	bc->gy = y;
+		bc->gx = x;
+		bc->gy = y;
+	} else
+		spot(bc);
 }
 
 void circle(bc *bc, double cx, double cy, double radius)
