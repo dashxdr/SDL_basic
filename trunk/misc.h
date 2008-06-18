@@ -78,9 +78,11 @@ typedef struct {
 } forstate;
 
 #define SND_ACTIVE         1
+#define SND_QUIET          2
 
 typedef struct {
 	int flags;
+	double start;
 	double frequency;
 	double fmul;
 	double volume;
@@ -98,6 +100,7 @@ typedef struct {
 typedef struct basic_context {
 	int flags;
 	SDL_Surface *thescreen;
+	double time;
 	int mousex, mousey, mouseb;
 	int xsize, ysize;
 	int txsize, tysize; // screen dimensions in characters
@@ -147,7 +150,7 @@ typedef struct basic_context {
 	int datapull;
 	double data[MAXDATA];
 	int starttime;
-	int waitbase;
+	double waitbase;
 	step *base;
 	step *lastip;
 	step *vip;
@@ -160,7 +163,9 @@ typedef struct basic_context {
 // sound
 	int soundworking;
 	sound sounds[MAX_SOUNDS];
+	sound isounds[MAX_SOUNDS];
 	sound *csound;
+	double soundtime;
 } bc;
 
 // main.c
@@ -349,7 +354,7 @@ DECLARE(inkey)
 DECLARE(pop)
 DECLARE(keyd)
 DECLARE(keycoded)
-DECLARE(silence)
+DECLARE(quiet)
 DECLARE(setsound)
 DECLARE(freq)
 DECLARE(vol)

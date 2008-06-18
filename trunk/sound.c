@@ -2,7 +2,7 @@
 #include <math.h>
 
 #define SAMPLING_RATE 48000
-#define FRAGSIZE 2048
+#define FRAGSIZE 1024
 #define PIECES 16
 
 #define FFIX (4294967296.0/SAMPLING_RATE)
@@ -27,6 +27,14 @@ Uint32 v, dv, vol;
 		for(sp = 0;sp < MAX_SOUNDS;++sp)
 		{
 			s=bc->sounds + sp;
+			if((s->flags & (SND_ACTIVE | SND_QUIET)) &&
+				bc->soundtime >= s->start)
+			{
+				bc->isounds[sp] = *s;
+				bc->isounds[sp].flags &= ~SND_QUIET;
+				s->flags &= ~(SND_ACTIVE | SND_QUIET);
+			}
+			s = bc->isounds + sp;
 			if(~s->flags & SND_ACTIVE)
 				continue;
 			ap = accum;
@@ -53,6 +61,7 @@ Uint32 v, dv, vol;
 			*p++ = *ap++;
 			*p++ = *ap++;
 		}
+		bc->soundtime += TIME_PER_PIECE;
 	}
 }
 

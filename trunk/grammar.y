@@ -302,8 +302,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "next\n");
 		else if(s->func == performnext1)
 			tprintf(bc, "next1\n");
-		else if(s->func == silence)
-			tprintf(bc, "silence\n");
+		else if(s->func == quiet)
+			tprintf(bc, "quiet\n");
 		else if(s->func == setsound)
 			tprintf(bc, "setsound\n");
 		else if(s->func == freq)
@@ -562,7 +562,7 @@ void yyerror(char *s);
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
 %token LF
 %token TONE ADSR WAVE FREQ DUR FMUL VOL FMUL
-%token SILENCE NOTE
+%token QUIET NOTE
 %left OROR
 %left ANDAND
 %left '=' NE LT GT LE GE
@@ -636,7 +636,7 @@ statement:
 	| INPUT inputlist {emitinput(PS, $2.value.count)}
 	| READ readlist {/* implemented */}
 	| DATA datalist {/* implemented */}
-	| SILENCE silist
+	| QUIET silist
 	| TONE tonenumber otonelist {emitfunc(PS, soundgo)}
 	| RANDOM
 	| RESTORE
@@ -644,8 +644,8 @@ statement:
 	| TEST {rendertest(PS->bc)}
 	;
 
-silist: /* nothing */ {emitpushd(PS, 0.0);emitfunc(PS, silence)}
-	| numexpr {emitfunc(PS, silence)}
+silist: /* nothing */ {emitpushd(PS, 0.0);emitfunc(PS, quiet)}
+	| numexpr {emitfunc(PS, quiet)}
 	;
 
 tonenumber:
@@ -1090,7 +1090,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "right$")) return RIGHTSTR;
 	if(iskeyword(ps, "rnd")) return RND;
 	if(iskeyword(ps, "sgn")) return SGN;
-	if(iskeyword(ps, "silence")) return SILENCE;
+	if(iskeyword(ps, "quiet")) return QUIET;
 	if(iskeyword(ps, "sin")) return SIN;
 	if(iskeyword(ps, "sleep")) return SLEEP;
 	if(iskeyword(ps, "spot")) return SPOT;
@@ -1261,6 +1261,10 @@ variable *v;
 
 void pruninit(bc *bc)
 {
+	bc->time = 0.0;
+	bc->soundtime = 0.0; // NEEDS A MUTEX!!!!
+	memset(bc->sounds, 0, sizeof(bc->sounds));
+	memset(bc->isounds, 0, sizeof(bc->isounds));
 	bc->numvars = 0;
 	bc->datanum=0;
 	bc->datapull=0;

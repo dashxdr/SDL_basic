@@ -6,7 +6,7 @@
 
 void reset_waitbase(bc *bc)
 {
-	bc->waitbase = SDL_GetTicks();
+	bc->waitbase = SDL_GetTicks() * .001 - bc->time;
 }
 
 bstring *make_raw_bstring(bc *bc, int length)
@@ -721,32 +721,51 @@ int r;
 }
 void sleepd(bc *bc)
 {
-int until, diff;
+double until, diff;
 double d;
 int now;
+int times;
 
-	now = SDL_GetTicks();
 	d=(--bc->vsp)->d;
+#if 1
+	now = SDL_GetTicks();
 
 	if(d<0) d = 0.0;
 	if(d>10.0) d=10.0;
 
-	until=bc->waitbase + d*1000;
+	until=bc->waitbase + bc->time + d;
 
 
+	times=0;
 	while(!needstop(bc))
 	{
-		diff = until - SDL_GetTicks();
-		if(diff<0 || diff>10000)
+		diff = until - SDL_GetTicks() * .001;
+		if(diff<-.1 || diff>10)
 		{
-//printf("%s: diff out of range! %d\n", __FUNCTION__, diff);
+printf("%s: diff out of range! %10.7lf\n", __FUNCTION__, diff);
 			reset_waitbase(bc);
 			break;
 		}
+		if(diff <= 0.0) break;
 		scaninput(bc);
 		SDL_Delay(1);
+		++times;
 	}
 	(bc->vsp++) -> d = (SDL_GetTicks() - now)*.001;
+#else
+	now = SDL_GetTicks();
+
+//printf("%lf, %lf\n", bc->soundtime, bc->time);
+	while(!needstop(bc))
+	{
+		if(bc->soundtime >= bc->time+d)
+			break;
+		scaninput(bc);
+//		SDL_Delay(1);
+	}
+	(bc->vsp++) -> d = (SDL_GetTicks() - now)*.001;
+#endif
+	bc->time += d;
 }
 
 /**************************************************************************
@@ -763,7 +782,7 @@ static int vcheck(bc *bc, int v)
 	return 0;
 }
 
-void silence(bc *bc)
+void quiet(bc *bc)
 {
 int v;
 int i;
@@ -772,19 +791,24 @@ int i;
 	if(!v)
 	{
 		for(i=0;i<MAX_SOUNDS;++i)
-			bc->sounds[i].flags &= ~SND_ACTIVE;
+			bc->sounds[i].flags |= SND_QUIET;
 	} else
-		bc->sounds[v-1].flags &= ~SND_ACTIVE;
+		bc->sounds[v-1].flags |= SND_QUIET;
 }
 
 void setsound(bc *bc)
 {
 int v;
+sound *s;
 	v=(--bc->vsp)->d;
 	if(vcheck(bc, v)) return;
 	{
-		bc->csound = bc->sounds + v-1;
-		bc->csound -> duration = 1000000.0; // forever!
+		s = bc->sounds + v-1;
+		bc->csound = s;
+		s->duration = 1000000.0; // forever!
+		s->fmul = 1.0;
+		s->frequency = 440.0;
+		s->volume = 1.0;
 	}
 }
 
@@ -832,6 +856,7 @@ double v;
 void soundgo(bc *bc)
 {
 	bc->csound->time = 0.0;
+	bc->csound->start = bc->time + .015;
 	bc->csound->flags |= SND_ACTIVE;
 }
 
