@@ -78,7 +78,7 @@ int v1,v2;
 		}
 	}
 
-	if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0 )
+	if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0 )
 	{
 		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
 		exit(1);
@@ -96,6 +96,7 @@ int v1,v2;
 	initbc(bc, thescreen, xsize, ysize);
 
 	SDL_AddTimer(0, mytimer, bc);
+	soundopen(bc);
 
 	for(;;)
 	{

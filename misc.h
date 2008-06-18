@@ -77,6 +77,16 @@ typedef struct {
 	step *start;
 } forstate;
 
+#define SND_ACTIVE         1
+
+typedef struct {
+	int flags;
+	float frequency;
+	int index;
+} sound;
+
+#define MAX_SOUNDS 32
+
 
 #define MAX_SHAPE_POINTS 1024
 #define MAX_SHAPE_CONTOURS 64
@@ -143,7 +153,9 @@ typedef struct basic_context {
 	variable vvars[MAXVARIABLES];
 	linemap lm[MAX_PROGRAM_LINES];
 	int takeaction;
-
+// sound
+	int soundworking;
+	sound sounds[MAX_SOUNDS];
 } bc;
 
 // main.c
@@ -339,3 +351,7 @@ void free_bstring(bc *bc, bstring *bs);
 bstring *make_bstring(bc *bc, char *string, int length);
 bstring *dup_bstring(bc *bc, bstring *bs);
 bstring *make_raw_bstring(bc *bc, int length);
+
+// sound.c
+
+void soundopen(bc *bc);
