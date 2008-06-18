@@ -312,6 +312,8 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "vol\n");
 		else if(s->func == dur)
 			tprintf(bc, "dur\n");
+		else if(s->func == fmul)
+			tprintf(bc, "fmul\n");
 		else if(s->func == soundgo)
 			tprintf(bc, "soundgo\n");
 		else if(s->func == note)
@@ -559,7 +561,7 @@ void yyerror(char *s);
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
 %token LF
-%token TONE ADSR WAVE FREQ DUR FMUL VOL
+%token TONE ADSR WAVE FREQ DUR FMUL VOL FMUL
 %token SILENCE NOTE
 %left OROR
 %left ANDAND
@@ -665,7 +667,7 @@ toneitem:
 	| FREQ singlenumpar {emitfunc(PS, freq)}
 	| DUR singlenumpar {emitfunc(PS, dur)}
 	| VOL singlenumpar {emitfunc(PS, vol)}
-	| FMUL singlenumpar
+	| FMUL singlenumpar {emitfunc(PS, fmul)}
 	;
 
 
@@ -1044,7 +1046,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "exp")) return EXP;
 	if(iskeyword(ps, "fill")) return FILL;
 	if(iskeyword(ps, "fix")) return FIX;
-	if(iskeyword(ps, "tmul")) return FMUL;
+	if(iskeyword(ps, "fmul")) return FMUL;
 	if(iskeyword(ps, "for")) return FOR;
 	if(iskeyword(ps, "freq")) return FREQ;
 	if(iskeyword(ps, "gosub")) return GOSUB;

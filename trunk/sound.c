@@ -43,7 +43,7 @@ Uint32 v, dv, vol;
 			s->time += TIME_PER_PIECE;
 			if(s->time >= s->duration)
 				s->flags &= ~SND_ACTIVE;
-//			s->frequency *= 1.0001;
+			s->frequency *= s->fmul;
 		}
 		ap = accum;
 		for(i=0;i<len;++i)
@@ -67,6 +67,7 @@ sound *s;
 		s->frequency = 440.0;
 		s->volume = 1.0;
 		s->duration = 0.0;
+		s->fmul = 1.0;
 		s->time = 0.0;
 	}
 

@@ -793,6 +793,18 @@ void freq(bc *bc)
 	bc->csound->frequency = (--bc->vsp)->d;
 }
 
+void fmul(bc *bc)
+{
+double v;
+	v=(--bc->vsp)->d;
+	if(v<0.0)
+	{
+		verror(bc, "Frequency multiplier cannot be negative");
+		return;
+	}
+	bc->csound->fmul = v;
+}
+
 void vol(bc *bc)
 {
 double v;
