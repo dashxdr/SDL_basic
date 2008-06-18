@@ -44,6 +44,8 @@ Uint32 v, dv, vol;
 			if(s->time >= s->duration)
 				s->flags &= ~SND_ACTIVE;
 			s->frequency *= s->fmul;
+			if(s->frequency > SAMPLING_RATE/2 || s->frequency < 4)
+				s->flags &= ~SND_ACTIVE;
 		}
 		ap = accum;
 		for(i=0;i<len;++i)
