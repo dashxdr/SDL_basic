@@ -81,7 +81,10 @@ typedef struct {
 
 typedef struct {
 	int flags;
-	float frequency;
+	double frequency;
+	double volume;
+	double duration;
+	double time;
 	int index;
 } sound;
 
@@ -156,6 +159,7 @@ typedef struct basic_context {
 // sound
 	int soundworking;
 	sound sounds[MAX_SOUNDS];
+	sound *csound;
 } bc;
 
 // main.c
@@ -344,6 +348,14 @@ DECLARE(inkey)
 DECLARE(pop)
 DECLARE(keyd)
 DECLARE(keycoded)
+DECLARE(silence)
+DECLARE(setsound)
+DECLARE(freq)
+DECLARE(vol)
+DECLARE(dur)
+DECLARE(soundgo)
+DECLARE(note)
+
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);
