@@ -302,6 +302,20 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "next\n");
 		else if(s->func == performnext1)
 			tprintf(bc, "next1\n");
+		else if(s->func == silence)
+			tprintf(bc, "silence\n");
+		else if(s->func == setsound)
+			tprintf(bc, "setsound\n");
+		else if(s->func == freq)
+			tprintf(bc, "freq\n");
+		else if(s->func == vol)
+			tprintf(bc, "vol\n");
+		else if(s->func == dur)
+			tprintf(bc, "dur\n");
+		else if(s->func == soundgo)
+			tprintf(bc, "soundgo\n");
+		else if(s->func == note)
+			tprintf(bc, "note\n");
 		else
 			tprintf(bc, "??? %x\n", s->i);
 		++s;
@@ -545,6 +559,8 @@ void yyerror(char *s);
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
 %token LF
+%token TONE ADSR WAVE FREQ DUR FMUL VOL
+%token SILENCE NOTE
 %left OROR
 %left ANDAND
 %left '=' NE LT GT LE GE
@@ -618,11 +634,40 @@ statement:
 	| INPUT inputlist {emitinput(PS, $2.value.count)}
 	| READ readlist {/* implemented */}
 	| DATA datalist {/* implemented */}
+	| SILENCE silist
+	| TONE tonenumber otonelist {emitfunc(PS, soundgo)}
 	| RANDOM
 	| RESTORE
 	| CLEAR num1
 	| TEST {rendertest(PS->bc)}
 	;
+
+silist: /* nothing */ {emitpushd(PS, 0.0);emitfunc(PS, silence)}
+	| numexpr {emitfunc(PS, silence)}
+	;
+
+tonenumber:
+	numexpr {emitfunc(PS, setsound)}
+	;
+
+otonelist: /* nothing */
+	| tonelist
+	;
+
+tonelist:
+	',' toneitem
+	| tonelist ',' toneitem
+	;
+
+toneitem:
+	ADSR singlestringpar
+	| WAVE
+	| FREQ singlenumpar {emitfunc(PS, freq)}
+	| DUR singlenumpar {emitfunc(PS, dur)}
+	| VOL singlenumpar {emitfunc(PS, vol)}
+	| FMUL singlenumpar
+	;
+
 
 print: PRINT
 	| '?'
@@ -846,6 +891,7 @@ numfunc:
 	| SQR singlenumpar {emitfunc(PS, sqrd)}
 	| SLEEP singlenumpar {emitfunc(PS, sleepd)}
 	| KEY singlenumpar {emitfunc(PS, keyd)}
+	| NOTE singlenumpar {emitfunc(PS, note)}
 	| LEN singlestringpar {emitfunc(PS, lend)}
 	| VAL singlestringpar {emitfunc(PS, vald)}
 	| ASC singlestringpar {emitfunc(PS, ascd)}
@@ -977,6 +1023,7 @@ printf("here:%s\n", ps->yypntr);
 
 // alphabetized for readability -- but atn2 must be before atn, keycode < key
 	if(iskeyword(ps, "abs")) return ABS;
+	if(iskeyword(ps, "adsr")) return ADSR;
 	if(iskeyword(ps, "and")) return ANDAND;
 	if(iskeyword(ps, "asc")) return ASC;
 	if(iskeyword(ps, "atn2")) return ATN2; // order critical!
@@ -991,12 +1038,15 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "data")) return DATA;
 	if(iskeyword(ps, "dim")) return DIM;
 	if(iskeyword(ps, "disc")) return DISC;
+	if(iskeyword(ps, "dur")) return DUR;
 	if(iskeyword(ps, "else")) return ELSE;
 	if(iskeyword(ps, "end")) return END;
 	if(iskeyword(ps, "exp")) return EXP;
 	if(iskeyword(ps, "fill")) return FILL;
 	if(iskeyword(ps, "fix")) return FIX;
+	if(iskeyword(ps, "tmul")) return FMUL;
 	if(iskeyword(ps, "for")) return FOR;
+	if(iskeyword(ps, "freq")) return FREQ;
 	if(iskeyword(ps, "gosub")) return GOSUB;
 	if(iskeyword(ps, "goto")) return GOTO;
 	if(iskeyword(ps, "home")) return HOME;
@@ -1018,6 +1068,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "mousey")) return MOUSEY;
 	if(iskeyword(ps, "move")) return MOVE;
 	if(iskeyword(ps, "next")) return NEXT;
+	if(iskeyword(ps, "note")) return NOTE;
 	if(iskeyword(ps, "on")) return ON;
 	if(iskeyword(ps, "or")) return OROR;
 	if(iskeyword(ps, "pen")) return PEN;
@@ -1037,6 +1088,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "right$")) return RIGHTSTR;
 	if(iskeyword(ps, "rnd")) return RND;
 	if(iskeyword(ps, "sgn")) return SGN;
+	if(iskeyword(ps, "silence")) return SILENCE;
 	if(iskeyword(ps, "sin")) return SIN;
 	if(iskeyword(ps, "sleep")) return SLEEP;
 	if(iskeyword(ps, "spot")) return SPOT;
@@ -1050,9 +1102,12 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "test")) return TEST;
 	if(iskeyword(ps, "then")) return THEN;
 	if(iskeyword(ps, "ticks")) return TICKS;
+	if(iskeyword(ps, "tone")) return TONE;
 	if(iskeyword(ps, "to")) return TO;
 	if(iskeyword(ps, "update")) return UPDATE;
 	if(iskeyword(ps, "val")) return VAL;
+	if(iskeyword(ps, "vol")) return VOL;
+	if(iskeyword(ps, "wave")) return WAVE;
 	if(iskeyword(ps, "xsize")) return XSIZE;
 	if(iskeyword(ps, "ysize")) return YSIZE;
 

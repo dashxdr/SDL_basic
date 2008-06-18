@@ -749,6 +749,90 @@ int now;
 	(bc->vsp++) -> d = (SDL_GetTicks() - now)*.001;
 }
 
+/**************************************************************************
+          sound functions
+**************************************************************************/
+
+static int vcheck(bc *bc, int v)
+{
+	if(v<0 || v>MAX_SOUNDS)
+	{
+		verror(bc, "Voice index '%d' out of range", v);
+		return -1;
+	}
+	return 0;
+}
+
+void silence(bc *bc)
+{
+int v;
+int i;
+	v=(--bc->vsp)->d;
+	if(vcheck(bc, v)) return;
+	if(!v)
+	{
+		for(i=0;i<MAX_SOUNDS;++i)
+			bc->sounds[i].flags &= ~SND_ACTIVE;
+	} else
+		bc->sounds[v-1].flags &= ~SND_ACTIVE;
+}
+
+void setsound(bc *bc)
+{
+int v;
+	v=(--bc->vsp)->d;
+	if(vcheck(bc, v)) return;
+	{
+		bc->csound = bc->sounds + v-1;
+		bc->csound -> duration = 1000000.0; // forever!
+	}
+}
+
+void freq(bc *bc)
+{
+	bc->csound->frequency = (--bc->vsp)->d;
+}
+
+void vol(bc *bc)
+{
+double v;
+	v = (--bc->vsp)->d;
+	if(v<0.0 || v>100.0)
+	{
+		verror(bc, "Volume must be between 0.0 and 100.0");
+		return;
+	}
+	bc->csound->volume = v/100.0;
+}
+
+void dur(bc *bc)
+{
+double v;
+	v = (--bc->vsp)->d;
+	if(v<0.0)
+	{
+		verror(bc, "Duration cannot be negative");
+		return;
+	}
+	bc->csound->duration = v;
+}
+
+void soundgo(bc *bc)
+{
+	bc->csound->time = 0.0;
+	bc->csound->flags |= SND_ACTIVE;
+}
+
+void note(bc *bc)
+{
+	bc->vsp[-1].d = 261.625565 * pow(1.0594630943592953, bc->vsp[-1].d - 60.0);
+}
+
+
+/**************************************************************************
+          graphics/rendering functions
+**************************************************************************/
+
 void mousexd(bc *bc){(bc->vsp++)->d = bc->mousex;}
 void mouseyd(bc *bc){(bc->vsp++)->d = bc->mousey;}
 void mousebd(bc *bc){(bc->vsp++)->d = bc->mouseb;}
