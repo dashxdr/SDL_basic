@@ -250,12 +250,11 @@ void stroke(bc *bc, double x, double y)
 double dx,dy, r, pen2;
 double a;
 
-	taint(bc);
-
 	dx=bc->gx - x;
 	dy=bc->gy - y;
 	if(dx || dy)
 	{
+		taint(bc);
 		a=atan2(-dy, dx)*180.0/M_PI;
 		pen2=bc->pen/2.0;
 		r=sqrt(dx*dx+dy*dy);
