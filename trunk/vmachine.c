@@ -6,6 +6,7 @@
 
 void reset_waitbase(bc *bc)
 {
+	bc->time = bc->soundtime;
 	bc->waitbase = SDL_GetTicks() * .001 - bc->time;
 }
 
