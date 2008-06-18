@@ -31,6 +31,8 @@ Uint32 v, dv, vol;
 				bc->soundtime >= s->start)
 			{
 				bc->isounds[sp] = *s;
+				if(bc->isounds[sp].flags & SND_QUIET)
+					bc->isounds[sp].flags &=~SND_ACTIVE;
 				bc->isounds[sp].flags &= ~SND_QUIET;
 				s->flags &= ~(SND_ACTIVE | SND_QUIET);
 			}
@@ -41,11 +43,29 @@ Uint32 v, dv, vol;
 			v = s->index;
 			dv = FFIX * s->frequency;
 			vol = s->volume * 16384;
-			for(i=0;i<len;++i)
+			if(sp < MAX_SOUNDS-4) // last 4 are noise
 			{
-				v += dv;
-				ap[i*2+0] += ((((v>>19) & 0x1fff) - 4096) * vol) >> 14;
-				ap[i*2+1] += ((((v>>19) & 0x1fff) - 4096) * vol) >> 14;
+				for(i=0;i<len;++i)
+				{
+					v += dv;
+					ap[i*2+0] += ((((v>>19) & 0x1fff) - 4096) * vol) >> 14;
+					ap[i*2+1] += ((((v>>19) & 0x1fff) - 4096) * vol) >> 14;
+				}
+			} else
+			{
+				int t = ~0, t2, t3=0;
+				for(i=0;i<len;++i)
+				{
+					v += dv;
+					t2 = v>>31;
+					if(t != t2)
+					{
+						t = t2;
+						t3 = (rand() & 0x1fff) - 4096;
+					}
+					ap[i*2+0] += t3*vol >> 14;
+					ap[i*2+1] += t3*vol >> 14;
+				}
 			}
 			s->index = v;
 			s->time += TIME_PER_PIECE;
