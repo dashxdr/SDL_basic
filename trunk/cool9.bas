@@ -310,7 +310,7 @@
 3100 tone 32, freq(5), dur(1), vol(avol)
 3110 return
 3120 rem *************** Shoot missile sound
-3130 tone 2, freq(900), fmul(.989), dur(.15), vol(40)
+3130 tone 2, freq(900), fmul(.989), dur(.15), vol(40), wtri
 3140 return
 3150 rem *************** Asteroid explosion sound
 3160 avol = 100

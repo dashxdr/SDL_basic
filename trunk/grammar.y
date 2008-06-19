@@ -314,6 +314,14 @@ linemap *lm = bc->lm, *elm = lm + bc->numlines;
 			tprintf(bc, "dur\n");
 		else if(s->func == fmul)
 			tprintf(bc, "fmul\n");
+		else if(s->func == wsin)
+			tprintf(bc, "wsin\n");
+		else if(s->func == wtri)
+			tprintf(bc, "wtri\n");
+		else if(s->func == wsaw)
+			tprintf(bc, "wsaw\n");
+		else if(s->func == wsqr)
+			tprintf(bc, "wsqr\n");
 		else if(s->func == soundgo)
 			tprintf(bc, "soundgo\n");
 		else if(s->func == note)
@@ -561,7 +569,7 @@ void yyerror(char *s);
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
 %token LF
-%token TONE ADSR WAVE FREQ DUR FMUL VOL FMUL
+%token TONE ADSR WAVE FREQ DUR FMUL VOL WSIN WSQR WTRI WSAW
 %token QUIET NOTE
 %left OROR
 %left ANDAND
@@ -662,12 +670,16 @@ tonelist:
 	;
 
 toneitem:
-	ADSR singlestringpar
+	ADSR stringexpr
 	| WAVE
-	| FREQ singlenumpar {emitfunc(PS, freq)}
-	| DUR singlenumpar {emitfunc(PS, dur)}
-	| VOL singlenumpar {emitfunc(PS, vol)}
-	| FMUL singlenumpar {emitfunc(PS, fmul)}
+	| FREQ numexpr {emitfunc(PS, freq)}
+	| DUR numexpr {emitfunc(PS, dur)}
+	| VOL numexpr {emitfunc(PS, vol)}
+	| FMUL numexpr {emitfunc(PS, fmul)}
+	| WSIN {emitfunc(PS, wsin)}
+	| WTRI {emitfunc(PS, wtri)}
+	| WSQR {emitfunc(PS, wsqr)}
+	| WSAW {emitfunc(PS, wsaw)}
 	;
 
 
@@ -1110,6 +1122,10 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "val")) return VAL;
 	if(iskeyword(ps, "vol")) return VOL;
 	if(iskeyword(ps, "wave")) return WAVE;
+	if(iskeyword(ps, "wsaw")) return WSAW;
+	if(iskeyword(ps, "wsin")) return WSIN;
+	if(iskeyword(ps, "wsqr")) return WSQR;
+	if(iskeyword(ps, "wtri")) return WTRI;
 	if(iskeyword(ps, "xsize")) return XSIZE;
 	if(iskeyword(ps, "ysize")) return YSIZE;
 

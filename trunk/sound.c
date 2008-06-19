@@ -15,7 +15,8 @@ int i,j, sp;
 Sint16 *p;
 sound *s;
 int accum[FRAGSIZE*2/PIECES], *ap;
-Uint32 v, dv, vol;
+Uint32 v, dv;
+int vol;
 
 	p = (void *)buffer;
 	len>>=2; // stereo, 16 bit signed samples = 4 bytes/sample
@@ -48,8 +49,8 @@ Uint32 v, dv, vol;
 				for(i=0;i<len;++i)
 				{
 					v += dv;
-					ap[i*2+0] += ((((v>>19) & 0x1fff) - 4096) * vol) >> 14;
-					ap[i*2+1] += ((((v>>19) & 0x1fff) - 4096) * vol) >> 14;
+					ap[i*2+0] += (s->wave[(v>>19) & 0x1fff] * vol) >> 17;
+					ap[i*2+1] += (s->wave[(v>>19) & 0x1fff] * vol) >> 17;
 				}
 			} else
 			{
@@ -100,6 +101,14 @@ sound *s;
 		s->duration = 0.0;
 		s->fmul = 1.0;
 		s->time = 0.0;
+	}
+
+	for(i=0;i<8192;++i)
+	{
+		bc->wsqr[i] = (i<4096) ? -0x8000 : 0x7fff;
+		bc->wsin[i] = 0x7fff*sin(i*3.1415927/4096.0);
+		bc->wtri[i] = (i<4096) ? -0x8000 + i*8 : 0xffff - i*8;
+		bc->wsaw[i] = -0x8000 + i*8;
 	}
 
 	memset(&wanted,0,sizeof(wanted));

@@ -88,6 +88,7 @@ typedef struct {
 	double volume;
 	double duration;
 	double time;
+	short *wave;
 	int index;
 } sound;
 
@@ -166,6 +167,7 @@ typedef struct basic_context {
 	sound isounds[MAX_SOUNDS];
 	sound *csound;
 	double soundtime;
+	short wsqr[8192], wtri[8192], wsin[8192], wsaw[8192];
 } bc;
 
 // main.c
@@ -362,6 +364,10 @@ DECLARE(dur)
 DECLARE(soundgo)
 DECLARE(note)
 DECLARE(fmul)
+DECLARE(wsin)
+DECLARE(wsqr)
+DECLARE(wtri)
+DECLARE(wsaw)
 
 
 void vmachine(bc *bc, step *program, step *stack);
