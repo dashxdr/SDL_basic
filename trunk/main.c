@@ -111,5 +111,6 @@ int v1,v2;
 		if(bc->flags & BF_QUIT) break;
 //		printf("%s\n", bc->debline);
 	}
+	SDL_Quit();
 	return 0;
 }
