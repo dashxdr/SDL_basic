@@ -810,6 +810,7 @@ sound *s;
 		s->fmul = 1.0;
 		s->frequency = 440.0;
 		s->volume = 1.0;
+		s->wave = bc->wsaw;
 	}
 }
 
@@ -852,6 +853,26 @@ double v;
 		return;
 	}
 	bc->csound->duration = v;
+}
+
+void wtri(bc *bc)
+{
+	bc->csound->wave = bc->wtri;
+}
+
+void wsin(bc *bc)
+{
+	bc->csound->wave = bc->wsin;
+}
+
+void wsqr(bc *bc)
+{
+	bc->csound->wave = bc->wsqr;
+}
+
+void wsaw(bc *bc)
+{
+	bc->csound->wave = bc->wsaw;
 }
 
 void soundgo(bc *bc)
