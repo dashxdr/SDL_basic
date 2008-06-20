@@ -116,7 +116,10 @@ help helplist[]={
 		"  so you see flickering of items, or the drawing isn't complete. Use UPDATE\n"
 		"  to control when the display gets updated. For about 1/4 second after using\n"
 		"  the UPDATE command, the auto update of the display will be disabled.\n"},
-
+{"rem", 0, "REM <comments>\n"
+		"  REM lets you introduce comments into the code. BASIC ignores the rest of the\n"
+		"  line after a REM.\n"
+		"  Example:  if j=1 then gosub 100: REM **** Draw the rocket\n"},
 
 {0,0}
 };
