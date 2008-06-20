@@ -380,3 +380,7 @@ bstring *make_raw_bstring(bc *bc, int length);
 // sound.c
 
 void soundopen(bc *bc);
+
+// vdis.c
+
+void disassemble(bc *bc, step *p, int num);
