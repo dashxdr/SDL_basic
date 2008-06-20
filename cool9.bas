@@ -41,10 +41,10 @@
 410 gosub 1300: rem handle firing missiles
 420 gosub 1690: rem asteroids
 430 gosub 1990: rem missiles hitting asteroids
-440 gosub 2410: rem handle explosion dots
-450 gosub 2700: rem check if ship destroyed
-460 gosub 2850: rem housekeeping
-470 gosub 3020: rem sounds
+440 gosub 2430: rem handle explosion dots
+450 gosub 2720: rem check if ship destroyed
+460 gosub 2890: rem housekeeping
+470 gosub 3060: rem sounds
 480 update
 490 wt = sleep(.02)
 500 if restart=1 then 50
@@ -53,7 +53,7 @@
 530 if dead<>0 then 790
 540 fire=0
 550 if key(402)=0 then 620
-560 gosub 3180
+560 gosub 3220
 570 dx = dx + thrust*cos(a)
 580 dy = dy - thrust*sin(a)
 590 v = sqr(dx*dx + dy*dy)
@@ -130,7 +130,7 @@
 1300 rem ************************   Fire missile
 1310 if wantm = 0 then 1420
 1320 if lastm+6 > fc then 1420
-1330 gosub 3120
+1330 gosub 3160
 1340 lastm = fc
 1350 missnum = missnum + 1
 1360 misst(missnum) = 60
@@ -197,124 +197,128 @@
 1970 circle x,y,s
 1980 return
 1990 rem *********************** handle missiles hitting asteroids
-2000 if missnum = 0 or anum = 0 then 2400
+2000 if missnum = 0 or anum = 0 then 2420
 2010 for i=1 to missnum
 2020 x = missx(i):y=missy(i)
-2030 if misst(i) <= 0 then 2300
+2030 if misst(i) <= 0 then 2320
 2040 for j=1 to anum
-2050 if rs(j) = 0 then 2290
-2060 tx = rx(j) - x
-2070 ty = ry(j) - y
-2080 r = sqr(tx*tx + ty*ty)
-2090 if r>rs(j) then 2290
-2100 dst1 = dst1 + ddst1
-2110 gosub 3150
-2120 gosub 2540
-2130 misst(i) = 0
-2140 rs(j) = rs(j)*.5
-2150 if rs(j) < amin then rs(j) = 0:goto 2290
-2160 s=sqr(rdx(j)*rdx(j) + rdy(j)*rdy(j))
-2170 s = s * 2
-2180 tx = s * tx/r
-2190 ty = s * ty/r
-2200 rdx(j) = -ty
-2210 rdy(j) = tx
-2220 anum = anum+1
-2230 rx(anum) = rx(j)
-2240 ry(anum) = ry(j)
-2250 rdx(anum) = -rdx(j)
-2260 rdy(anum) = -rdy(j)
-2270 rs(anum) = rs(j)
-2280 goto 2300
-2290 next j
-2300 next i
-2310 i=1: goto 2390
-2320 if rs(i) > 0 then i=i+1: goto 2390
-2330 rx(i) = rx(anum)
-2340 ry(i) = ry(anum)
-2350 rdx(i) = rdx(anum)
-2360 rdy(i) = rdy(anum)
-2370 rs(i) = rs(anum)
-2380 anum = anum - 1
-2390 if i<= anum then 2320
-2400 return
-2410 rem ************************* handle explosion dots
-2420 for i=1 to emax
-2430 if et(i) <= 0 then 2520
-2440 ex(i) = ex(i) + edx(i)
-2450 if ex(i)<0 then ex(i) = ex(i) + xsize
-2460 if ex(i)>=xsize then ex(i) = ex(i) - xsize
-2470 ey(i) = ey(i) + edy(i)
-2480 if ey(i)<0 then ey(i) = ey(i) + ysize
-2490 if ey(i)>=ysize then ey(i) = ey(i) - ysize
-2500 et(i) = et(i) - 1
-2510 disc ex(i), ey(i), 1.5
-2520 next i
-2530 return
-2540 rem *********************** Add some explosion dots
-2550 rem x, y is coord
-2560 uc=15
-2570 for u = 1 to emax
-2580 if et(u) >0 then 2680
-2590 et(u) = 50 + rnd(10)
-2600 ex(u) = x
-2610 ey(u) = y
-2620 ur = rnd(0)*2 + 1
-2630 ut = rnd(360)*3.1415928/180
-2640 edx(u) = ur*cos(ut)
-2650 edy(u) = ur*sin(ut)
-2660 uc = uc - 1
-2670 if uc = 0 then 2690
-2680 next u
-2690 return
-2700 rem ********************* Check if ship destroyed
-2710 if dead<>0 then 2840
-2720 if anum = 0 then 2840
-2730 for i = 1 to anum
-2740 tx = shipx - rx(i)
-2750 ty = shipy - ry(i)
-2760 r = sqr(tx*tx+ty*ty)
-2770 if r > rs(i) then 2830
-2780 gosub 3150
-2790 dead=1
-2800 x=shipx
-2810 y=shipy
-2820 gosub 2540: gosub 2540: gosub 2540
-2830 next i
-2840 return
-2850 rem ********************** Housekeeping functions
-2860 if dead=0 then 2980
-2870 timer = timer + 1
-2880 if timer <150 then 3010
-2890 shipx = xsize/2: shipy = ysize/2: dx=0: dy=0: shipa=3.1415928/2
-2900 if anum = 0 then 2970
-2910 for i=1 to anum
-2920 tx = rx(i) - shipx
-2930 ty = ry(i) - shipy
-2940 r=sqr(tx*tx + ty*ty)
-2950 if r<xsize/4 or r<ysize/4 then 2980
-2960 next i
-2970 dead = 0:timer=0
-2980 if anum<>0 then 3010
-2990 timer = timer + 1
-3000 if timer = 150 then timer = 0:gosub 1500
-3010 return
-3020 rem *************************** sounds
-3030 st1 = st1 + dst1
-3040 if st1 < 1 then 3080
-3050 st1 = 0
-3060 tone 1, freq(note(40 + tn1)), dur(.1), vol(20)
-3070 tn1 = 1-tn1
-3080 avol = avol - 4
-3090 if avol<0 then avol=0: goto 3110
-3100 tone 32, freq(5), dur(1), vol(avol)
-3110 return
-3120 rem *************** Shoot missile sound
-3130 tone 2, freq(900), fmul(.989), dur(.15), vol(40), wtri
-3140 return
-3150 rem *************** Asteroid explosion sound
-3160 avol = 100
-3170 return
-3180 rem ************************   Ship thruster sound
-3190 tone 31, freq(4), vol(50), dur(.2)
-3200 return
+2050 if rs(j) = 0 then 2310
+2060 tx = abs(rx(j) - x)
+2070 if tx>xsize/2 then tx=xsize-tx
+2080 ty = abs(ry(j) - y)
+2090 if ty>ysize/2 then ty=ysize-ty
+2100 r = sqr(tx*tx + ty*ty)
+2110 if r>rs(j) then 2310
+2120 dst1 = dst1 + ddst1
+2130 gosub 3190
+2140 gosub 2560
+2150 misst(i) = 0
+2160 rs(j) = rs(j)*.5
+2170 if rs(j) < amin then rs(j) = 0:goto 2310
+2180 s=sqr(rdx(j)*rdx(j) + rdy(j)*rdy(j))
+2190 s = s * 2
+2200 tx = s * tx/r
+2210 ty = s * ty/r
+2220 rdx(j) = -ty
+2230 rdy(j) = tx
+2240 anum = anum+1
+2250 rx(anum) = rx(j)
+2260 ry(anum) = ry(j)
+2270 rdx(anum) = -rdx(j)
+2280 rdy(anum) = -rdy(j)
+2290 rs(anum) = rs(j)
+2300 goto 2320
+2310 next j
+2320 next i
+2330 i=1: goto 2410
+2340 if rs(i) > 0 then i=i+1: goto 2410
+2350 rx(i) = rx(anum)
+2360 ry(i) = ry(anum)
+2370 rdx(i) = rdx(anum)
+2380 rdy(i) = rdy(anum)
+2390 rs(i) = rs(anum)
+2400 anum = anum - 1
+2410 if i<= anum then 2340
+2420 return
+2430 rem ************************* handle explosion dots
+2440 for i=1 to emax
+2450 if et(i) <= 0 then 2540
+2460 ex(i) = ex(i) + edx(i)
+2470 if ex(i)<0 then ex(i) = ex(i) + xsize
+2480 if ex(i)>=xsize then ex(i) = ex(i) - xsize
+2490 ey(i) = ey(i) + edy(i)
+2500 if ey(i)<0 then ey(i) = ey(i) + ysize
+2510 if ey(i)>=ysize then ey(i) = ey(i) - ysize
+2520 et(i) = et(i) - 1
+2530 disc ex(i), ey(i), 1.5
+2540 next i
+2550 return
+2560 rem *********************** Add some explosion dots
+2570 rem x, y is coord
+2580 uc=15
+2590 for u = 1 to emax
+2600 if et(u) >0 then 2700
+2610 et(u) = 50 + rnd(10)
+2620 ex(u) = x
+2630 ey(u) = y
+2640 ur = rnd(0)*2 + 1
+2650 ut = rnd(360)*3.1415928/180
+2660 edx(u) = ur*cos(ut)
+2670 edy(u) = ur*sin(ut)
+2680 uc = uc - 1
+2690 if uc = 0 then 2710
+2700 next u
+2710 return
+2720 rem ********************* Check if ship destroyed
+2730 if dead<>0 then 2880
+2740 if anum = 0 then 2880
+2750 for i = 1 to anum
+2760 tx = abs(shipx - rx(i))
+2770 if tx>xsize/2 then tx=xsize-tx
+2780 ty = abs(shipy - ry(i))
+2790 if ty>ysize/2 then ty=ysize-ty
+2800 r = sqr(tx*tx+ty*ty)
+2810 if r > rs(i)*1.2 then 2870
+2820 gosub 3190
+2830 dead=1
+2840 x=shipx
+2850 y=shipy
+2860 gosub 2560: gosub 2560: gosub 2560
+2870 next i
+2880 return
+2890 rem ********************** Housekeeping functions
+2900 if dead=0 then 3020
+2910 timer = timer + 1
+2920 if timer <150 then 3050
+2930 shipx = xsize/2: shipy = ysize/2: dx=0: dy=0: shipa=3.1415928/2
+2940 if anum = 0 then 3010
+2950 for i=1 to anum
+2960 tx = rx(i) - shipx
+2970 ty = ry(i) - shipy
+2980 r=sqr(tx*tx + ty*ty)
+2990 if r<xsize/4 or r<ysize/4 then 3020
+3000 next i
+3010 dead = 0:timer=0
+3020 if anum<>0 then 3050
+3030 timer = timer + 1
+3040 if timer = 150 then timer = 0:gosub 1500
+3050 return
+3060 rem *************************** sounds
+3070 st1 = st1 + dst1
+3080 if st1 < 1 then 3120
+3090 st1 = 0
+3100 tone 1, freq(note(40 + tn1)), dur(.1), vol(20)
+3110 tn1 = 1-tn1
+3120 avol = avol - 4
+3130 if avol<0 then avol=0: goto 3150
+3140 tone 32, freq(5), dur(1), vol(avol)
+3150 return
+3160 rem *************** Shoot missile sound
+3170 tone 2, freq(900), fmul(.989), dur(.15), vol(40), wtri
+3180 return
+3190 rem *************** Asteroid explosion sound
+3200 avol = 100
+3210 return
+3220 rem ************************   Ship thruster sound
+3230 tone 31, freq(4), vol(50), dur(.2)
+3240 return
