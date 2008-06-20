@@ -384,3 +384,7 @@ void soundopen(bc *bc);
 // vdis.c
 
 void disassemble(bc *bc, step *p, int num);
+
+// help.c
+
+void dohelp(bc *bc, char *p);
