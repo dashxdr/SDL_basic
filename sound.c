@@ -17,11 +17,16 @@ sound *s;
 int accum[FRAGSIZE*2/PIECES], *ap;
 Uint32 v, dv;
 int vol;
+double soundtime;
+int now;
 
+	now = SDL_GetTicks();
 	p = (void *)buffer;
 	len>>=2; // stereo, 16 bit signed samples = 4 bytes/sample
 
+//printf("%10.3f %10.3f %10.3f\n", bc->time, bc->soundtime, bc->time - bc->soundtime);
 	len /= PIECES;
+	soundtime = bc->soundtime;
 	for(j=0;j<PIECES;++j)
 	{
 		memset(accum, 0, sizeof(accum));
@@ -29,12 +34,16 @@ int vol;
 		{
 			s=bc->sounds + sp;
 			if((s->flags & (SND_ACTIVE | SND_QUIET)) &&
-				bc->soundtime >= s->start)
+				soundtime >= s->start)
 			{
-				bc->isounds[sp] = *s;
-				if(bc->isounds[sp].flags & SND_QUIET)
-					bc->isounds[sp].flags &=~SND_ACTIVE;
-				bc->isounds[sp].flags &= ~SND_QUIET;
+				sound *s2 = bc->isounds + sp;
+				v=s2->index;
+				*s2 = *s;
+				s2->index = v;
+
+				if(s2->flags & SND_QUIET)
+					s2->flags &=~SND_ACTIVE;
+				s2->flags &= ~SND_QUIET;
 				s->flags &= ~(SND_ACTIVE | SND_QUIET);
 			}
 			s = bc->isounds + sp;
@@ -82,8 +91,11 @@ int vol;
 			*p++ = *ap++;
 			*p++ = *ap++;
 		}
-		bc->soundtime += TIME_PER_PIECE;
+		soundtime += TIME_PER_PIECE;
 	}
+	bc->soundtime += (now - bc->soundticks)*.001;
+	bc->soundticks = now;
+
 }
 
 void soundopen(bc *bc)

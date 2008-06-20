@@ -167,6 +167,7 @@ typedef struct basic_context {
 	sound isounds[MAX_SOUNDS];
 	sound *csound;
 	double soundtime;
+	int soundticks;
 	short wsqr[8192], wtri[8192], wsin[8192], wsaw[8192];
 } bc;
 
