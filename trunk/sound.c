@@ -125,16 +125,6 @@ sound *s;
 		return;
 	}
 	bc->soundworking = 1;
-#if 0
-	bc->sounds[0].flags = SND_ACTIVE;
-	bc->sounds[0].frequency = 110.0;// * pow(2.0, 5.0/12.0);;
-	bc->sounds[1].flags = SND_ACTIVE;
-	bc->sounds[1].frequency = bc->sounds[0].frequency * pow(2.0, 4.0/12.0);
-	bc->sounds[2].flags = SND_ACTIVE;
-	bc->sounds[2].frequency = bc->sounds[0].frequency * pow(2.0, 7.0/12.0);
-	bc->sounds[3].flags = SND_ACTIVE;
-	bc->sounds[3].frequency = bc->sounds[0].frequency * pow(2.0, 12.0/12.0);
-#endif
 
 	SDL_PauseAudio(0);
 }
