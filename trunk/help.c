@@ -45,6 +45,79 @@ help helplist[]={
 {"pow", 0, "POW(x,y) returns x raised to the power of y.\n"},
 {"int", 0, "INT() removes the fractional part of the number, always moving towards the next lowest integer\n"},
 {"fix", 0, "FIX() removes the fractional part of the number, always moving towards 0\n"},
+{"let", 0, "LET <var>=<expr>\n"
+			"  The LET is optional. Assigns value of <expr> to the <var>.\n"},
+{"if", 0, "IF <expr> THEN <statements> ELSE <statements>\n"
+		"  If the <expr> is non-zero (true) the first <statements> are executed.\n"
+		"  If the <expr> is zero (false), the second <statements> are executed.\n"
+		"  The ELSE and the <statements> after it are optional.\n"
+		"  Statements my be separated by the ':' character.\n"},
+{"then", "if", ""},
+{"else", "if", ""},
+{"print", 0, "PRINT <expr>[, or ;] ...\n"
+		"PRINT @<expr> ...\n"
+		"PRINT tab(<expr>) ...\n"
+		"  Prints out information. The <expr>'s can be strings or numeric expressions.\n"
+		"  @<expr> is for TRS-80 compatibility -- print at the screen location on 64x16 display.\n"
+		"  tab(<expr>) prints at the specified column\n"
+		"  The ',' or ';' separators affect spacing between printed elements.\n"
+		"  The ',' tabs to 16 spaces. The ';' doesn't move the print position.\n"
+		"  Ending with either ',' or ';' allows more printing on the same line.\n"},
+{"dim", 0, "DIM <var>(<size_list>)\n"
+		" Allocate an array of storage. The <size_list> can have up to 16 dimensions,\n"
+		" separated by commas.\n"
+		" Examples: dim a(10,10), x$(20)\n"},
+{"end", 0, "END means end the current program.\n"},
+{"stop", 0, "STOP means stop execution at this point, as if control-C or escape\n"
+		"  had been hit.\n"},
+{"sleep", 0, "SLEEP <expr>\n"
+		"  Sleep for some amount of seconds.\n"
+		"  Example: sleep .75      = Sleep for 3/4 of a second.\n"},
+{"pen", 0, "PEN <expr>\n"
+		"  Sets the pen drawing size. Default size is 1 pixel.\n"},
+{"color", 0, "COLOR <expr>, <expr>, <expr> [,<expr>]\n"
+		"  Sets the current drawing color. The parameters are for red, green, blue,\n"
+		"  and an optional alpha value. The range for all is from 0 to 255.\n"
+		"  Example:  color 255,0,0:fill     = Fills the screen with red.\n"},
+{"cls", 0, "CLS\n"
+		"  Clears the screen, moves the cursor up to the upper left.\n"},
+{"home", 0, "HOME\n"
+		"  Moves the cursor to the upper left.\n"},
+{"circle", 0, "CIRCLE <expr>, <expr>, <expr>\n"
+		"  Parameters are the x position, y position, and radius. Draws a circle\n"
+		"  with the current pen color and size.\n"
+		"  Example:  circle 400,400,200\n"},
+{"disc", 0, "DISC <expr>, <expr>, <expr>\n"
+		"  Parameters are the x position, y position, and the radius. Draws a solid\n"
+		"  circular disc with the current pen color and size.\n"
+		"  Example:  disc 400,400,200\n"},
+{"fill", 0, "FILL\n"
+		"  Fills the display with the current color.\n"},
+{"move", 0, "MOVE <expr>, <expr>\n"
+		"  Move the drawing pen to the specified X and Y positions. No drawing is done.\n"
+		"  Example:   move 100,100\n"},
+{"line", 0, "LINE <expr>, <expr>\n"
+		"  Draws a line from the current position to the specified X and Y position.\n"
+		"  Example:   line 300,200\n"},
+{"box", 0, "BOX <expr>, <expr>, <expr>, <expr>\n"
+		"  Draws a solid rectangular box. The parameters are X position, Y position\n"
+		"  X extension, Y extension. The coordinates define the center of the box.\n"
+		"  The extensions represent half the width or height of the resultant box.\n"},
+{"rect", 0, "RECT <expr>, <expr>, <expr>, <expr>\n"
+		"  Draws a rectangle. The parameters are X position, Y position\n"
+		"  X extension, Y extension. The coordinates define the center of the rectangle.\n"
+		"  The extensions represent half the width or height of the resultant rectangle.\n"},
+{"spot", 0, "SPOT\n"
+		"  Draws a circular spot at the current drawing position with the current color\n"
+		"  and pen size.\n"},
+{"update", 0, "UPDATE\n"
+		"  Normally screen updates take place automatically about 50 times per\n"
+		"  second. Sometimes you're in the middle of drawing when the update occurs\n"
+		"  so you see flickering of items, or the drawing isn't complete. Use UPDATE\n"
+		"  to control when the display gets updated. For about 1/4 second after using\n"
+		"  the UPDATE command, the auto update of the display will be disabled.\n"},
+
+
 {0,0}
 };
 
