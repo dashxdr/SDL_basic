@@ -13,12 +13,13 @@ void fillaudio(void *data, Uint8 *buffer, int len)
 bc *bc=data;
 int i,j, sp;
 Sint16 *p;
-sound *s;
+sound *s, *is;
 int accum[FRAGSIZE*2/PIECES], *ap;
 Uint32 v, dv;
 int vol;
 double soundtime;
 int now;
+int diff;
 
 	now = SDL_GetTicks();
 	p = (void *)buffer;
@@ -32,21 +33,22 @@ int now;
 		memset(accum, 0, sizeof(accum));
 		for(sp = 0;sp < MAX_SOUNDS;++sp)
 		{
-			s=bc->sounds + sp;
-			if((s->flags & (SND_ACTIVE | SND_QUIET)) &&
+			s = bc->sounds + sp;
+			is = bc->isounds + sp;
+
+			diff = s->count - is->count;
+			if(diff>0 && (s->flags & (SND_ACTIVE | SND_QUIET)) &&
 				soundtime >= s->start)
 			{
-				sound *s2 = bc->isounds + sp;
-				v=s2->index;
-				*s2 = *s;
-				s2->index = v;
+				v=is->index;
+				*is = *s;
+				is->index = v;
 
-				if(s2->flags & SND_QUIET)
-					s2->flags &=~SND_ACTIVE;
-				s2->flags &= ~SND_QUIET;
-				s->flags &= ~(SND_ACTIVE | SND_QUIET);
+				if(is->flags & SND_QUIET)
+					is->flags &=~SND_ACTIVE;
+				is->flags &= ~SND_QUIET;
 			}
-			s = bc->isounds + sp;
+			s = is;
 			if(~s->flags & SND_ACTIVE)
 				continue;
 			ap = accum;
@@ -113,6 +115,8 @@ sound *s;
 		s->duration = 0.0;
 		s->fmul = 1.0;
 		s->time = 0.0;
+		s->count = 0;
+		bc->isounds[i] = *s;
 	}
 
 	for(i=0;i<8192;++i)

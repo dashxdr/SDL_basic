@@ -783,6 +783,12 @@ static int vcheck(bc *bc, int v)
 	return 0;
 }
 
+static void qv(sound *s)
+{
+	s->flags |= SND_QUIET;
+	++s->count;
+}
+
 void quiet(bc *bc)
 {
 int v;
@@ -792,9 +798,9 @@ int i;
 	if(!v)
 	{
 		for(i=0;i<MAX_SOUNDS;++i)
-			bc->sounds[i].flags |= SND_QUIET;
+			qv(bc->sounds+i);
 	} else
-		bc->sounds[v-1].flags |= SND_QUIET;
+		qv(bc->sounds+v-1);
 }
 
 void setsound(bc *bc)
@@ -880,6 +886,8 @@ void soundgo(bc *bc)
 	bc->csound->time = 0.0;
 	bc->csound->start = bc->time + .015;
 	bc->csound->flags |= SND_ACTIVE;
+	bc->csound->flags &= ~SND_QUIET;
+	bc->csound->count++;
 }
 
 void note(bc *bc)

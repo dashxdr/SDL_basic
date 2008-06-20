@@ -90,6 +90,7 @@ typedef struct {
 	double time;
 	short *wave;
 	int index;
+	int count;
 } sound;
 
 #define MAX_SOUNDS 32
