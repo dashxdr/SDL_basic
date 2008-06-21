@@ -1,25 +1,50 @@
+This is an implementation of the language BASIC I made to expose my kids
+to programming. You should be able to build under linux if you have SDL
+installed, just do
+
+make
+./basic
+
+There are a number of sample basic programs included. Within basic just
+do
+
+load cool
+run
+
+or
+load cool2
+run
+
+etc.
+cool9 is an "asteroids" game.
+
+
+
+
+
+
 Basic interpreter commands. Commands can be shortened
 
 edit #             = edit line, arrow keys, delete, backspace, always in
                      insert mode
-del #              = delete line
-ren #[,#]          = renumber lines with optional step count (default 10)
+ren [#[,#]]          = renumber lines, first number is step count, 2nd start #
 save filename      = save out program to file (appends .bas automatically)
 load filename      = load program from file (appends .bas automatically)
 run                = Initialize everything run program
-cont               = continue running program from last line
-quit               = quit
-dir [directory]    = list directory
+exit               = Exit the program
 <statement>        = Can execute any statement
-list [#[,#]]
-new
-info
+list [#[-#]]       = list program or parts of it
+new                = Delete program + all variables
+scr                = same as new
+info               = Print out info on current program
+parse              = Parse the basic program and dump the virtual machine code
+help  --- prints out help, more detail than this file
 
-Statements
+Multiple statements can be on a line, separated by ':'.
 
-One statement per line, no ':' separaters (has to do with "cont" statement)
 Variables are any string starting with a-z. Case is not sensitive. Can
-contain numbers. Any length. Can't use keywords.
+contain numbers. Up to 16 characters. Might not be able to start with a
+keyword.
 
 [let] variable = expression
 goto #
@@ -31,22 +56,22 @@ dim variable(#[,...])  ; arrays are one based
 for variable = expression to espression [step expression]
 next [variable]
 print string|expression[,|;][...][,|;]
-plot  <x>,<y>
 color <r>,<g>,<b>[,<alpha>]   ; range 0-255 each
-clear  ; clear screen to black
+cls  ; clear screen to black
 fill ; fill screen with current pen color
-pen <radius> ; always circular for now, defaults to '1'
+pen <diameter> ; always circular for now, defaults to '1'
 move <x>,<y>
+spot
 line <x>,<y>
-flood <x>,<y> ; does flood fill
-arc <radius>,<start>,<end> ; in radians
-darc <radius>,<start>,<end> ; in degrees
-curve <cx>,<cy>,<x>,<y>  ; bezier curve
+NOT IMPLEMENTED:flood <x>,<y> ; does flood fill
+NOT IMPLEMENTED:arc <radius>,<start>,<end> ; in radians
+NOT IMPLEMENTED: curve <cx>,<cy>,<x>,<y>  ; bezier curve
 rectangle <x1>,<y1>,<width>,<height>
-box <x1>,<y1>,<width>,<height>
+box <x1>,<y1>,<1/2 width>,<1/2 height>
+rect <x1>,<y1>,<1/2 width>,<1/2 height>
 circle <x1>,<y1>,<radius>
 disc <x1>,<y1>,<radius>
-text <x1>,<y1>,<string>
+NOT IMPLEMENTED:text <x1>,<y1>,<string>
 randomize
 clear   ; clear screen
 input variable|string
@@ -58,38 +83,97 @@ quiet
 data expression[,...]
 read variable[,...]
 end
+if <condition> then statements
+if <condition> then statements else statements
+tone #, freq #, dur #, wsqr|wsin|wsaw|wtri, fmul #, vol #
+    See the "help tone" within basic itself...
 
 
 
 
 Functions:
 
-int(expr)
-sgn(expr)
-sqrt(expr)
-sin(expr)
-cos(expr)
-log(expr) (base 10)
-exp(expr) (base 10)
-pow(expr,expr)  (pow(x,y) = x^y
-rnd(expr)  (random number between 0 and expr-1)
+int(expr) = round down to next lowest integer. int(-.5) = -1
+fix(expr) = round to integer closest to 0. fix(-.5) is 0
+abs(expr) = absolute value
+sgn(expr) = sgn(0) is 0. sgn(5) is 1. sgn(-10) is -1.
+sqr(expr) = square root of the expr. sqr(9) is 3
+sin(expr) = sine
+cos(expr) = cosine
+log(expr) = log base e
+exp(expr) = e raised to the power of the expr
+pow(expr,expr)  (pow(x,y) = x raised to the power of y. pow(2,3) is 8
+rnd(expr)  (if expr<>0, random number between 1 and expr) if expr=0,
+           random number between 0 and 1.
+atn(expr) = atan -- inverse tangent
+atn2(expr1, expr2) = atan2 -- expr1 is the Y and expr2 is the X
+tan(expr) = sin(expr)/cos(expr)
+sleep(expr) = sleep for some number of seconds -- returns actual time slept
+key(expr) = 1 if keyboard key is pressed, 0 otherwise
+len(string_expr) = length of the string
+val(string_expr) = decimal value of the string. val("1.23") is 1.23
+asc(string_expr) = ascii value of first character of string
+note(expr) = Frequency in HZ of midi note number of expr. note(69) is 440.0
+             Useful for 
 
-Expressions:
-+, -, *, /  ; obvious
+Expression operators, from lowest priority to highest
+OR           As in if j=1 or k=2 ...
+AND          As in if j=1 and k=2 ...
+=, <>, <, >, <=, >=    Comparisons
+|, ^         Logical or and xor
+&            Logical and
+<<, >>       Logical left and right shift
++, -         Plus, minus
+*, /         Multiply, divide
+~            Power -- 2~3 is 8
+
 (expr)
-and ; same priority as * /
-or, xor ; same priority as + -
 func(expr[,...])
-
-If expressions:
-variable=expr
-variable<>expr
-ifexpression and ifexpression
-ifexpression or ifexpression
 
 String expressions:
 variable$
 variable$ + variable$
-mid$(variable$, start, end)
-left$(variable$, length)
+mid$(variable$, start, length) = interior part of string.
+	mid$("abcdef", 3, 2) is "cd"
+left$(variable$, length) = left part of string.
+        left$("abcdef", 3) is "abc"
 right$(variable$, length)
+        right$(abcdef", 3) is "def"
+chr$(expr) = Make a string with one character using the ascii code of the expr.
+        chr$(48) is "0"
+str$(expr) = Make a string containing the ascii representation of the expr.
+        str$(1.23) is "1.23"
+string$(expr, string_expr) = Make a string using the first character of the
+        string expression argument, of length of the first expression.
+        string$(8, "x") is "xxxxxxxx"
+
+
+SPECIAL variables 
+
+mousex = mouse x position
+mousey = mouse y position
+mouseb = state of mouse buttons
+xsize = x size in pixels of BASIC window
+ysize = y size in pixels of BASIC window
+ticks = # of ticks (thousdandths of a second) since the program started
+keycode = keycode of next key pressed, or -1. Figure out the codes on your own:
+    10 k=keycode
+    20 if k=-1 then 10
+    30 print k
+    40 goto 10
+
+inkey$ = ascii code of next key pressed, or an empty string. Not as useful
+         as keycode since you only get 8 bits...
+
+
+---------------------------------------------------------------------
+
+THEORY
+
+SDL_basic is divided into these pieces
+
+main.c    =   opens the SDL library and initializes a basic context
+basic.c   =   interprets commands
+grammar.y =   a bison grammar and tokenizer for BASIC.
+vmachine  =   a virtual stack based machine, similiar to FORTH
+vdis      =   a disassembler for 
