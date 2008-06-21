@@ -33,13 +33,14 @@ clean:
 test:	all
 	./basic
 
+WORK = /ram
 VER = 1.0.0
-DDIR = /ram/SDL_basic-$(VER)
+DDIR = SDL_basic-$(VER)
 
 package:  clean
-	rm -rf $(DDIR)
-	mkdir $(DDIR)
-	cp *.c *.h *.y Makefile README COPYING AUTHORS TODO ChangeLog $(DDIR)
-	cp cool*.bas cubic.bas startrek1.bas wumpus.bas $(DDIR)
-	cp INSTALL $(DDIR)
-	tar czf $(DDIR).tgz $(DDIR)
+	rm -rf $(WORK)/$(DDIR)
+	mkdir $(WORK)/$(DDIR)
+	cp *.c *.h *.y Makefile README COPYING AUTHORS TODO $(WORK)/$(DDIR)
+	cp cool*.bas cubic.bas startrek1.bas wumpus.bas $(WORK)/$(DDIR)
+	cp INSTALL ChangeLog $(WORK)/$(DDIR)
+	cd $(WORK) && tar czf $(DDIR).tgz $(DDIR)
