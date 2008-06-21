@@ -1,0 +1,20 @@
+DEF FN -- functions
+WAVE -- ability to specify the waveform of a tone from an array
+ADSR -- ability to set the amplitude envelope of a tone
+PRINT USING -- not implemented
+Window resize
+Sprites
+Gradients/fill patterns
+Logo
+Full screen edit mode
+Add rotated rectangles + boxes
+Add ovals + rotated ovals
+Interface for feeding points and cubic/quadratic control points to ftgrays
+List disk directory
+Move block of lines, with auto renumbering
+Delete block
+Trace mode, breakpoints, debug features
+Timer interrupt, say for music driver
+Elaborate text rendering, truetype fonts
+Cross compile to SWF file.
+Docs
