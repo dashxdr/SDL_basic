@@ -1,3 +1,8 @@
+/*
+   SDL_basic written by David Ashley, released 20080621 under the GPL
+   http://www.linuxmotors.com/SDL_basic
+   dashxdr@gmail.com
+*/
 #include <SDL.h>
 #include <stdlib.h>
 #include <string.h>
