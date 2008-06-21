@@ -30,21 +30,59 @@ help helplist[]={
 		"save test         = save to file 'test.bas'\n"},
 {"load", 0, "Load BASIC program from the filename specified.\n"
 		"load test         = load file 'test.bas'\n"},
-{"sgn", 0, "SGN() returns 1, -1 or 0 depending on the sign of the argument.\n"
+{"sgn", 0, "SGN(x) returns 1, -1 or 0 depending on the sign of the argument.\n"
 		"sgn(0) is 0.  sgn(50) is 1. sgn(-10) is -1.\n"},
-{"rnd", 0, "RND() returns a random number.\n"
+{"rnd", 0, "RND(x) returns a random number.\n"
 		"rnd(0) returns a random real number between 0 and 1\n"
 		"rnd(50) returns a random integer between 1 and 50\n"},
-{"sin", 0, "SIN() returns the sine of the angle argument. The angle is in radians.\n"
+{"sin", 0, "SIN(x) returns the sine of the angle argument. The angle is in radians.\n"
 		"sin(1.570796) is 1.0\n"},
 {"cos", 0, "COS() returns the cosine of the angle argument. The angle is in radians.\n"
 		"cos(1.570796) is 0.0\n"},
-{"log", 0, "LOG() returns the logarithm, base e, of the argument.\n"},
-{"exp", 0, "EXP() returns e raised to the power of the argument.\n"},
-{"sqr", 0, "SQR() returns the square root of the argument.\n"},
+{"log", 0, "LOG(x) returns the logarithm, base e, of the argument.\n"},
+{"exp", 0, "EXP(x) returns e raised to the power of the argument.\n"},
+{"sqr", 0, "SQR(x) returns the square root of the argument.\n"},
 {"pow", 0, "POW(x,y) returns x raised to the power of y.\n"},
-{"int", 0, "INT() removes the fractional part of the number, always moving towards the next lowest integer\n"},
-{"fix", 0, "FIX() removes the fractional part of the number, always moving towards 0\n"},
+{"int", 0, "INT(x) removes the fractional part of the number, always moving towards the next lowest integer\n"},
+{"tan", 0, "TAN(x) returns the tangent of the angle argument. The angle is in radians.\n"},
+{"atn", 0, "ATN(x) returns the arctangent in radians of the numeric argument.\n"},
+{"atn2", 0, "ATN2(y, x) takes two numeric arguments, and returns the angle between the line from (0,0) and (1,0).\n"
+		"  The first argument is the 'y' value, second is the 'x' value.\n"},
+{"abs", 0, "ABS(x) returns the absolute value of the numeric argument.\n"},
+{"key", 0, "KEY(x) returns 1 if the specified keycode is currently pressed, 0 otherwise\n"},
+{"note", 0, "NOTE(x) returns the MIDI key frequency corresponding to the note number.\n"
+		"  note(69) returns 440.0\n"},
+{"len", 0, "LEN(a$) returns the length of the string argument.\n"},
+{"val", 0, "VAL(a$) returns the decimal value of the string argument.\n"
+		"val(\"1.23\") is 1.23.\n"},
+{"asc", 0, "ASC(a$) returns the ascii value of the first character in the string argument.\n"
+		"  asc(\"0\") returns 48.\n"},
+{"mousex", 0, "MOUSEX in an expression evaluates to the current mouse X position\n"},
+{"mousey", 0, "MOUSEY in an expression evaluates to the current mouse Y position\n"},
+{"mouseb", 0, "MOUSEB in an expression evaluates to the current mouse button state\n"},
+{"xsize", 0, "XSIZE in an expression evaluates to the BASIC window's horizontal size\n"},
+{"ysize", 0, "XSIZE in an expression evaluates to the BASIC window's vertical size\n"},
+{"ticks", 0, "TICKS in an expression evaluates to the number of elapsed ticks since the\n"
+		"  program started. There are 1000 ticks per second.\n"},
+{"keycode", 0, "KEYCODE in an expression evaluates to the keycode of the next key pressed\n"
+		"  by the user, or -1 if no key was pressed\n"},
+{"inkey", 0, "INKEY$ in an expression evaluates to a string containing the next key pressed\n"
+		"  by the user, or an empty string if no key was pressed\n"},
+{"left", 0, "LEFT$(a$, <expr>) returns the leftmost N characters of the string, as determined\n"
+		"  by the value of the numeric expression\n"},
+{"right", 0, "RIGHT$(a$, <expr>) returns the rightmost N characters of the string, as determined\n"
+		"  by the value of the numeric expression\n"},
+{"midstring", 0, "MID$(a$, <expr>, <expr>) returns a string containing the middle characters of\n"
+		"  the string. The first expression selects the start, and the second expression selects\n"
+		"  the length.\n"},
+{"chr", 0, "CHR$(<expr>) returns a string containing a single character with the ASCII code\n"
+		"  of the numeric argument.\n"},
+{"str", 0, "STR$(<expr>) returns a string representing the decimal value of the\n"
+		"  numeric argument.\n"},
+{"string", 0, "STRING$(<expr>, a$) returns a string consisting of N of the first characters of\n"
+		"  the string argument, as specified by the first argument.\n"
+		"  string$(8, \"x\") would evaluate to \"xxxxxxxx\"\n"},
+{"fix", 0, "FIX(x) removes the fractional part of the number, always moving towards 0\n"},
 {"let", 0, "LET <var>=<expr>\n"
 			"  The LET is optional. Assigns value of <expr> to the <var>.\n"},
 {"if", 0, "IF <expr> THEN <statements> ELSE <statements>\n"
@@ -72,7 +110,9 @@ help helplist[]={
 		"  had been hit.\n"},
 {"sleep", 0, "SLEEP <expr>\n"
 		"  Sleep for some amount of seconds.\n"
-		"  Example: sleep .75      = Sleep for 3/4 of a second.\n"},
+		"  Example: sleep .75      = Sleep for 3/4 of a second.\n"
+		"  sleep(x) can also be used in expressions, the argument is how long to wait in seconds,\n"
+		"  and the value returned is the amount actually waited, in order to align the runtime clock.\n"},
 {"pen", 0, "PEN <expr>\n"
 		"  Sets the pen drawing size. Default size is 1 pixel.\n"},
 {"color", 0, "COLOR <expr>, <expr>, <expr> [,<expr>]\n"
@@ -160,6 +200,7 @@ help helplist[]={
 		"  Example:\n"
 		"  tone 5, freq 880, wsin, vol 100, dur 1, fmul 1.0001\n"
 		"  See also: QUIET\n"},
+
 
 
 {0,0}
