@@ -18,7 +18,7 @@ render.o: render.c misc.h
 keyboard.o: keyboard.c misc.h
 parse.o: parse.c
 parse.c: grammar.y misc.h
-	bison -o $@ $< -v
+	bison -o $@ $<
 vmachine.o: vmachine.c misc.h
 sound.o: sound.c misc.h
 vdis.o: vdis.c misc.h
@@ -28,6 +28,18 @@ ftgrays.o: ftgrays.c ftgrays.h ftimage.h
 
 
 clean:
-	rm -f *.o basic
+	rm -f *.o basic parse.c
+
 test:	all
 	./basic
+
+VER = 1.0.0
+DDIR = /ram/SDL_basic-$(VER)
+
+package:  clean
+	rm -rf $(DDIR)
+	mkdir $(DDIR)
+	cp *.c *.h *.y Makefile README COPYING AUTHORS TODO ChangeLog $(DDIR)
+	cp cool*.bas cubic.bas startrek1.bas wumpus.bas $(DDIR)
+	cp INSTALL $(DDIR)
+	tar czf $(DDIR).tgz $(DDIR)
