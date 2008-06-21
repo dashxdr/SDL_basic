@@ -364,7 +364,6 @@ struct cmd commandlist[]={
 {"run", dopr},
 {"ren", doren},
 {"parse", doparse},
-{"pr", dopr},
 {"help", dohelp},
 {0, 0}};
 
