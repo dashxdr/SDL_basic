@@ -19,7 +19,9 @@ etc.
 cool9 is an "asteroids" game.
 
 
-
+Arrow keys work for moving within the typed line, and through a line history.
+The page up and down keys, or shifted page up and down keys, scroll through
+a text history.
 
 
 
@@ -72,14 +74,10 @@ rect <x1>,<y1>,<1/2 width>,<1/2 height>
 circle <x1>,<y1>,<radius>
 disc <x1>,<y1>,<radius>
 NOT IMPLEMENTED:text <x1>,<y1>,<string>
-randomize
-clear   ; clear screen
+NOT IMPLEMENTED:randomize
 input variable|string
-wait <time>  ; in seconds
+sleep <time>  ; in seconds
 if ifexpr then statement|#
-tone <frequency>,<volume>,<duration>[,array] ;freq hz, vol 0-100,
-   ; dur in seconds. Array is optional waveform array, each entry -1 to +1
-quiet
 data expression[,...]
 read variable[,...]
 end
@@ -87,6 +85,7 @@ if <condition> then statements
 if <condition> then statements else statements
 tone #, freq #, dur #, wsqr|wsin|wsaw|wtri, fmul #, vol #
     See the "help tone" within basic itself...
+quiet [voice #]
 
 
 
