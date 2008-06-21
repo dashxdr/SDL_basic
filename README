@@ -172,8 +172,31 @@ THEORY
 
 SDL_basic is divided into these pieces
 
-main.c    =   opens the SDL library and initializes a basic context
-basic.c   =   interprets commands
-grammar.y =   a bison grammar and tokenizer for BASIC.
-vmachine  =   a virtual stack based machine, similiar to FORTH
-vdis      =   a disassembler for 
+main.c      =   opens the SDL library and initializes a basic context
+basic.c     =   interprets commands
+grammar.y   =   a bison grammar and tokenizer for BASIC.
+vmachine.c  =   a virtual stack based machine, similiar to FORTH
+vdis.c      =   a disassembler for the virtual machine code
+misc.h      =   catch all header file
+keyboard.c  =   Deals with user input
+font.c      =   Deals with text rendering and the scrollback feature
+sound.c     =   Handles the sound system
+help.c      =   All the online help
+ftgrays.c   =   Rasterizing engine from the freetype library. Used for graphics.
+render.c    =   All the graphics rendering functions
+
+
+When you type "run" the bison parser is invoked. It parses the program
+and converts it to virtual machine instructions. These are then executed
+by the virtual machine.
+
+In order to add a new command to the language, you need to do these steps:
+
+1) Add appropriate grammar to grammar.y, plus code to emit the correct
+   virtual machine instructions (steps)
+   1a) That might require adding a new TOKEN up at the top part of grammar.y
+   1b) Plus add to the yylex function the ability to recognize the new token.
+2) Add to the vdis.c so the new code(s) can be disassembled correctly
+3) Add to misc.h any new functions in vmachine.c that need to be added
+4) Add new functions to vmachine.c
+5) Add to help.c describing the new command(s)
