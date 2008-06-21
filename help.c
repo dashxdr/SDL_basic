@@ -120,6 +120,47 @@ help helplist[]={
 		"  REM lets you introduce comments into the code. BASIC ignores the rest of the\n"
 		"  line after a REM.\n"
 		"  Example:  if j=1 then gosub 100: REM **** Draw the rocket\n"},
+{"on", 0, "ON <expr> GOTO <line#>[,<line#>]...\n"
+		"ON <expr> GOSUB <line#>[,<line#>]...\n"
+		"  Evaluate the expression, then either goto or gosub to the line number\n"
+		"  in the matching position in the list. The numbers start from 1.\n"
+		"  Example:   on i goto 100,150,200,250\n"},
+{"input", 0, "INPUT <var>[,<var>]...\n"
+		"INPUT <string literal>;<var>[,<var>]...\n"
+		"  Used for entering numbers or strings from the user. Examples:\n"
+		"  input \"Type in a number between 1 and 10\";n\n"
+		"  input \"Please answer yes or no\";a$\n"
+		"  input x,y\n"},
+{"read", 0, "READ...DATA\n"
+		"Use DATA statements to provide a list of numbers or strings.\n"
+		"Use READ to define variables from the data. Examples:\n"
+		"10 data 2,3,5,7,11,13\n"
+		"20 read p(1), p(2), p(3), p(4), p(5), p(6)\n"
+		"...in the end, p(1) will be 2, p(2) will be 3, p(3) will be 5...and so on.\n"},
+{"data", "read", ""},
+{"quiet", 0, "QUIET <expr>\n"
+		"QUIET with no arguments turns off all sound voices. Quiet with a numeric\n"
+		"argument turns off that voice only. Example:\n"
+		"quiet 5      = turn off voice #5\n"},
+{"tone", 0, "TONE <expr>[,freq <expr>][,dur <expr>][,fmul <expr>][,vol <expr>]\n"
+		"          [,wsqr][,wsin][,wsaw][,wtri]\n"
+		"  Start a sound voice. The first argument is the voice number, currently\n"
+		"  from 1 to 32. Voices 28 to 32 are noise channels. Voices 1 through 27\n"
+		"  are tones. The tone parameters can be set as follows:\n"
+		"  freq    =  Set the frequency in Hz.\n"
+		"  dur     =  Set the duration in seconds.\n"
+		"  fmul    =  Set the frequency multiplier. Set to 1 and the frequency\n"
+		"             remains constant. Values greater than 1 will cause the frequency\n"
+		"             to rise. Values less than 1 will cause the frequency to fall.\n"
+		"  vol     =  Set the volume from 1 to 100\n"
+		"  wsqr    =  Choose a square wave\n"
+		"  ssin    =  Choose a sine wave\n"
+		"  ssaw    =  Choose a sawtooth wave\n"
+		"  stri    =  Chose a triangular wave\n"
+		"  Example:\n"
+		"  tone 5, freq 880, wsin, vol 100, dur 1, fmul 1.0001\n"
+		"  See also: QUIET\n"},
+
 
 {0,0}
 };
