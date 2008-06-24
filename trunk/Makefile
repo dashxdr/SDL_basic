@@ -1,4 +1,5 @@
-DBG = # -g
+#DBG += -g
+#DBG += -pg
 CC	= gcc
 CFLAGS = -O2 -Wall $(shell sdl-config --cflags) $(DBG)
 LDFLAGS = $(shell sdl-config --libs) $(DBG) -lm
