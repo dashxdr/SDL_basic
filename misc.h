@@ -206,6 +206,8 @@ void shape_add(bc *bc, double x, double y, int tag);
 void shape_end(bc *bc);
 void shape_done(bc *bc);
 void spot(bc *bc);
+void lock(bc *bc);
+void unlock(bc *bc);
 
 // keyboard.c
 
