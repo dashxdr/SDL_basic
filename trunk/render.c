@@ -106,6 +106,7 @@ int w;
 SDL_Surface *scr = bc->thescreen;
 
 	taint(bc);
+	lock(bc);
 	color = maprgb(bc, r, g, b) | 0xff000000;
 	if(a==255)
 	{
@@ -124,6 +125,7 @@ SDL_Surface *scr = bc->thescreen;
 			for(x=0;x<bc->xsize;++x)
 				colordot_32(scr, x, y, color, a);
 	}
+	unlock(bc);
 }
 
 void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg)
@@ -133,6 +135,7 @@ int v;
 unsigned char c;
 int step = bc->thescreen->pitch >> 2;
 
+	lock(bc);
 	for(v=0;v<13;++v)
 	{
 		c=*p++;
@@ -144,6 +147,7 @@ int step = bc->thescreen->pitch >> 2;
 		p2[5]= (c&0x20) ? fg : bg;
 		p2 += step;
 	}
+	unlock(bc);
 }
 
 void taint(bc *bc)
@@ -183,7 +187,7 @@ void resetupdate(bc *bc)
 
 void lock(bc *bc)
 {
-	if(SDL_MUSTLOCK(bc->thescreen))
+//	if(SDL_MUSTLOCK(bc->thescreen))
 	{
 		if ( SDL_LockSurface(bc->thescreen) < 0 )
 		{
@@ -194,7 +198,7 @@ void lock(bc *bc)
 }
 void unlock(bc *bc)
 {
-	if(SDL_MUSTLOCK(bc->thescreen))
+//	if(SDL_MUSTLOCK(bc->thescreen))
 		SDL_UnlockSurface(bc->thescreen);
 }
 
@@ -415,7 +419,9 @@ FT_Outline myoutline;
 
 	SDL_basic_ft_grays_raster.raster_reset(myraster, bc->pool, sizeof(bc->pool));
 
+	lock(bc);
 	res=SDL_basic_ft_grays_raster.raster_render(myraster, &myparams);
+	unlock(bc);
 
 	SDL_basic_ft_grays_raster.raster_done(myraster);
 

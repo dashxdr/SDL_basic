@@ -151,6 +151,7 @@ unsigned char *p1, *p2;
 int pitch;
 
 	taint(bc);
+	lock(bc);
 	w=bc->xsize*4;
 	h=bc->ysize-FONTH;
 	pitch = bc->thescreen->pitch;
@@ -172,6 +173,7 @@ int pitch;
 	memmove(bc->textstate, bc->textstate + bc->txsize,
 		bc->txsize * (bc->tysize-1));
 	memset(bc->textstate + bc->txsize * (bc->tysize-1), ' ', bc->txsize);
+	unlock(bc);
 }
 
 void cursor(bc *bc, int onoff)
