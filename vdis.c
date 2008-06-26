@@ -227,7 +227,8 @@ void (*pr)(struct basic_context *bc, char *format, ...);
 				++s;
 				break;
 			case D_INTEGER:
-				pr(bc, " %d\n", s->i);
+				pr(bc, " %d\n", s[1].i);
+				++s;
 				break;
 			}
 		}
