@@ -266,7 +266,7 @@ void arrayd(bc *bc)
 {
 double *d;
 
-	d = array(bc, sizeof(double *));
+	d = array(bc, sizeof(double));
 	if(d)
 		(bc->vsp++)->p = d;
 }
