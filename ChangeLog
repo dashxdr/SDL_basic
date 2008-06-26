@@ -1,12 +1,15 @@
 ----------------------------------------------------------------------------
-David Ashley (DA)
+David Ashley (DA) Wed Jun 25 21:40:30 EDT 2008
 dashxdr@gmail.com
 
-Current version xxx.
+Current version 101.
 
 Fixed problem with dissassembling "pushi" instruction.
 Fixed problem with vmachine's arrayd function, was using sizeof(double *)
    instead of sizeof(double). On my machine pointers and doubles are 8 bytes...
+Added Makefile.osx for building on MAC OSX.
+Added lock(), unlock() calls around in code to lock the SDL_surface. This
+   fixes flickering on OSX, and is actually what you're supposed to do in SDL.
 ----------------------------------------------------------------------------
 David Ashley (DA) Sat Jun 21 10:55:18 EDT 2008
 dashxdr@gmail.com
