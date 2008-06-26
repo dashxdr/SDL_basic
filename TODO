@@ -1,7 +1,7 @@
 DEF FN -- functions
 WAVE -- ability to specify the waveform of a tone from an array
 ADSR -- ability to set the amplitude envelope of a tone
-PRINT USING -- not implemented
+PRINT USING -- not implemented. a$=str$(expr, format$). ".2f" "-10.2f", c-style
 Window resize
 Sprites
 Gradients/fill patterns
