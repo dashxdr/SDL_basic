@@ -1,4 +1,8 @@
 ----------------------------------------------------------------------------
+
+Fixed problem with scrollback, wouldn't snap back down if you hit up arrow or
+   down with no more lines in the history buffer...
+----------------------------------------------------------------------------
 David Ashley (DA) Wed Jun 25 21:40:30 EDT 2008
 dashxdr@gmail.com
 
