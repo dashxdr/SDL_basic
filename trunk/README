@@ -19,9 +19,15 @@ etc.
 cool9 is an "asteroids" game.
 
 
+
 Arrow keys work for moving within the typed line, and through a line history.
 The page up and down keys, or shifted page up and down keys, scroll through
 a text history.
+
+**** BUILDING ON MAC OSX:
+If the SDL framework is installed in /Library/Frameworks/SDL.framework
+you should be able to build by just doing
+make -f Makefile.osx
 
 
 
