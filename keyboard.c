@@ -426,29 +426,33 @@ top:
 			if(xdelta<0) {++xdelta;++ref;}
 		} else if(code==MYUP)
 		{
-			if(backcount>=linesin) continue;
-			if(!backcount)
-				memcpy(linesave,bc->debline,LINESIZE);
-			++backcount;
-			oldlen = strlen(bc->debline);
-			memcpy(bc->debline,
-				bc->debhist+LINESIZE*((bc->hcount-backcount) & (HISTSIZE-1)),
-				LINESIZE);
-			oldlen -= strlen(bc->debline);
-			if(oldlen>0) tail=zerospaces-oldlen;
-			xdelta=0;
+			if(backcount<linesin)
+			{
+				if(!backcount)
+					memcpy(linesave,bc->debline,LINESIZE);
+				++backcount;
+				oldlen = strlen(bc->debline);
+				memcpy(bc->debline,
+					bc->debhist+LINESIZE*((bc->hcount-backcount) &
+						(HISTSIZE-1)), LINESIZE);
+				oldlen -= strlen(bc->debline);
+				if(oldlen>0) tail=zerospaces-oldlen;
+				xdelta=0;
+			}
 			++ref;
 		} else if(code==MYDOWN)
 		{
-			if(!backcount) continue;
-			--backcount;
-			oldlen = strlen(bc->debline);
-			if(!backcount) memcpy(bc->debline,linesave,LINESIZE);
-			else
-				memcpy(bc->debline,bc->debhist+LINESIZE*((bc->hcount-backcount) & (HISTSIZE-1)),LINESIZE);
-			oldlen -= strlen(bc->debline);
-			if(oldlen>0) tail=zerospaces-oldlen;
-			xdelta=0;
+			if(backcount)
+			{
+				--backcount;
+				oldlen = strlen(bc->debline);
+				if(!backcount) memcpy(bc->debline,linesave,LINESIZE);
+				else
+					memcpy(bc->debline,bc->debhist+LINESIZE*((bc->hcount-backcount) & (HISTSIZE-1)),LINESIZE);
+				oldlen -= strlen(bc->debline);
+				if(oldlen>0) tail=zerospaces-oldlen;
+				xdelta=0;
+			}
 			++ref;
 		} else if(code>=0 && code<128)
 		{
