@@ -113,14 +113,14 @@ help helplist[]={
 {"end", 0, "END means end the current program.\n"},
 {"stop", 0, "STOP means stop execution at this point, as if control-C or escape\n"
 		"  had been hit.\n"},
-{"sleep", 0, "SLEEP <expr>\n"
+{"sleep", 0, "SLEEP <seconds>\n"
 		"  Sleep for some amount of seconds.\n"
 		"  Example: sleep .75      = Sleep for 3/4 of a second.\n"
 		"  sleep(x) can also be used in expressions, the argument is how long to wait in seconds,\n"
 		"  and the value returned is the amount actually waited, in order to align the runtime clock.\n"},
 {"pen", 0, "PEN <expr>\n"
 		"  Sets the pen drawing size. Default size is 1 pixel.\n"},
-{"color", 0, "COLOR <expr>, <expr>, <expr> [,<expr>]\n"
+{"color", 0, "COLOR <red>, <green>, <blue> [,<alpha>]\n"
 		"  Sets the current drawing color. The parameters are for red, green, blue,\n"
 		"  and an optional alpha value. The range for all is from 0 to 255.\n"
 		"  Example:  color 255,0,0:fill     = Fills the screen with red.\n"},
@@ -128,29 +128,29 @@ help helplist[]={
 		"  Clears the screen, moves the cursor up to the upper left.\n"},
 {"home", 0, "HOME\n"
 		"  Moves the cursor to the upper left.\n"},
-{"circle", 0, "CIRCLE <expr>, <expr>, <expr>\n"
+{"circle", 0, "CIRCLE <xpos>, <ypos>, <radius>\n"
 		"  Parameters are the x position, y position, and radius. Draws a circle\n"
 		"  with the current pen color and size.\n"
 		"  Example:  circle 400,400,200\n"},
-{"disc", 0, "DISC <expr>, <expr>, <expr>\n"
+{"disc", 0, "DISC <xpos>, <ypos>, <radius>\n"
 		"  Parameters are the x position, y position, and the radius. Draws a solid\n"
 		"  circular disc with the current pen color and size.\n"
 		"  Example:  disc 400,400,200\n"},
 {"fill", 0, "FILL\n"
 		"  Fills the display with the current color.\n"},
-{"move", 0, "MOVE <expr>, <expr>\n"
+{"move", 0, "MOVE <xpos>, <ypos>\n"
 		"  Move the drawing pen to the specified X and Y positions. No drawing is done.\n"
 		"  Example:   move 100,100\n"},
-{"line", 0, "LINE <expr>, <expr>\n"
+{"line", 0, "LINE <xpos>, <ypos>\n"
 		"  Draws a line from the current position to the specified X and Y position.\n"
 		"  Example:   line 300,200\n"},
-{"box", 0, "BOX <expr>, <expr>, <expr>, <expr> [modifiers]\n"
-		"  Draws a solid rectangular box. The parameters are X position, Y position\n"
+{"box", 0, "BOX <xpos>, <ypos>, <xext>, <yext> [modifiers]\n"
+		"  Draws a solid rectangular box. The parameters are X position, Y position,\n"
 		"  X extension, Y extension. The coordinates define the center of the box.\n"
 		"  The extensions represent half the width or height of the resultant box.\n"
 		"  See the help on 'modifiers'\n"},
-{"rect", 0, "RECT <expr>, <expr>, <expr>, <expr> [modifiers]\n"
-		"  Draws a rectangle. The parameters are X position, Y position\n"
+{"rect", 0, "RECT <xpos>, <ypos>, <xext>, <yext> [modifiers]\n"
+		"  Draws a rectangle. The parameters are X position, Y position,\n"
 		"  X extension, Y extension. The coordinates define the center of the rectangle.\n"
 		"  The extensions represent half the width or height of the resultant rectangle.\n"
 		"  See the help on 'modifiers'\n"},
@@ -160,6 +160,14 @@ help helplist[]={
 		"  round <expr>        ; For BOX or RECT specifies radius of rounded corners\n"
 		"  rotate <expr>       ; For BOX or RECT specifies the rotation (not implemented)\n"
 		"  EXAMPLE: box 500,500,250,50 round 30\n"},
+{"arc", 0, "ARC <xpos>, <ypos>, <radius>, <angle>, <anglesize>\n"
+		"  Draws an arc. The parameters are X position, Y position,\n"
+		"  radius, starting angle, and angle size. The angle and size\n"
+		"  are in degrees, and both can be positive or negative.\n"},
+{"wedge", 0, "WEDGE <xpos>, <ypos>, <inrad>, <outrad>, <angle>, <anglesize>\n"
+		"  Draws a pie slice-like wedge. Parameters are X position, Y position\n"
+		"  inner radius, outer radius, starting angle, and angle size. The\n"
+		"  angle and size are in degrees, and both can be positive or negative.\n"},
 {"spot", 0, "SPOT\n"
 		"  Draws a circular spot at the current drawing position with the current color\n"
 		"  and pen size.\n"},
