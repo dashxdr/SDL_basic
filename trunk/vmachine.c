@@ -9,6 +9,11 @@
 
 #define TD(name) void name(bc *bc){}
 
+static inline double dabs(double d)
+{
+	return d<0.0 ? -d : d;
+}
+
 void reset_waitbase(bc *bc)
 {
 	bc->time = bc->soundtime;
@@ -928,44 +933,102 @@ void color4(bc *bc)
 	bc->vsp-=4;
 }
 
-// x,y,  width, height
-void box4(bc *bc)
-{
-double list[4];
+struct modifiers {
+	double round;
+	double rotate;
+};
 
-	list[0]=bc->vsp[-4].d;
-	list[1]=bc->vsp[-3].d;
-	list[2]=bc->vsp[-2].d;
-	list[3]=bc->vsp[-1].d;
+void gather_modifiers(bc *bc, struct modifiers *m)
+{
+unsigned int v, t;
+double d;
+	m->round = 0.0;
+	m->rotate = 0.0;
+	v=(bc->vip++)->i;
+	while(v)
+	{
+		t = v & ((1<<MODIFIER_BITS)-1);
+		if(t)
+		{
+			d=(--bc->vsp)->d;
+			if(t==RENDER_ROUND)
+				m->round = d;
+			if(t==RENDER_ROTATE)
+				m->rotate =d;
+		}
+		v>>=MODIFIER_BITS;
+	}
+}
+
+void roundbox(bc *bc, double x, double y, double dx, double dy, double round)
+{
+	if(round<0.0)
+		round = 0.0;
+	if(round>dabs(dx))
+		round = dabs(dx);
+	if(round>dabs(dy))
+		round = dabs(dy);
+	dx -= round;
+	dy -= round;
+	arc_piece(bc, x-dx, y-dy, round, 180, -90);
+	arc_piece(bc, x+dx, y-dy, round, 90, -90);
+	arc_piece(bc, x+dx, y+dy, round, 0, -90);
+	arc_piece(bc, x-dx, y+dy, round, 270, -90);
+}
+
+// x,y,  width, height
+void box(bc *bc)
+{
+double x, y, dx, dy;
+struct modifiers modifiers;
+	gather_modifiers(bc, &modifiers);
+	x=bc->vsp[-4].d; // x
+	y=bc->vsp[-3].d; // y
+	dx=bc->vsp[-2].d; // x extension
+	dy=bc->vsp[-1].d; // y extension
 	bc->vsp-=4;
 	shape_init(bc);
-	shape_add(bc, list[0]-list[2], list[1]-list[3], TAG_ONPATH);
-	shape_add(bc, list[0]+list[2], list[1]-list[3], TAG_ONPATH);
-	shape_add(bc, list[0]+list[2], list[1]+list[3], TAG_ONPATH);
-	shape_add(bc, list[0]-list[2], list[1]+list[3], TAG_ONPATH);
+	if(!modifiers.round)
+	{
+		shape_add(bc, x-dx, y-dy, TAG_ONPATH);
+		shape_add(bc, x+dx, y-dy, TAG_ONPATH);
+		shape_add(bc, x+dx, y+dy, TAG_ONPATH);
+		shape_add(bc, x-dx, y+dy, TAG_ONPATH);
+	} else
+		roundbox(bc, x, y, dx, dy, modifiers.round);
 	shape_done(bc);
 }
 
-void rect4(bc *bc)
+void rect(bc *bc)
 {
-double list[4];
+double x, y, dx, dy;
 double pen2=bc->pen/2.0;
+struct modifiers modifiers;
+	gather_modifiers(bc, &modifiers);
 
-	list[0]=bc->vsp[-4].d;
-	list[1]=bc->vsp[-3].d;
-	list[2]=bc->vsp[-2].d;
-	list[3]=bc->vsp[-1].d;
+	x=bc->vsp[-4].d;
+	y=bc->vsp[-3].d;
+	dx=bc->vsp[-2].d;
+	dy=bc->vsp[-1].d;
 	bc->vsp-=4;
 	shape_init(bc);
-	shape_add(bc, list[0]-list[2]-pen2, list[1]-list[3]-pen2, TAG_ONPATH);
-	shape_add(bc, list[0]+list[2]+pen2, list[1]-list[3]-pen2, TAG_ONPATH);
-	shape_add(bc, list[0]+list[2]+pen2, list[1]+list[3]+pen2, TAG_ONPATH);
-	shape_add(bc, list[0]-list[2]-pen2, list[1]+list[3]+pen2, TAG_ONPATH);
-	shape_end(bc);
-	shape_add(bc, list[0]-list[2]+pen2, list[1]-list[3]+pen2, TAG_ONPATH);
-	shape_add(bc, list[0]+list[2]-pen2, list[1]-list[3]+pen2, TAG_ONPATH);
-	shape_add(bc, list[0]+list[2]-pen2, list[1]+list[3]-pen2, TAG_ONPATH);
-	shape_add(bc, list[0]-list[2]+pen2, list[1]+list[3]-pen2, TAG_ONPATH);
+	if(!modifiers.round)
+	{
+		shape_add(bc, x-dx-pen2, y-dy-pen2, TAG_ONPATH);
+		shape_add(bc, x+dx+pen2, y-dy-pen2, TAG_ONPATH);
+		shape_add(bc, x+dx+pen2, y+dy+pen2, TAG_ONPATH);
+		shape_add(bc, x-dx-pen2, y+dy+pen2, TAG_ONPATH);
+		shape_end(bc);
+		shape_add(bc, x-dx+pen2, y-dy+pen2, TAG_ONPATH);
+		shape_add(bc, x+dx-pen2, y-dy+pen2, TAG_ONPATH);
+		shape_add(bc, x+dx-pen2, y+dy-pen2, TAG_ONPATH);
+		shape_add(bc, x-dx+pen2, y+dy-pen2, TAG_ONPATH);
+	} else
+	{
+		roundbox(bc, x, y, dx+pen2, dy+pen2, modifiers.round);
+		shape_end(bc);
+		roundbox(bc, x, y, dx-pen2, dy-pen2, modifiers.round);
+	}
 	shape_done(bc);
 
 }

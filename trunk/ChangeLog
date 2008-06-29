@@ -2,6 +2,11 @@
 
 Fixed problem with scrollback, wouldn't snap back down if you hit up arrow or
    down with no more lines in the history buffer...
+Added "round <expr>" and placeholder "rotate <expr>" to box and rect
+   commands, for doing rounded boxes and rectangles.
+In grammar.y, added emitfuncint() function that takes a function plus an
+   integer, and emits one followed by the other -- this is a very common
+   operation. Fixed so everything that could now uses the new function.
 ----------------------------------------------------------------------------
 David Ashley (DA) Wed Jun 25 21:40:30 EDT 2008
 dashxdr@gmail.com

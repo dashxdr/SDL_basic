@@ -7,7 +7,6 @@
 #include <math.h>
 
 #include "misc.h"
-#define M_PI2 (M_PI*2.0)
 
 Uint32 maprgb(bc *bc, int r,int g,int b)
 {

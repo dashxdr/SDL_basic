@@ -33,7 +33,7 @@ int need=1;
 #define D_STRING     3
 #define D_OFFSET     4
 #define D_INTEGER    5
-
+#define D_MODIFIERS  6
 
 typedef struct {
 	void (*func)(struct basic_context *);
@@ -54,7 +54,7 @@ disentry dlist[]={
 {assigns, "assigns", D_NONE},
 {atn2d, "atn2d", D_NONE},
 {atnd, "atnd", D_NONE},
-{box4, "box4", D_NONE},
+{box, "box", D_MODIFIERS},
 {chrstr, "chrstr", D_NONE},
 {chs, "chs", D_NONE},
 {cls, "cls", D_NONE},
@@ -128,7 +128,7 @@ disentry dlist[]={
 {quiet, "quiet", D_NONE},
 {rcall, "rcall", D_OFFSET},
 {readd, "readd", D_NONE},
-{rect4, "rect4", D_NONE},
+{rect, "rect", D_MODIFIERS},
 {ret, "ret", D_NONE},
 {rightstr, "rightstr", D_NONE},
 {rjmp, "rjmp", D_OFFSET},
@@ -167,6 +167,29 @@ va_list ap;
 	va_end(ap);
 }
 
+void dump_modifiers(bc *bc,
+		void (*pr)(struct basic_context *bc, char *format, ...),
+		unsigned int v)
+{
+int t;
+char *p;
+	if(!v)
+		pr(bc, " -NONE-");
+	while(v)
+	{
+		t=v & ((1<<MODIFIER_BITS)-1);
+		if(t==RENDER_ROUND)
+			p="ROUND";
+		else if(t==RENDER_ROTATE)
+			p="ROTATE";
+		else p="???";
+		pr(bc, " %s", p);
+
+		v>>=MODIFIER_BITS;
+	}
+	pr(bc, "\n");
+
+}
 
 
 void disassemble(bc *bc, step *s, int num)
@@ -229,6 +252,10 @@ void (*pr)(struct basic_context *bc, char *format, ...);
 			case D_INTEGER:
 				pr(bc, " %d\n", s[1].i);
 				++s;
+				break;
+			case D_MODIFIERS:
+				++s;
+				dump_modifiers(bc, pr, s->i);
 				break;
 			}
 		}
