@@ -12,7 +12,7 @@ all: basic
 basic: main.o basic.o font.o render.o keyboard.o ftgrays.o parse.o \
 	vmachine.o sound.o vdis.o help.o SDLMain.o
 
-SDLMain.o: SDLmain.m
+SDLMain.o: SDLMain.m
 main.o: main.c misc.h
 basic.o: basic.c misc.h
 font.o: font.c misc.h
