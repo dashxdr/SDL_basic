@@ -144,14 +144,22 @@ help helplist[]={
 {"line", 0, "LINE <expr>, <expr>\n"
 		"  Draws a line from the current position to the specified X and Y position.\n"
 		"  Example:   line 300,200\n"},
-{"box", 0, "BOX <expr>, <expr>, <expr>, <expr>\n"
+{"box", 0, "BOX <expr>, <expr>, <expr>, <expr> [modifiers]\n"
 		"  Draws a solid rectangular box. The parameters are X position, Y position\n"
 		"  X extension, Y extension. The coordinates define the center of the box.\n"
-		"  The extensions represent half the width or height of the resultant box.\n"},
-{"rect", 0, "RECT <expr>, <expr>, <expr>, <expr>\n"
+		"  The extensions represent half the width or height of the resultant box.\n"
+		"  See the help on 'modifiers'\n"},
+{"rect", 0, "RECT <expr>, <expr>, <expr>, <expr> [modifiers]\n"
 		"  Draws a rectangle. The parameters are X position, Y position\n"
 		"  X extension, Y extension. The coordinates define the center of the rectangle.\n"
-		"  The extensions represent half the width or height of the resultant rectangle.\n"},
+		"  The extensions represent half the width or height of the resultant rectangle.\n"
+		"  See the help on 'modifiers'\n"},
+{"modifiers", 0, "[modifiers]\n"
+		"  Some drawing commands, such as BOX or RECT, can accept one or more\n"
+		"  modifiers. Modifiers can be:\n"
+		"  round <expr>        ; For BOX or RECT specifies radius of rounded corners\n"
+		"  rotate <expr>       ; For BOX or RECT specifies the rotation (not implemented)\n"
+		"  EXAMPLE: box 500,500,250,50 round 30\n"},
 {"spot", 0, "SPOT\n"
 		"  Draws a circular spot at the current drawing position with the current color\n"
 		"  and pen size.\n"},

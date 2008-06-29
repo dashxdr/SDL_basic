@@ -1,5 +1,8 @@
 #include <SDL.h>
+#include <math.h>
 #include "ftgrays.h"
+
+#define M_PI2 (M_PI*2.0)
 
 #define KEYMAX 32
 #define KEYHISTSIZE 16
@@ -208,6 +211,7 @@ void shape_done(bc *bc);
 void spot(bc *bc);
 void lock(bc *bc);
 void unlock(bc *bc);
+void arc_piece(bc *bc, double xc, double yc, double r, double a, double da);
 
 // keyboard.c
 
@@ -260,6 +264,10 @@ void pruninit(bc *bc);
 
 // vmachine.c
 
+#define MODIFIER_BITS       4 // enough for 15 modifiers
+#define RENDER_ROUND        1 // figure has a rounding value
+#define RENDER_ROTATE       2 // figure is rotated
+
 #define DECLARE(name) extern void name(bc *bc);
 DECLARE(pushd)
 DECLARE(evald)
@@ -302,7 +310,8 @@ DECLARE(cls)
 DECLARE(home)
 DECLARE(color3)
 DECLARE(color4)
-DECLARE(box4)
+DECLARE(box)
+DECLARE(rect)
 DECLARE(performdisc)
 DECLARE(dimd)
 DECLARE(dims)
@@ -312,7 +321,6 @@ DECLARE(performstop)
 DECLARE(performfill)
 DECLARE(performmove)
 DECLARE(performline)
-DECLARE(rect4)
 DECLARE(intd)
 DECLARE(fixd)
 DECLARE(sgnd)

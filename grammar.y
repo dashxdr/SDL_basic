@@ -7,6 +7,7 @@
 
 
 #include <ctype.h>
+#include <stdarg.h>
 #include "misc.h"
 
 #define NAMELEN 16
@@ -44,6 +45,8 @@ typedef struct parse_state {
 	step steps[MAXSTEPS];
 	int numlinerefs;
 	variable *rankfailure;
+	char errormsg[128];
+	char *errorpos;
 	lineref linerefs[MAXLINEREFS];
 } ps;
 
@@ -103,6 +106,39 @@ linemap *lm;
 		return lm->step;
 }
 
+void seterror(ps *ps, char *p, char *msg, ...)
+{
+va_list ap;
+	va_start(ap, msg);
+	vsnprintf(ps->errormsg, sizeof(ps->errormsg), msg, ap);
+	va_end(ap);
+	ps->errorpos = p;
+}
+
+#define MAX (sizeof(int)*8/MODIFIER_BITS - 1)
+int append_modifier(ps *ps, char *pos, int oldvalue, int toadd)
+{
+int i;
+int t;
+char *p;
+
+	for(i=0;i<MAX;++i)
+	{
+		t=(oldvalue >> (i*MODIFIER_BITS)) & ((1<<MODIFIER_BITS)-1);
+		if(t == toadd)
+		{
+			if(toadd == RENDER_ROUND) p="ROUND";
+			else if(toadd == RENDER_ROTATE) p="ROTATE";
+			else p="";
+			seterror(ps, pos, "Duplicate modifier %s", p);
+			break;
+		}
+	}
+	if(i==MAX)
+		oldvalue = (oldvalue<<MODIFIER_BITS) | toadd;
+	return oldvalue;
+}
+
 
 static int fixuplinerefs(ps *ps)
 {
@@ -142,6 +178,12 @@ static void emitint(ps *ps, int i)
 	ps->nextstep++ -> i = i;
 }
 
+static void emitfuncint(ps *ps, void (*func)(), int v)
+{
+	emitfunc(ps, func);
+	emitint(ps, v);
+}
+
 static void emitdouble(ps *ps, double val)
 {
 	ps->nextstep++ -> d = val;
@@ -151,36 +193,6 @@ static void emitpushd(ps *ps, double val)
 {
 	emitfunc(ps, pushd);
 	emitdouble(ps, val);
-}
-
-static void emitpushvd(ps *ps, int num)
-{
-	emitfunc(ps, pushvd);
-	emitint(ps, num);
-}
-
-static void emitinput(ps *ps, int num)
-{
-	emitfunc(ps, input);
-	emitint(ps, num);
-}
-
-static void emitpushvs(ps *ps, int num)
-{
-	emitfunc(ps, pushvs);
-	emitint(ps, num);
-}
-
-static void emitpushav(ps *ps, int num)
-{
-	emitfunc(ps, pushav);
-	emitint(ps, num);
-}
-
-static void emitpushi(ps *ps, int v)
-{
-	emitfunc(ps, pushi);
-	emitint(ps, v);
 }
 
 static void emitpushs(ps *ps, char *s)
@@ -204,61 +216,6 @@ int i;
 		}
 	} while(*s);
 }
-
-static void emitdims(ps *ps, int v)
-{
-	emitfunc(ps, dims);
-	emitint(ps, v);
-}
-
-static void emitdimd(ps *ps, int v)
-{
-	emitfunc(ps, dimd);
-	emitint(ps, v);
-}
-
-static void emitarrayd(ps *ps, int v)
-{
-	emitfunc(ps, arrayd);
-	emitint(ps, v);
-}
-
-static void emitarrays(ps *ps, int v)
-{
-	emitfunc(ps, arrays);
-	emitint(ps, v);
-}
-
-static void emitongoto(ps *ps, int v)
-{
-	emitfunc(ps, ongoto);
-	emitint(ps, v);
-}
-
-static void emitongosub(ps *ps, int v)
-{
-	emitfunc(ps, ongosub);
-	emitint(ps, v);
-}
-
-static void emitpushea(ps *ps, int v)
-{
-	emitfunc(ps, pushea);
-	emitint(ps, v);
-}
-
-static void emitrjmp(ps *ps, int delta)
-{
-	emitfunc(ps, rjmp);
-	emitint(ps, delta);
-}
-
-static void emitrcall(ps *ps, int delta)
-{
-	emitfunc(ps, rcall);
-	emitint(ps, delta);
-}
-
 
 #define YYDEBUG 0
 #define YYSTYPE tokeninfo
@@ -285,6 +242,7 @@ void yyerror(char *s);
 %token MOVE PEN LINE COLOR CLEAR RANDOM CLS FILL HOME
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
+%token ROUND ROTATE
 %token LF
 %token TONE ADSR WAVE FREQ DUR FMUL VOL WSIN WSQR WTRI WSAW
 %token QUIET NOTE
@@ -313,9 +271,13 @@ prog2:
 	;
 
 line:
-	mark INTEGER statements LF {addline(PS, $2.value.integer,
+	mark linenumber mark statements LF {addline(PS, $2.value.integer,
 					$1.value.step - PS->steps,
 					$2.at)}
+	;
+
+linenumber:
+	INTEGER
 	;
 
 statements:
@@ -328,7 +290,7 @@ statement:
 	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
 		{$4.value.step[1].i = $7.value.step - $4.value.step;
 		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
-	| GOTO INTEGER {addlineref(PS, $2.at);emitrjmp(PS, $2.value.integer)}
+	| GOTO INTEGER {addlineref(PS, $2.at);emitfuncint(PS, rjmp, $2.value.integer)}
 	| LET assignexpr {/* implemented */}
 	| assignexpr {/* implemented */}
 	| print printlist {if($2.value.integer) emitfunc(PS, lf)}
@@ -346,19 +308,19 @@ statement:
 	| FILL {emitfunc(PS, performfill)}
 	| MOVE num2 {emitfunc(PS, performmove)}
 	| LINE num2 {emitfunc(PS, performline)}
-	| BOX num4 {emitfunc(PS, box4)}
-	| RECT num4 {emitfunc(PS, rect4)}
+	| BOX num4 extrarender {emitfuncint(PS, box, $3.value.integer)}
+	| RECT num4 extrarender {emitfuncint(PS, rect, $3.value.integer)}
 	| SPOT {emitfunc(PS, spot)}
 	| UPDATE {emitfunc(PS, forceupdate)}
 	| FOR forvar '=' numexpr TO numexpr optstep
-		{emitpushav(PS, $2.value.integer);emitfunc(PS, performfor)}
+		{emitfuncint(PS, pushav, $2.value.integer);emitfunc(PS, performfor)}
 	| NEXT optforvar
-	| GOSUB INTEGER {addlineref(PS, $2.at);emitrcall(PS, $2.value.integer)}
+	| GOSUB INTEGER {addlineref(PS, $2.at);emitfuncint(PS, rcall, $2.value.integer)}
 	| RETURN {emitfunc(PS, ret)}
 	| REM {/* do nothing */}
-	| ON numexpr GOTO linelist {emitongoto(PS, $4.value.count)}
-	| ON numexpr GOSUB linelist {emitongosub(PS, $4.value.count)}
-	| INPUT inputlist {emitinput(PS, $2.value.count)}
+	| ON numexpr GOTO linelist {emitfuncint(PS, ongoto, $4.value.count)}
+	| ON numexpr GOSUB linelist {emitfuncint(PS, ongosub, $4.value.count)}
+	| INPUT inputlist {emitfuncint(PS, input, $2.value.count)}
 	| READ readlist {/* implemented */}
 	| DATA datalist {/* implemented */}
 	| QUIET silist
@@ -368,6 +330,22 @@ statement:
 	| CLEAR num1
 	| TEST {rendertest(PS->bc)}
 	;
+
+extrarender: /* nothing */ {$$.value.integer = 0}
+	| erlist
+	;
+
+erlist:
+	eritem
+	| erlist eritem {$$.value.integer =
+				append_modifier(PS, $1.at, $1.value.integer,
+					$2.value.integer)}
+	;
+
+eritem: ROUND numexpr {$$.value.integer = RENDER_ROUND}
+	| ROTATE numexpr {$$.value.integer = RENDER_ROTATE}
+	;
+
 
 silist: /* nothing */ {emitpushd(PS, 0.0);emitfunc(PS, quiet)}
 	| numexpr {emitfunc(PS, quiet)}
@@ -406,10 +384,10 @@ print: PRINT
 
 fixif: /* nothing */ {emitfunc(PS, skip2ne);
 		$$.value.step = PS->nextstep;
-		emitrjmp(PS, 0)} // size of true side}
+		emitfuncint(PS, rjmp, 0)} // size of true side}
 	;
 
-fixifelse: /* nothing */ {emitrjmp(PS, 0); // true side to skip over false
+fixifelse: /* nothing */ {emitfuncint(PS, rjmp, 0); // true side to skip over false
 		$$.value.step = PS->nextstep;}
 	;
 
@@ -421,7 +399,7 @@ optstep: { emitpushd(PS, 1.0)}
 	;
 
 optforvar: {emitfunc(PS, performnext)}
-	| forvar {emitpushav(PS, $1.value.integer);emitfunc(PS, performnext1)}
+	| forvar {emitfuncint(PS, pushav, $1.value.integer);emitfunc(PS, performnext1)}
 	;
 
 forvar:
@@ -430,7 +408,7 @@ forvar:
 
 stint:
 	statements
-	| INTEGER {addlineref(PS, $1.at);emitrjmp(PS, $1.value.integer)}
+	| INTEGER {addlineref(PS, $1.at);emitfuncint(PS, rjmp, $1.value.integer)}
 	;
 
 optthen: /* nothing */
@@ -463,24 +441,24 @@ dimarraylist:
 	;
 
 dimarrayvar:
-	NUMSYMBOL '(' dimlist ')' {emitpushav(PS, $1.value.integer);
-				emitdimd(PS, $3.value.count);
+	NUMSYMBOL '(' dimlist ')' {emitfuncint(PS, pushav, $1.value.integer);
+				emitfuncint(PS, dimd, $3.value.count);
 				rankcheck(PS, $1.value.integer, $3.value.count)}
-	| STRINGSYMBOL '(' dimlist ')' {emitpushav(PS, $1.value.integer);
-				emitdims(PS, $3.value.count);
+	| STRINGSYMBOL '(' dimlist ')' {emitfuncint(PS, pushav, $1.value.integer);
+				emitfuncint(PS, dims, $3.value.count);
 				rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
-dimlist: INTEGER {$$.value.count = 1;emitpushi(PS, $1.value.integer)}
+dimlist: INTEGER {$$.value.count = 1;emitfuncint(PS, pushi, $1.value.integer)}
 	| dimlist ',' INTEGER {$$.value.count = $1.value.count + 1;
-				emitpushi(PS, $3.value.integer)}
+				emitfuncint(PS, pushi, $3.value.integer)}
 	;
 
 linelist: INTEGER {$$.value.count = 1;addlineref(PS, $1.at);
-				emitpushea(PS, $1.value.integer)}
+				emitfuncint(PS, pushea, $1.value.integer)}
 	| linelist ',' INTEGER {$$.value.count = $1.value.count + 1;
 				addlineref(PS, $3.at);
-				emitpushea(PS, $3.value.integer)}
+				emitfuncint(PS, pushea, $3.value.integer)}
 	;
 
 datalist:
@@ -509,16 +487,16 @@ readvar:
 	| stringvar;
 
 numvar:
-	NUMSYMBOL {emitpushvd(PS, $1.value.integer)}
+	NUMSYMBOL {emitfuncint(PS, pushvd, $1.value.integer)}
 	| NUMSYMBOL '(' numlist ')'
-			{emitarrayd(PS, $1.value.integer);
+			{emitfuncint(PS, arrayd, $1.value.integer);
 			rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
 stringvar:
-	STRINGSYMBOL {emitpushvs(PS, $1.value.integer)}
+	STRINGSYMBOL {emitfuncint(PS, pushvs, $1.value.integer)}
 	| STRINGSYMBOL '(' numlist ')'
-			{emitarrays(PS, $1.value.integer);
+			{emitfuncint(PS, arrays, $1.value.integer);
 			rankcheck(PS, $1.value.integer, $3.value.count)}
 	;
 
@@ -564,8 +542,8 @@ inputlist2:
 	;
 
 inputvar:
-	numvar {emitpushi(PS, 0)}
-	| stringvar {emitpushi(PS, 1)}
+	numvar {emitfuncint(PS, pushi, 0)}
+	| stringvar {emitfuncint(PS, pushi, 1)}
 	;
 
 assignexpr:
@@ -818,6 +796,8 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "return")) return RETURN;
 	if(iskeyword(ps, "right$")) return RIGHTSTR;
 	if(iskeyword(ps, "rnd")) return RND;
+	if(iskeyword(ps, "rotate")) return ROTATE;
+	if(iskeyword(ps, "round")) return ROUND;
 	if(iskeyword(ps, "sgn")) return SGN;
 	if(iskeyword(ps, "quiet")) return QUIET;
 	if(iskeyword(ps, "sin")) return SIN;
@@ -1028,7 +1008,7 @@ void pruninit(bc *bc)
 
 void dump_data_init(ps *ps)
 {
-	emitrcall(ps, 0); // call to load up all the data...
+	emitfuncint(ps, rcall, 0); // call to load up all the data...
 }
 
 void dump_data_finish(ps *ps)
@@ -1045,10 +1025,22 @@ int i;
 	emitfunc(ps, ret);
 }
 
+char *recover_line(ps *ps, char *put, int len, char *p)
+{
+int n;
+	while(p>ps->yystart && p[-1] != '\n') --p;
+	n=0;
+	for(n=0;p[n] && p[n]!='\n' && n<len-1;++n)
+		put[n] = p[n];
+	put[n] = 0;
+	return p;
+}
+
 ps *newps(bc *bc, char *take)
 {
 struct parse_state *ps;
 int i;
+char linecopy[1024];
 	ps = malloc(sizeof(struct parse_state));
 	if(!ps)
 	{
@@ -1068,7 +1060,29 @@ int i;
 
 	ps->res=yyparse(ps);
 
-	if(!ps->res)
+
+	if(ps->res)
+	{
+		int n;
+		char *p;
+		tprintf(bc, "Parse error\n");
+
+		p=recover_line(ps, linecopy, sizeof(linecopy), ps->yylast);
+		tprintf(bc, "%s\n", linecopy);
+
+		n=ps->yylast - p;
+		if(n>sizeof(linecopy)-1)
+			n=sizeof(linecopy)-1;
+		memset(linecopy, ' ', n);
+		linecopy[n]=0;
+		tprintf(bc, "%s^\n", linecopy);
+	} else if(ps->errormsg[0])
+	{
+		ps->res = -1;
+		recover_line(ps, linecopy, sizeof(linecopy), ps->errorpos);
+		tprintf(bc, "%s\n", linecopy);
+		tprintf(bc, "%s\n", ps->errormsg);
+	} else
 	{
 		emitfunc(ps, performend);
 		dump_data_finish(ps);
@@ -1082,26 +1096,6 @@ int i;
 		}
 		for(i=0;i<bc->numvars;++i)	// clear out all the ranks
 			bc->vvars[i].rank = 0;
-
-	} else
-	{
-		char linecopy[1024];
-		int n;
-		char *p;
-		tprintf(bc, "Parse error\n");
-		p = ps->yylast;
-		while(p>ps->yystart && p[-1] != '\n') --p;
-		n=0;
-		for(n=0;p[n] && p[n]!='\n' && n<sizeof(linecopy)-1;++n)
-			linecopy[n] = p[n];
-		linecopy[n] = 0;
-		tprintf(bc, "%s\n", linecopy);
-		n=ps->yylast - p;
-		if(n>sizeof(linecopy)-1)
-			n=sizeof(linecopy)-1;
-		memset(linecopy, ' ', n);
-		linecopy[n]=0;
-		tprintf(bc, "%s^\n", linecopy);
 	}
 	return ps;
 }
