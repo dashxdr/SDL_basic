@@ -960,6 +960,13 @@ printf("here:%s\n", ps->yypntr);
 	return -1;
 }
 
+char *myindex(char *p, char want)
+{
+	while(*p && *p!=want) ++p;
+	if(*p) return p;
+	else return 0;
+}
+
 void freeold(bc *bc)
 {
 int i;
@@ -971,7 +978,7 @@ variable *v;
 	{
 		if(!v->pointer)
 			continue;
-		if(index(v->name, '$'))
+		if(myindex(v->name, '$'))
 		{
 			if(v->rank)
 			{
