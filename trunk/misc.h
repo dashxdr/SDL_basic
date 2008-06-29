@@ -380,7 +380,8 @@ DECLARE(wsin)
 DECLARE(wsqr)
 DECLARE(wtri)
 DECLARE(wsaw)
-
+DECLARE(arc)
+DECLARE(wedge)
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);

@@ -242,6 +242,7 @@ void yyerror(char *s);
 %token MOVE PEN LINE COLOR CLEAR RANDOM CLS FILL HOME
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
+%token ARC WEDGE
 %token ROUND ROTATE
 %token LF
 %token TONE ADSR WAVE FREQ DUR FMUL VOL WSIN WSQR WTRI WSAW
@@ -309,6 +310,8 @@ statement:
 	| MOVE num2 {emitfunc(PS, performmove)}
 	| LINE num2 {emitfunc(PS, performline)}
 	| BOX num4 extrarender {emitfuncint(PS, box, $3.value.integer)}
+	| ARC num5 {emitfunc(PS, arc)}
+	| WEDGE num6 {emitfunc(PS, wedge)}
 	| RECT num4 extrarender {emitfuncint(PS, rect, $3.value.integer)}
 	| SPOT {emitfunc(PS, spot)}
 	| UPDATE {emitfunc(PS, forceupdate)}
@@ -427,6 +430,16 @@ num3:
 	;
 num4:
 	numexpr ',' numexpr ',' numexpr ',' numexpr {$$.value.count = 4}
+	;
+
+num5:
+	numexpr ',' numexpr ',' numexpr ',' numexpr ',' numexpr
+		{$$.value.count = 5}
+	;
+
+num6:
+	numexpr ',' numexpr ',' numexpr ',' numexpr ',' numexpr ',' numexpr
+		{$$.value.count = 6}
 	;
 
 num34:
@@ -734,6 +747,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "abs")) return ABS;
 	if(iskeyword(ps, "adsr")) return ADSR;
 	if(iskeyword(ps, "and")) return ANDAND;
+	if(iskeyword(ps, "arc")) return ARC;
 	if(iskeyword(ps, "asc")) return ASC;
 	if(iskeyword(ps, "atn2")) return ATN2; // order critical!
 	if(iskeyword(ps, "atn")) return ATN;
@@ -819,6 +833,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "val")) return VAL;
 	if(iskeyword(ps, "vol")) return VOL;
 	if(iskeyword(ps, "wave")) return WAVE;
+	if(iskeyword(ps, "wedge")) return WEDGE;
 	if(iskeyword(ps, "wsaw")) return WSAW;
 	if(iskeyword(ps, "wsin")) return WSIN;
 	if(iskeyword(ps, "wsqr")) return WSQR;

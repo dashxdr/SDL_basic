@@ -7,6 +7,7 @@ Added "round <expr>" and placeholder "rotate <expr>" to box and rect
 In grammar.y, added emitfuncint() function that takes a function plus an
    integer, and emits one followed by the other -- this is a very common
    operation. Fixed so everything that could now uses the new function.
+Added arc and wedge commands.
 ----------------------------------------------------------------------------
 David Ashley (DA) Wed Jun 25 21:40:30 EDT 2008
 dashxdr@gmail.com

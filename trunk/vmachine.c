@@ -1033,6 +1033,39 @@ struct modifiers modifiers;
 
 }
 
+void arc(bc *bc)
+{
+double x, y, r, a, da;
+double pen2=bc->pen/2.0;
+	x=bc->vsp[-5].d;
+	y=bc->vsp[-4].d;
+	r=bc->vsp[-3].d;
+	a=bc->vsp[-2].d;
+	da=bc->vsp[-1].d;
+	bc->vsp -= 5;
+	shape_init(bc);
+	arc_piece(bc, x, y, r+pen2, a, da);
+	arc_piece(bc, x, y, r-pen2, a+da, -da);
+	shape_done(bc);
+}
+
+void wedge(bc *bc)
+{
+double x, y, ri, ro, a, da;
+	x=bc->vsp[-6].d;
+	y=bc->vsp[-5].d;
+	ri=bc->vsp[-4].d;
+	ro=bc->vsp[-3].d;
+	a=bc->vsp[-2].d;
+	da=bc->vsp[-1].d;
+	bc->vsp -= 6;
+	shape_init(bc);
+	arc_piece(bc, x, y, ro, a, da);
+	arc_piece(bc, x, y, ri, a+da, -da);
+	shape_done(bc);
+}
+
+
 void performdisc(bc *bc)
 {
 	disc(bc, bc->vsp[-3].d, bc->vsp[-2].d, bc->vsp[-1].d);
