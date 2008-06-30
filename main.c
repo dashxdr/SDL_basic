@@ -100,7 +100,7 @@ int v1,v2;
 	bc=&mybc;
 	initbc(bc, thescreen, xsize, ysize);
 
-	SDL_AddTimer(0, mytimer, bc);
+	SDL_AddTimer(10, mytimer, bc);
 	soundopen(bc);
 
 	for(;;)
