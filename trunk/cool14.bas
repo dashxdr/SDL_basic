@@ -3,7 +3,7 @@
 30 control2 = 2
 40 halfpi = 3.1415927/2.0
 50 px = xsize/2:py = ysize/2: dpx = 4: dpy = 4.2737127283
-60 px2 = xsize/32: py2 = ysize*.9: dpx2 = 3.77282848: dpy2 = 4
+60 px2 = xsize/32: py2 = ysize*.5: dpx2 = 3.77282848: dpy2 = 4
 70 cx = xsize/2
 80 cy = ysize/2
 90 n=20
