@@ -2,6 +2,8 @@
 David Ashley (DA) Mon Jun 30 00:09:19 EDT 2008
 dash@gmail.com
 
+Current version 102.
+
 Fixed problem with scrollback, wouldn't snap back down if you hit up arrow or
    down with no more lines in the history buffer...
 Added "round <expr>" and placeholder "rotate <expr>" to box and rect
