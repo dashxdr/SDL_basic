@@ -382,6 +382,14 @@ DECLARE(wtri)
 DECLARE(wsaw)
 DECLARE(arc)
 DECLARE(wedge)
+DECLARE(shinit)
+DECLARE(shend)
+DECLARE(shdone)
+DECLARE(shmove)
+DECLARE(shline)
+DECLARE(shcurve)
+DECLARE(shcubic)
+
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);
