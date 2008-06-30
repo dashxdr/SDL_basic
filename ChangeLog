@@ -1,4 +1,16 @@
 ----------------------------------------------------------------------------
+David Ashley (DA)
+dash@gmail.com
+
+Current version xxx.
+
+Fixed problem with launch of timer, wasn't working on windows.
+Tweaks of cool14.bas program.
+Added separate shape structure so shape primitives and internal drawing
+  primitives can coexist.
+Made it so ** is the power, not '~'. So 2**3 is 8.
+Made it so ~ is unary NOT, as it should be.
+----------------------------------------------------------------------------
 David Ashley (DA) Mon Jun 30 00:09:19 EDT 2008
 dash@gmail.com
 
