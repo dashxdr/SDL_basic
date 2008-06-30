@@ -215,14 +215,52 @@ help helplist[]={
 		"             to rise. Values less than 1 will cause the frequency to fall.\n"
 		"  vol     =  Set the volume from 1 to 100\n"
 		"  wsqr    =  Choose a square wave\n"
-		"  ssin    =  Choose a sine wave\n"
-		"  ssaw    =  Choose a sawtooth wave\n"
-		"  stri    =  Chose a triangular wave\n"
+		"  wsin    =  Choose a sine wave\n"
+		"  wsaw    =  Choose a sawtooth wave\n"
+		"  wtri    =  Chose a triangular wave\n"
 		"  Example:\n"
 		"  tone 5, freq 880, wsin, vol 100, dur 1, fmul 1.0001\n"
 		"  See also: QUIET\n"},
-
-
+{"shape", 0, "SHAPE COMMANDS\n"
+		"  The shape commands are SHINIT, SHEND, SHDONE, SHLINE, SHCURVE and SHCUBIC.\n"
+		"  They provide an interface for a shape rendering engine. The idea is you\n"
+		"  define one or more outlines using lines and quadratic or cubic bezier\n"
+		"  curves. For example you could draw a donut by tracing an outer circle\n"
+		"  then an inner circle. The cool14 demo makes use of the shape interface.\n"
+		"  The shape commands are:\n"
+		"  SHINIT  = Initialize a shape\n"
+		"  SHEND   = Terminate a path so a new one can be started. Paths are\n"
+		"            automatically closed if the last point on a path isn't the\n"
+		"            same as the first point.\n"
+		"  SHDONE  = The current shape is finished, now render it.\n"
+		"  SHLINE <x>,<y> = Stroke a line to the point from current position.\n"
+		"            It's good practice to follow the SHINIT or SHEND\n"
+		"            with at least one SHLINE.\n"
+		"  SHCURVE <xc>,<yc>,<x>,<y> = Stroke a quadratic bezier curve from current\n"
+		"            position. The <xc>,<yc> is the control point.\n"
+		"  SHCUBIC <xc1>,<yc1>,<xc2>,<yc2>,<x>,<y> = Stroke a cubic bezier curve\n"
+		"            from current position. Two control points are required.\n"
+		"  Example: This program draws a weird figure with a box cutout\n"
+		"     10 cls\n"
+		"     20 shinit: shline 100,100\n"
+		"     30 shcurve 150,50,200,100\n"
+		"     40 shline 200,200\n"
+		"     50 shcubic 300,220,0,220,100,200\n"
+		"     60 shline 100,100\n"
+		"     70 shend\n"
+		"     80 shline 130,130:shline 170,130\n"
+		"     90 shline 170,170:shline 130,170\n"
+		"     100 shdone\n"},
+{"shinit", "shape", ""},
+{"shend", "shape", ""},
+{"shdone", "shape", ""},
+{"shline", "shape", ""},
+{"shcurve", "shape", ""},
+{"shcubic", "shape", ""},
+{"wsin", "tone", ""},
+{"wsaw", "tone", ""},
+{"wsqr", "tone", ""},
+{"wtri", "tone", ""},
 
 {0,0}
 };
