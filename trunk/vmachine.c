@@ -933,6 +933,28 @@ void color4(bc *bc)
 	bc->vsp-=4;
 }
 
+void shinit(bc *bc) {shape_init(bc);}
+void shend(bc *bc) {shape_end(bc);}
+void shdone(bc *bc) {shape_done(bc);}
+void shline(bc *bc)
+{
+	shape_add(bc, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
+	bc->vsp -= 2;
+}
+void shcurve(bc *bc)
+{
+	shape_add(bc, bc->vsp[-4].d, bc->vsp[-3].d, TAG_CONTROL2);
+	shape_add(bc, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
+	bc->vsp -= 4;
+}
+void shcubic(bc *bc)
+{
+	shape_add(bc, bc->vsp[-6].d, bc->vsp[-5].d, TAG_CONTROL3);
+	shape_add(bc, bc->vsp[-4].d, bc->vsp[-3].d, TAG_CONTROL3);
+	shape_add(bc, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
+	bc->vsp -= 6;
+}
+
 struct modifiers {
 	double round;
 	double rotate;
