@@ -3,7 +3,7 @@
 30 dim rx(100), ry(100), rdx(100), rdy(100), rs(100)
 40 dim ex(100), ey(100), edx(100), edy(100), et(100)
 50 rem ****** restart here
-60 gx=xsize*40/100:gy=ysize/2:gs=200: rem *******  Black hole
+60 gx=xsize*40/100:gy=ysize/2:gs=0: rem *******  Black hole
 70 tn1 = 0
 80 avol = 0
 90 ddst1 = .002
