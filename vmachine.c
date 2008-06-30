@@ -191,6 +191,7 @@ void absd(bc *bc){double *d=&bc->vsp[-1].d;if(*d<0.0) *d = -*d;}
 
 void sqrd(bc *bc){double *d=&bc->vsp[-1].d;if(*d>=0.0) *d = sqrt(*d);}
 void chs(bc *bc){bc->vsp[-1].d = -bc->vsp[-1].d;}
+void not(bc *bc){bc->vsp[-1].d = ~(long)(bc->vsp[-1].d);}
 
 // take both off the stack...
 void assignd(bc *bc){*(double *)bc->vsp[-2].p = bc->vsp[-1].d;bc->vsp-=2;}

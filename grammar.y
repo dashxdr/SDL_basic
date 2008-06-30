@@ -257,7 +257,7 @@ void yyerror(char *s);
 %left '+' '-'
 %left '*' '/' MOD
 %left POWER
-%right UNARY
+%right UNARY NOT
 %expect 4
 %%
 
@@ -573,6 +573,7 @@ assignexpr:
 
 numexpr:
 	'-' numexpr %prec UNARY {emitfunc(PS, chs)}
+	| NOT numexpr {emitfunc(PS, not)}
 	| '(' numexpr ')'
 	| numexpr '+' numexpr {emitfunc(PS, addd)}
 	| numexpr '-' numexpr {emitfunc(PS, subd)}
@@ -866,14 +867,18 @@ printf("here:%s\n", ps->yypntr);
 	case ')': return ch;
 	case '+': return ch;
 	case '-': return ch;
-	case '*': return ch;
+	case '*':
+		ch=get(ps);
+		if(ch=='*') return POWER;
+		back(ps);
+		return '*';
 	case '/': return ch;
 	case '&': return AND;
 	case '|': return OR;
 	case '^': return XOR;
 	case '\n': return LF;
 	case '=': return ch;
-	case '~': return POWER;
+	case '~': return NOT;
 	case 0: back(ps);
 		return 0;
 	case '>':

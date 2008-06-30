@@ -130,7 +130,8 @@ AND          As in if j=1 and k=2 ...
 <<, >>       Logical left and right shift
 +, -         Plus, minus
 *, /         Multiply, divide
-~            Power -- 2~3 is 8
+**            Power -- 2**3 is 8
+-, ~         Unary minus and unary NOT
 
 (expr)
 func(expr[,...])

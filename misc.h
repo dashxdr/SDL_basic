@@ -393,7 +393,7 @@ DECLARE(shmove)
 DECLARE(shline)
 DECLARE(shcurve)
 DECLARE(shcubic)
-
+DECLARE(not)
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);
