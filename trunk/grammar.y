@@ -243,6 +243,7 @@ void yyerror(char *s);
 %token CIRCLE DISC TEST BOX RECT SLEEP SPOT UPDATE
 %token INTEGER REAL NUMSYMBOL STRINGSYMBOL STRING
 %token ARC WEDGE
+%token SHINIT SHDONE SHEND SHLINE SHCURVE SHCUBIC
 %token ROUND ROTATE
 %token LF
 %token TONE ADSR WAVE FREQ DUR FMUL VOL WSIN WSQR WTRI WSAW
@@ -313,6 +314,12 @@ statement:
 	| ARC num5 {emitfunc(PS, arc)}
 	| WEDGE num6 {emitfunc(PS, wedge)}
 	| RECT num4 extrarender {emitfuncint(PS, rect, $3.value.integer)}
+	| SHINIT {emitfunc(PS, shinit)}
+	| SHDONE {emitfunc(PS, shdone)}
+	| SHEND {emitfunc(PS, shend)}
+	| SHLINE num2 {emitfunc(PS, shline)}
+	| SHCURVE num4 {emitfunc(PS, shcurve)}
+	| SHCUBIC num6 {emitfunc(PS, shcubic)}
 	| SPOT {emitfunc(PS, spot)}
 	| UPDATE {emitfunc(PS, forceupdate)}
 	| FOR forvar '=' numexpr TO numexpr optstep
@@ -814,6 +821,12 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "round")) return ROUND;
 	if(iskeyword(ps, "sgn")) return SGN;
 	if(iskeyword(ps, "quiet")) return QUIET;
+	if(iskeyword(ps, "shcubic")) return SHCUBIC;
+	if(iskeyword(ps, "shcurve")) return SHCURVE;
+	if(iskeyword(ps, "shdone")) return SHDONE;
+	if(iskeyword(ps, "shend")) return SHEND;
+	if(iskeyword(ps, "shinit")) return SHINIT;
+	if(iskeyword(ps, "shline")) return SHLINE;
 	if(iskeyword(ps, "sin")) return SIN;
 	if(iskeyword(ps, "sleep")) return SLEEP;
 	if(iskeyword(ps, "spot")) return SPOT;
