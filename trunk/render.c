@@ -202,7 +202,7 @@ void unlock(bc *bc)
 }
 
 
-void arc_piece(bc *bc, double xc, double yc, double r, double a, double da)
+void arc_piece(shape *shape, double xc, double yc, double r, double a, double da)
 {
 double x1,y1,x2,y2,x3,y3,x4,y4;
 double q1,q2,k2,ax,ay,bx,by;
@@ -237,11 +237,11 @@ int i;
 		x3=x4 + k2*by;
 		y3=y4 - k2*bx;
 
-		shape_add(bc, x1, y1, TAG_ONPATH);
-		shape_add(bc, x2, y2, TAG_CONTROL3);
-		shape_add(bc, x3, y3, TAG_CONTROL3);
+		shape_add(shape, x1, y1, TAG_ONPATH);
+		shape_add(shape, x2, y2, TAG_CONTROL3);
+		shape_add(shape, x3, y3, TAG_CONTROL3);
 		if(i+1==AP_STEPS)
-			shape_add(bc, x4, y4, TAG_ONPATH);
+			shape_add(shape, x4, y4, TAG_ONPATH);
 	}
 }
 
@@ -268,14 +268,14 @@ double a;
 		r=sqrt(dx*dx+dy*dy);
 		dx=dx*pen2/r;
 		dy=dy*pen2/r;
-		shape_init(bc);
-		shape_add(bc, bc->gx-dy, bc->gy+dx, TAG_ONPATH);
-		shape_add(bc, x-dy, y+dx, TAG_ONPATH);
-		arc_piece(bc, x, y, pen2, a-90, -180);
-		shape_add(bc, x+dy, y-dx, TAG_ONPATH);
-		shape_add(bc, bc->gx+dy, bc->gy-dx, TAG_ONPATH);
-		arc_piece(bc, bc->gx, bc->gy, pen2, a+90, -180);
-		shape_done(bc);
+		shape_init(&bc->shape);
+		shape_add(&bc->shape, bc->gx-dy, bc->gy+dx, TAG_ONPATH);
+		shape_add(&bc->shape, x-dy, y+dx, TAG_ONPATH);
+		arc_piece(&bc->shape, x, y, pen2, a-90, -180);
+		shape_add(&bc->shape, x+dy, y-dx, TAG_ONPATH);
+		shape_add(&bc->shape, bc->gx+dy, bc->gy-dx, TAG_ONPATH);
+		arc_piece(&bc->shape, bc->gx, bc->gy, pen2, a+90, -180);
+		shape_done(bc, &bc->shape);
 		bc->gx = x;
 		bc->gy = y;
 	} else
@@ -285,20 +285,20 @@ double a;
 void circle(bc *bc, double cx, double cy, double radius)
 {
 	taint(bc);
-	shape_init(bc);
+	shape_init(&bc->shape);
 #define T1 0
 #define T2 360
-	arc_piece(bc, cx, cy, radius+bc->pen/2.0, T1,T2);
-	arc_piece(bc, cx, cy, radius-bc->pen/2.0, T1+T2, -T2);
-	shape_done(bc);
+	arc_piece(&bc->shape, cx, cy, radius+bc->pen/2.0, T1,T2);
+	arc_piece(&bc->shape, cx, cy, radius-bc->pen/2.0, T1+T2, -T2);
+	shape_done(bc, &bc->shape);
 }
 
 void disc(bc *bc, double cx, double cy, double radius)
 {
 	taint(bc);
-	shape_init(bc);
-	arc_piece(bc, cx, cy, radius, 0, 360);
-	shape_done(bc);
+	shape_init(&bc->shape);
+	arc_piece(&bc->shape, cx, cy, radius, 0, 360);
+	shape_done(bc, &bc->shape);
 }
 
 #define IFACTOR 64  // used to fix coords to the grays rendering engine 
@@ -358,46 +358,46 @@ float a,r;
 	taint(bc);
 }
 
-void shape_init(bc *bc)
+void shape_init(shape *shape)
 {
-	bc->shape_numpoints = 0;
-	bc->shape_numcontours = 0;
+	shape->numpoints = 0;
+	shape->numcontours = 0;
 }
 
-void shape_add(bc *bc, double x, double y, int tag)
+void shape_add(shape *shape, double x, double y, int tag)
 {
-	if(bc->shape_numpoints < MAX_SHAPE_POINTS)
+	if(shape->numpoints < MAX_SHAPE_POINTS)
 	{
-		bc->shape_points[bc->shape_numpoints].x = IFACTOR *x;
-		bc->shape_points[bc->shape_numpoints].y = IFACTOR *y;
-		bc->shape_tags[bc->shape_numpoints] = tag;
-		++bc->shape_numpoints;
+		shape->points[shape->numpoints].x = IFACTOR *x;
+		shape->points[shape->numpoints].y = IFACTOR *y;
+		shape->tags[shape->numpoints] = tag;
+		++shape->numpoints;
 	}
 }
-void shape_end(bc *bc)
+void shape_end(shape *shape)
 {
-	if(bc->shape_numcontours < MAX_SHAPE_CONTOURS &&
-		bc->shape_numpoints &&
-		(!bc->shape_numcontours || 
-		bc->shape_numpoints > bc->shape_pathstops[bc->shape_numcontours-1]+1))
+	if(shape->numcontours < MAX_SHAPE_CONTOURS &&
+				shape->numpoints &&
+			(!shape->numcontours || 
+			shape->numpoints > shape->pathstops[shape->numcontours-1]+1))
 	{
-		bc->shape_pathstops[bc->shape_numcontours++] = bc->shape_numpoints-1;
+		shape->pathstops[shape->numcontours++] = shape->numpoints-1;
 	}
 }
-void shape_done(bc *bc)
+void shape_done(bc *bc, shape *shape)
 {
 int res;
 FT_Raster myraster;
 FT_Raster_Params myparams;
 FT_Outline myoutline;
 
-	shape_end(bc);
+	shape_end(shape);
 
-	myoutline.n_contours = bc->shape_numcontours;;
-	myoutline.n_points = bc->shape_numpoints;
-	myoutline.points = bc->shape_points;
-	myoutline.tags = bc->shape_tags;;
-	myoutline.contours = bc->shape_pathstops;
+	myoutline.n_contours = shape->numcontours;;
+	myoutline.n_points = shape->numpoints;
+	myoutline.points = shape->points;
+	myoutline.tags = shape->tags;;
+	myoutline.contours = shape->pathstops;
 	myoutline.flags = FT_OUTLINE_IGNORE_DROPOUTS |
 			FT_OUTLINE_EVEN_ODD_FILL;
 
