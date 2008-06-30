@@ -96,11 +96,18 @@ typedef struct {
 	int count;
 } sound;
 
-#define MAX_SOUNDS 32
-
-
 #define MAX_SHAPE_POINTS 1024
 #define MAX_SHAPE_CONTOURS 64
+typedef struct {
+	int numpoints;
+	int numcontours;
+	short pathstops[MAX_SHAPE_CONTOURS];
+	FT_Vector  points[MAX_SHAPE_POINTS];
+	char tags[MAX_SHAPE_POINTS];
+
+} shape;
+
+#define MAX_SOUNDS 32
 
 typedef struct basic_context {
 	int flags;
@@ -145,11 +152,8 @@ typedef struct basic_context {
 	double pen; // pen size
 	unsigned char pool[65536];
 // shape state
-	int shape_numpoints;
-	int shape_numcontours;
-	short shape_pathstops[MAX_SHAPE_CONTOURS];
-	FT_Vector  shape_points[MAX_SHAPE_POINTS];
-	char shape_tags[MAX_SHAPE_POINTS];
+	shape shape;
+	shape pshape;
 //
 	int datanum;
 	int datapull;
@@ -204,14 +208,14 @@ void fillscreen(bc *bc, int r, int g, int b, int a);
 void circle(bc *bc, double cx, double cy, double radius);
 void disc(bc *bc, double cx, double cy, double radius);
 void rendertest(bc *bc);
-void shape_init(bc *bc);
-void shape_add(bc *bc, double x, double y, int tag);
-void shape_end(bc *bc);
-void shape_done(bc *bc);
+void shape_init(shape *shape);
+void shape_add(shape *shape, double x, double y, int tag);
+void shape_end(shape *shape);
+void shape_done(bc *bc, shape *shape);
 void spot(bc *bc);
 void lock(bc *bc);
 void unlock(bc *bc);
-void arc_piece(bc *bc, double xc, double yc, double r, double a, double da);
+void arc_piece(shape *shape, double xc, double yc, double r, double a, double da);
 
 // keyboard.c
 

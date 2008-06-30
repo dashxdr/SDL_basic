@@ -1026,8 +1026,8 @@ void pruninit(bc *bc)
 	bc->gblue=255;
 	bc->galpha=255;
 	bc->pen = 1.0;
-	bc->shape_numpoints = 0;
-	bc->shape_numcontours = 0;
+	bc->shape.numpoints = 0;
+	bc->shape.numcontours = 0;
 	freeold(bc);
 	bc->starttime = SDL_GetTicks();
 	memset(bc->vvars, sizeof(bc->vvars), 0);

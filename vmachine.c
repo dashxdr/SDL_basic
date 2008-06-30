@@ -933,25 +933,25 @@ void color4(bc *bc)
 	bc->vsp-=4;
 }
 
-void shinit(bc *bc) {shape_init(bc);}
-void shend(bc *bc) {shape_end(bc);}
-void shdone(bc *bc) {shape_done(bc);}
+void shinit(bc *bc) {shape_init(&bc->pshape);}
+void shend(bc *bc) {shape_end(&bc->pshape);}
+void shdone(bc *bc) {shape_done(bc, &bc->pshape);}
 void shline(bc *bc)
 {
-	shape_add(bc, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
+	shape_add(&bc->pshape, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
 	bc->vsp -= 2;
 }
 void shcurve(bc *bc)
 {
-	shape_add(bc, bc->vsp[-4].d, bc->vsp[-3].d, TAG_CONTROL2);
-	shape_add(bc, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
+	shape_add(&bc->pshape, bc->vsp[-4].d, bc->vsp[-3].d, TAG_CONTROL2);
+	shape_add(&bc->pshape, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
 	bc->vsp -= 4;
 }
 void shcubic(bc *bc)
 {
-	shape_add(bc, bc->vsp[-6].d, bc->vsp[-5].d, TAG_CONTROL3);
-	shape_add(bc, bc->vsp[-4].d, bc->vsp[-3].d, TAG_CONTROL3);
-	shape_add(bc, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
+	shape_add(&bc->pshape, bc->vsp[-6].d, bc->vsp[-5].d, TAG_CONTROL3);
+	shape_add(&bc->pshape, bc->vsp[-4].d, bc->vsp[-3].d, TAG_CONTROL3);
+	shape_add(&bc->pshape, bc->vsp[-2].d, bc->vsp[-1].d, TAG_ONPATH);
 	bc->vsp -= 6;
 }
 
@@ -992,10 +992,10 @@ void roundbox(bc *bc, double x, double y, double dx, double dy, double round)
 		round = dabs(dy);
 	dx -= round;
 	dy -= round;
-	arc_piece(bc, x-dx, y-dy, round, 180, -90);
-	arc_piece(bc, x+dx, y-dy, round, 90, -90);
-	arc_piece(bc, x+dx, y+dy, round, 0, -90);
-	arc_piece(bc, x-dx, y+dy, round, 270, -90);
+	arc_piece(&bc->shape, x-dx, y-dy, round, 180, -90);
+	arc_piece(&bc->shape, x+dx, y-dy, round, 90, -90);
+	arc_piece(&bc->shape, x+dx, y+dy, round, 0, -90);
+	arc_piece(&bc->shape, x-dx, y+dy, round, 270, -90);
 }
 
 // x,y,  width, height
@@ -1009,16 +1009,16 @@ struct modifiers modifiers;
 	dx=bc->vsp[-2].d; // x extension
 	dy=bc->vsp[-1].d; // y extension
 	bc->vsp-=4;
-	shape_init(bc);
+	shape_init(&bc->shape);
 	if(!modifiers.round)
 	{
-		shape_add(bc, x-dx, y-dy, TAG_ONPATH);
-		shape_add(bc, x+dx, y-dy, TAG_ONPATH);
-		shape_add(bc, x+dx, y+dy, TAG_ONPATH);
-		shape_add(bc, x-dx, y+dy, TAG_ONPATH);
+		shape_add(&bc->shape, x-dx, y-dy, TAG_ONPATH);
+		shape_add(&bc->shape, x+dx, y-dy, TAG_ONPATH);
+		shape_add(&bc->shape, x+dx, y+dy, TAG_ONPATH);
+		shape_add(&bc->shape, x-dx, y+dy, TAG_ONPATH);
 	} else
 		roundbox(bc, x, y, dx, dy, modifiers.round);
-	shape_done(bc);
+	shape_done(bc, &bc->shape);
 }
 
 void rect(bc *bc)
@@ -1033,25 +1033,25 @@ struct modifiers modifiers;
 	dx=bc->vsp[-2].d;
 	dy=bc->vsp[-1].d;
 	bc->vsp-=4;
-	shape_init(bc);
+	shape_init(&bc->shape);
 	if(!modifiers.round)
 	{
-		shape_add(bc, x-dx-pen2, y-dy-pen2, TAG_ONPATH);
-		shape_add(bc, x+dx+pen2, y-dy-pen2, TAG_ONPATH);
-		shape_add(bc, x+dx+pen2, y+dy+pen2, TAG_ONPATH);
-		shape_add(bc, x-dx-pen2, y+dy+pen2, TAG_ONPATH);
-		shape_end(bc);
-		shape_add(bc, x-dx+pen2, y-dy+pen2, TAG_ONPATH);
-		shape_add(bc, x+dx-pen2, y-dy+pen2, TAG_ONPATH);
-		shape_add(bc, x+dx-pen2, y+dy-pen2, TAG_ONPATH);
-		shape_add(bc, x-dx+pen2, y+dy-pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x-dx-pen2, y-dy-pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x+dx+pen2, y-dy-pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x+dx+pen2, y+dy+pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x-dx-pen2, y+dy+pen2, TAG_ONPATH);
+		shape_end(&bc->shape);
+		shape_add(&bc->shape, x-dx+pen2, y-dy+pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x+dx-pen2, y-dy+pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x+dx-pen2, y+dy-pen2, TAG_ONPATH);
+		shape_add(&bc->shape, x-dx+pen2, y+dy-pen2, TAG_ONPATH);
 	} else
 	{
 		roundbox(bc, x, y, dx+pen2, dy+pen2, modifiers.round);
-		shape_end(bc);
+		shape_end(&bc->shape);
 		roundbox(bc, x, y, dx-pen2, dy-pen2, modifiers.round);
 	}
-	shape_done(bc);
+	shape_done(bc, &bc->shape);
 
 }
 
@@ -1065,10 +1065,10 @@ double pen2=bc->pen/2.0;
 	a=bc->vsp[-2].d;
 	da=bc->vsp[-1].d;
 	bc->vsp -= 5;
-	shape_init(bc);
-	arc_piece(bc, x, y, r+pen2, a, da);
-	arc_piece(bc, x, y, r-pen2, a+da, -da);
-	shape_done(bc);
+	shape_init(&bc->shape);
+	arc_piece(&bc->shape, x, y, r+pen2, a, da);
+	arc_piece(&bc->shape, x, y, r-pen2, a+da, -da);
+	shape_done(bc, &bc->shape);
 }
 
 void wedge(bc *bc)
@@ -1081,10 +1081,10 @@ double x, y, ri, ro, a, da;
 	a=bc->vsp[-2].d;
 	da=bc->vsp[-1].d;
 	bc->vsp -= 6;
-	shape_init(bc);
-	arc_piece(bc, x, y, ro, a, da);
-	arc_piece(bc, x, y, ri, a+da, -da);
-	shape_done(bc);
+	shape_init(&bc->shape);
+	arc_piece(&bc->shape, x, y, ro, a, da);
+	arc_piece(&bc->shape, x, y, ri, a+da, -da);
+	shape_done(bc, &bc->shape);
 }
 
 
