@@ -1,38 +1,68 @@
 10 rem *** Inspired by inkscape's polygon tool
-20 px = 0:py = 0: dpx = 4: dpy = 4.2737127283
-30 cx = xsize/2
-40 cy = ysize/2
-50 n=20
-60 r = ysize*.5
-70 r2 = r*.3
-80 da = 3.1415927*2.0/n
-90 cd = .2
-100 ia=0:ia2=da/2
-110 a=ia
-120 a2=ia2
-130 color 255,255,255
-140 fill
-150 color 255,0,0
-160 shinit
-170 shline cx+r2*cos(a2-da), cy-r2*sin(a2-da)
-180 for i=1 to n
-190 shcubic cx+r2*cos(a2-da+cd), cy-r2*sin(a2-da+cd), cx+r*cos(a-cd), cy-r*sin(a-cd), cx+r*cos(a), cy-r*sin(a)
-200 shcubic cx+r*cos(a+cd),cy-r*sin(a+cd), cx+r2*cos(a2-cd), cy-r2*sin(a2-cd), cx+r2*cos(a2), cy-r2*sin(a2)
-210 a = a + da
-220 a2 = a2 + da
-230 next i
-240 shdone
-250 color 0,0,0
-260 disc px, py, 5
-270 update
-280 px = px + dpx
-290 if px<=0 then px = 0:dpx = -dpx
-300 if px>=xsize then px = xsize-1:dpx = -dpx
-310 py = py + dpy
-320 if py<=0 then py = 0: dpy = -dpy
-330 if py>=ysize then py = ysize-1:dpy = -dpy
-340 rem ***** Uncomment the line below to allow mouse control
-350 rem px=mousex:py=mousey
-360 ia2 = 3.1415927*2.0*px/xsize:cd = 3.1415927*py/ysize
-370 sleep .04
-380 goto 110
+20 control1 = 0
+30 control2 = 2
+40 halfpi = 3.1415927/2.0
+50 px = xsize/2:py = ysize/2: dpx = 4: dpy = 4.2737127283
+60 px2 = xsize/32: py2 = ysize*.9: dpx2 = 3.77282848: dpy2 = 4
+70 cx = xsize/2
+80 cy = ysize/2
+90 n=20
+100 r = ysize*.5
+110 rem ****** Main loop
+120 ia2 = 3.1415927*2.0*(px-xsize/2)/xsize:cd = (xsize/2)*(py-ysize/2)/ysize
+130 r2 = r*px2/xsize: n = 3+int(50*py2/ysize):da = 3.1415927*2.0/n
+140 gosub 620: rem handle mouse control toggles
+150 gosub 420: rem handle control1
+160 gosub 520: rem handle control2
+170 a = -da/2
+180 a2=ia2
+190 color 255,255,255
+200 fill
+210 shinit
+220 shline cx+r2*cos(a2-da), cy-r2*sin(a2-da)
+230 for i=1 to n
+240 x2 = cx+r2*cos(a2):y2 = cy-r2*sin(a2)
+250 x1 = cx+r*cos(a):y1 = cy-r*sin(a)
+260 tx1 = cd*cos(a-halfpi):ty1 = -cd*sin(a-halfpi)
+270 tx2 = cd*cos(a2-halfpi):ty2 = -cd*sin(a2-halfpi)
+280 shcubic cx+r2*cos(a2-da) - cd*cos(a2-da-halfpi), cy-r2*sin(a2-da) + cd*sin(a2-da-halfpi), x1+tx1, y1+ty1, x1, y1
+290 shcubic x1-tx1, y1-ty1, x2 + tx2, y2 + ty2, x2, y2
+300 a = a + da
+310 a2 = a2 + da
+320 next i
+330 color 255,0,0
+340 shdone
+350 color 0,255,0
+360 disc px, py, 5
+370 color 0,0,255
+380 disc px2, py2, 5
+390 update
+400 sleep .04
+410 goto 110
+420 rem *******  control1 handler
+430 if control1 <> 0 then 500
+440 px = px + dpx
+450 if px<=0 then px = 0:dpx = -dpx
+460 if px>=xsize then px = xsize-1:dpx = -dpx
+470 py = py + dpy
+480 if py<=0 then py = 0: dpy = -dpy
+490 if py>=ysize then py = ysize-1:dpy = -dpy
+500 if control1=1 then px=mousex:py=mousey
+510 return
+520 rem ******   control2 handler
+530 if control2 <> 0 then 600
+540 px2 = px2 + dpx2
+550 if px2<=0 then px2 = 0: dpx2 = -dpx2
+560 if px2>=xsize then px2 = xsize-1: dpx2 = -dpx2
+570 py2 = py2 + dpy2
+580 if py2<=0 then py2 = 0: dpy2 = -dpy2
+590 if py2>=ysize then py2 = ysize-1: dpy2 = -dpy2
+600 if control2=1 then px2=mousex:py2=mousey
+610 return
+620 rem ***** Mouse control on/off
+630 newmb = mouseb
+640 bits = ~oldmb & newmb
+650 oldmb = newmb
+660 if bits&1 then control1 = control1 + 1: if control1 = 3 then control1 = 0
+670 if bits&4 then control2 = control2 + 1: if control2 = 3 then control2 = 0
+680 return
