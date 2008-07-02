@@ -150,7 +150,7 @@ typedef struct basic_context {
 	double gx, gy; // position
 	int gred, ggreen, gblue, galpha;
 	double pen; // pen size
-	unsigned char pool[65536];
+	unsigned char pool[0x100000];
 // shape state
 	shape shape;
 	shape pshape;
