@@ -149,6 +149,12 @@ void addd(bc *bc){--bc->vsp;bc->vsp[-1].d += bc->vsp[0].d;}
 void muld(bc *bc){--bc->vsp;bc->vsp[-1].d *= bc->vsp[0].d;}
 void subd(bc *bc){--bc->vsp;bc->vsp[-1].d -= bc->vsp[0].d;}
 void divd(bc *bc){--bc->vsp;if(bc->vsp[0].d!=0.0) bc->vsp[-1].d /= bc->vsp[0].d;}
+void modd(bc *bc)
+{
+	--bc->vsp;
+	if(bc->vsp[0].d!=0.0)
+		bc->vsp[-1].d -= bc->vsp[0].d * (int)(bc->vsp[-1].d/bc->vsp[0].d);
+}
 void powerd(bc *bc){--bc->vsp;bc->vsp[-1].d = pow(bc->vsp[-1].d, bc->vsp[0].d);}
 
 void andd(bc *bc){--bc->vsp;bc->vsp[-1].d = (int)bc->vsp[-1].d & (int)bc->vsp[0].d;}

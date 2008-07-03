@@ -579,6 +579,7 @@ numexpr:
 	| numexpr '-' numexpr {emitfunc(PS, subd)}
 	| numexpr '*' numexpr {emitfunc(PS, muld)}
 	| numexpr '/' numexpr {emitfunc(PS, divd)}
+	| numexpr MOD numexpr {emitfunc(PS, modd)}
 	| numexpr POWER numexpr {emitfunc(PS, powerd)}
 	| numexpr LL numexpr
 	| numexpr RR numexpr
@@ -858,21 +859,22 @@ printf("here:%s\n", ps->yypntr);
 	ch=get(ps);
 	switch(ch)
 	{
-	case '?': return ch;
-	case '@': return ch;
-	case ',': return ch;
-	case ';': return ch;
-	case ':': return ch;
-	case '(': return ch;
-	case ')': return ch;
-	case '+': return ch;
+	case '%': return MOD;
+	case '?':
+	case '@':
+	case ',':
+	case ';':
+	case ':':
+	case '(':
+	case ')':
+	case '+':
+	case '/':
 	case '-': return ch;
 	case '*':
 		ch=get(ps);
 		if(ch=='*') return POWER;
 		back(ps);
 		return '*';
-	case '/': return ch;
 	case '&': return AND;
 	case '|': return OR;
 	case '^': return XOR;
