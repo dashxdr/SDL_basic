@@ -66,6 +66,7 @@ disentry dlist[]={
 {dimd, "dimd", D_INTEGER},
 {dims, "dims", D_INTEGER},
 {divd, "divd", D_NONE},
+{modd, "modd", D_NONE},
 {dur, "dur", D_NONE},
 {eqd, "eqd", D_NONE},
 {eqs, "eqs", D_NONE},

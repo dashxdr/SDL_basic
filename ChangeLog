@@ -11,6 +11,8 @@ Added separate shape structure so shape primitives and internal drawing
 Made it so ** is the power, not '~'. So 2**3 is 8.
 Made it so ~ is unary NOT, as it should be.
 Made ftgrays.c's pool 1M up from 64K -- this speeds up rasterizing.
+Added MOD operator, strangely wasn't there before. Either '%' or 'MOD'.
+Increased max shape points to 100,000, up from 1,024.
 ----------------------------------------------------------------------------
 David Ashley (DA) Mon Jun 30 00:09:19 EDT 2008
 dash@gmail.com

@@ -96,7 +96,7 @@ typedef struct {
 	int count;
 } sound;
 
-#define MAX_SHAPE_POINTS 1024
+#define MAX_SHAPE_POINTS 100000
 #define MAX_SHAPE_CONTOURS 64
 typedef struct {
 	int numpoints;
@@ -394,6 +394,7 @@ DECLARE(shline)
 DECLARE(shcurve)
 DECLARE(shcubic)
 DECLARE(not)
+DECLARE(modd)
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);
