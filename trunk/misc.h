@@ -4,6 +4,9 @@
 
 #define M_PI2 (M_PI*2.0)
 
+#define RANDOM_SIZE 55
+#define RANDOM_TAP  31
+
 #define KEYMAX 32
 #define KEYHISTSIZE 16
 
@@ -179,11 +182,15 @@ typedef struct basic_context {
 	double soundtime;
 	int soundticks;
 	short wsqr[8192], wtri[8192], wsin[8192], wsaw[8192];
+// random numbers
+	int randomblock[RANDOM_SIZE];
+	int rpointer;
 } bc;
 
 // main.c
 
 extern int globaltime;
+int randnum(bc *bc);
 
 // font.c
 

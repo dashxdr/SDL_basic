@@ -733,9 +733,9 @@ void rndd(bc *bc)
 int r;
 	r=bc->vsp[-1].d;
 	if(r)
-		bc->vsp[-1].d = 1 + rand()%r;
+		bc->vsp[-1].d = 1 + randnum(bc)%r;
 	else
-		bc->vsp[-1].d = (rand()&0x7fffffff)/(double)0x7fffffff;
+		bc->vsp[-1].d = (randnum(bc)&0x7fffffff)/(double)0x7fffffff;
 }
 void sleepd(bc *bc)
 {

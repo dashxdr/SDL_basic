@@ -33,9 +33,80 @@ int nt;
 	return 10;
 }
 
+int randomblock[RANDOM_SIZE]={
+0x76ca8ff1,
+0x573d7ea4,
+0x2ae6b258,
+0x23140f07,
+0x4e95c6da,
+0x11551b85,
+0x6988c599,
+0x4ee418a4,
+0x1907aca7,
+0x70dd13f6,
+0x65d89253,
+0x401e07d7,
+0x7cc12f8a,
+0x742483de,
+0x6f9464ad,
+0x13a45c30,
+0x53dde70d,
+0x42d3a0de,
+0x187e546f,
+0x3069f430,
+0x14ac1193,
+0x5795ce93,
+0x06089651,
+0x14e771f5,
+0x43876f29,
+0x6427b411,
+0x62277508,
+0x680b4d6f,
+0x38e14a23,
+0x252f82be,
+0x762ab4e6,
+0x2fabda14,
+0x7c6d0162,
+0x2111673e,
+0x52bfe91b,
+0x4b02c83c,
+0x326682c4,
+0x3c48aeb4,
+0x19e6e0e0,
+0x4b6e2f6b,
+0x2d25c2ab,
+0x7fbf7334,
+0x0b8c3742,
+0x29e6f235,
+0x73e3f712,
+0x7b209bf0,
+0x3d8b4e65,
+0x47c1de1f,
+0x3df43cce,
+0x5609a2d4,
+0x782bd24f,
+0x52a04e61,
+0x2d9f7167,
+0x7e3468a1,
+0x6787c057,
+};
+
+int randnum(bc *bc)
+{
+int p;
+	p = bc->rpointer - RANDOM_TAP;
+	if(p<0) p+=RANDOM_SIZE;
+	p = bc->randomblock[bc->rpointer]^=bc->randomblock[p];
+	++bc->rpointer;
+	if(bc->rpointer == RANDOM_SIZE)
+		bc->rpointer = 0;
+	return p;
+}
+
 void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
 {
 	memset(bc, 0, sizeof(mybc));
+	memcpy(bc->randomblock, randomblock, sizeof(bc->randomblock));
 	bc->lastcode = -1;
 	bc->xsize = xsize;
 	bc->ysize = ysize;
