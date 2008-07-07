@@ -170,6 +170,8 @@ typedef struct basic_context {
 	linemap lm[MAX_PROGRAM_LINES];
 	int takeaction;
 // sound
+	int leftover;
+	int samples;
 	int soundworking;
 	sound sounds[MAX_SOUNDS];
 	sound isounds[MAX_SOUNDS];

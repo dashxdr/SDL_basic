@@ -7,35 +7,45 @@
 #include <math.h>
 
 #define SAMPLING_RATE 48000
-#define FRAGSIZE 1024
+#define FRAGSIZE (1024)
 #define PIECES 16
+#define CHUNK (1024/PIECES) // timed for fragsize of 1024
 
 #define FFIX (4294967296.0/SAMPLING_RATE)
-#define TIME_PER_PIECE ((double)FRAGSIZE / (SAMPLING_RATE*PIECES))
+#define TIME_PER_PIECE ((double)1024 / (SAMPLING_RATE*PIECES))
 
 void fillaudio(void *data, Uint8 *buffer, int len)
 {
 bc *bc=data;
-int i,j, sp;
+int i, sp;
 Sint16 *p;
 sound *s, *is;
-int accum[FRAGSIZE*2/PIECES], *ap;
+int accum[16384], *ap;
 Uint32 v, dv;
 int vol;
 double soundtime;
 int now;
 int diff;
+int left;
+int chunk;
+int next;
+
 
 	now = SDL_GetTicks();
 	p = (void *)buffer;
 	len>>=2; // stereo, 16 bit signed samples = 4 bytes/sample
-
 //printf("%10.3f %10.3f %10.3f\n", bc->time, bc->soundtime, bc->time - bc->soundtime);
-	len /= PIECES;
 	soundtime = bc->soundtime;
-	for(j=0;j<PIECES;++j)
+	next = CHUNK - bc->leftover;
+	left = len;
+	while(left>0)
 	{
-		memset(accum, 0, sizeof(accum));
+		chunk = next;
+		if(chunk>left)
+			chunk = left;
+		left -= chunk;
+		next -= chunk;
+		memset(accum, 0, chunk*2*sizeof(accum[0]));
 		for(sp = 0;sp < MAX_SOUNDS;++sp)
 		{
 			s = bc->sounds + sp;
@@ -62,7 +72,7 @@ int diff;
 			vol = s->volume * 16384;
 			if(sp < MAX_SOUNDS-4) // last 4 are noise
 			{
-				for(i=0;i<len;++i)
+				for(i=0;i<chunk;++i)
 				{
 					v += dv;
 					ap[i*2+0] += (s->wave[(v>>19) & 0x1fff] * vol) >> 17;
@@ -71,7 +81,7 @@ int diff;
 			} else
 			{
 				int t = ~0, t2, t3=0;
-				for(i=0;i<len;++i)
+				for(i=0;i<chunk;++i)
 				{
 					v += dv;
 					t2 = v>>31;
@@ -85,6 +95,7 @@ int diff;
 				}
 			}
 			s->index = v;
+			if(next) continue;
 			s->time += TIME_PER_PIECE;
 			if(s->time >= s->duration)
 				s->flags &= ~SND_ACTIVE;
@@ -93,13 +104,18 @@ int diff;
 				s->flags &= ~SND_ACTIVE;
 		}
 		ap = accum;
-		for(i=0;i<len;++i)
+		for(i=0;i<chunk;++i)
 		{
 			*p++ = *ap++;
 			*p++ = *ap++;
 		}
-		soundtime += TIME_PER_PIECE;
+		if(!next)
+		{
+			soundtime += TIME_PER_PIECE;
+			next = CHUNK;
+		}
 	}
+	bc->leftover = CHUNK - next;
 	bc->soundtime += (now - bc->soundticks)*.001;
 	bc->soundticks = now;
 
@@ -145,6 +161,7 @@ sound *s;
 		fprintf(stderr,"Couldn't open audio: %s\n",SDL_GetError());
 		return;
 	}
+	bc->samples = wanted.samples;
 	bc->soundworking = 1;
 
 	SDL_PauseAudio(0);
