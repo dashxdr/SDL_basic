@@ -1,18 +1,16 @@
 #NOTE have to define AR, RANLIB + WINDRES in Makefile after configure
 # need to undef main() in main routine, lots of WinMain@16 insanity...
 
-SDL_BUILD = /home/dash/code/SDL_win32/SDL-1.2.13
+SDL_CONFIG =/usr/local/cross-tools/i386-mingw32/bin/sdl-config
 CROSS = /usr/local/cross-tools/bin/i386-mingw32-
 
 #DBG += -g
 #DBG += -pg
 CC	= $(CROSS)gcc
 CFLAGS = -O2 -Wall $(DBG)
-CFLAGS += -I$(SDL_BUILD)/include
-CFLAGS += -D_GNU_SOURCE=1
-CFLAGS += -D_REENTRANT
-CFLAGS += -DWIN32_BUILD
-LDFLAGS = $(DBG) -lm $(SDL_BUILD)/build/.libs/SDL.dll
+CFLAGS += $(shell $(SDL_CONFIG) --cflags)
+#LDFLAGS = $(DBG) -lm $(SDL_BUILD)/build/.libs/SDL.dll
+LDFLAGS = $(shell $(SDL_CONFIG) --libs)
 
 # ftgrays standalone
 CFLAGS += -D_STANDALONE_
@@ -21,6 +19,7 @@ CFLAGS += -D_STANDALONE_
 all: basic
 basic: main.o basic.o font.o render.o keyboard.o ftgrays.o parse.o \
 	vmachine.o sound.o vdis.o help.o
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 main.o: main.c misc.h
 basic.o: basic.c misc.h

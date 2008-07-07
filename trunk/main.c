@@ -122,9 +122,6 @@ void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
 }
 
 
-#ifdef WIN32_BUILD
-#undef main
-#endif
 int main(int argc,char **argv)
 {
 int videoflags;
