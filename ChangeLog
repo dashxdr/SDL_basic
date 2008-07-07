@@ -15,6 +15,8 @@ Added MOD operator, strangely wasn't there before. Either '%' or 'MOD'.
 Increased max shape points to 100,000, up from 1,024.
 Fixed sound issues on win32, the asked for fragment is not always granted.
 Tentative makefile for win32.
+Stopped using rand(), define randnum() and generate random numbers internally.
+  This is bacause on win32, for some reason the gnu rand() returns a 15 bit #.
 ----------------------------------------------------------------------------
 David Ashley (DA) Mon Jun 30 00:09:19 EDT 2008
 dash@gmail.com
