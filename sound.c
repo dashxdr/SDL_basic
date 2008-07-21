@@ -3,6 +3,8 @@
    http://www.linuxmotors.com/SDL_basic
    dashxdr@gmail.com
 */
+#include <string.h>
+#include <stdlib.h>
 #include "misc.h"
 #include <math.h>
 

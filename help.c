@@ -4,6 +4,9 @@
    dashxdr@gmail.com
 */
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "misc.h"
 
 typedef struct {

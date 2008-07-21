@@ -6,6 +6,7 @@
 */
 
 
+#include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include "misc.h"
