@@ -3,6 +3,8 @@
    http://www.linuxmotors.com/SDL_basic
    dashxdr@gmail.com
 */
+#include <string.h>
+#include <ctype.h>
 #include <SDL.h>
 #include "misc.h"
 
