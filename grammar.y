@@ -1038,7 +1038,7 @@ void pruninit(bc *bc)
 	bc->shape.numcontours = 0;
 	freeold(bc);
 	bc->starttime = SDL_GetTicks();
-	memset(bc->vvars, sizeof(bc->vvars), 0);
+	memset(bc->vvars, 0, sizeof(bc->vvars));
 	reset_waitbase(bc);
 }
 
