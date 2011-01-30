@@ -1,8 +1,12 @@
 #NOTE have to define AR, RANLIB + WINDRES in Makefile after configure
 # need to undef main() in main routine, lots of WinMain@16 insanity...
 
-SDL_CONFIG =/usr/local/cross-tools/i386-mingw32/bin/sdl-config
-CROSS = /usr/local/cross-tools/bin/i386-mingw32-
+#SDL_CONFIG =/usr/local/cross-tools/i386-mingw32/bin/sdl-config
+#CROSS = /usr/local/cross-tools/bin/i386-mingw32-
+
+SDL_CONFIG=/usr/local/cross-tools/i686-w64-mingw32/bin/sdl-config
+CROSS=i586-mingw32msvc-
+
 
 #DBG += -g
 #DBG += -pg
