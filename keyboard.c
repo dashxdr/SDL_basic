@@ -474,7 +474,7 @@ top:
 				if(echocr) cr(bc);
 				break;
 			}
-			else if(code>=0x20 && i<sizeof(bc->debline)-1)
+			else if(code>=0x20 && i<bc->txsize-1 && i<sizeof(bc->debline)-1)
 			{
 				p2=bc->debline+i;
 				p1=p2+1;
