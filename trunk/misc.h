@@ -15,7 +15,7 @@
 #define MAX_PROGRAM_LINES 100000
 
 #define HISTSIZE 512
-#define LINESIZE 128
+#define LINESIZE 256
 
 #define BF_QUIT         1 // we can quit
 #define BF_NOPROMPT     2 // don't put up "Ready" prompt.
