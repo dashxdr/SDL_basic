@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <math.h>
+#include <dirent.h>
 
 #include "misc.h"
 
@@ -350,6 +351,83 @@ void dopr(bc *bc, char *text)
 	parse(bc, 1); // run it
 }
 
+int nametail(char *name, char *tail)
+{
+int n, t, d;
+	n = strlen(name);
+	t = strlen(tail);
+	if(n<=t) return -1;
+	name += n-t;
+	while(!(d = tolower(*name) - tolower(*tail)) && *name)
+		++name, ++tail;
+	return d;
+}
+
+int namecompare(const void *p1, const void *p2)
+{
+	return strcmp(*(char **)p1, *(char **)p2);
+}
+
+#define MAXNAMES 4096
+void dodir(bc *bc, char *text)
+{
+	struct dirent *de;
+	DIR *dirp;
+	char **names;
+	int count = 0;
+	int maxw = 0;
+
+	names = malloc(MAXNAMES*sizeof(void *));
+	if(!names)
+		return;
+	dirp = opendir(".");
+	if(!dirp)
+		return;
+	for(;;)
+	{
+		de = readdir(dirp);
+		if(!de) break;
+		if(nametail(de->d_name, ".bas")) continue;
+		char *t = strdup(de->d_name);
+		if(!t) break;
+		names[count++] = t;
+		int len = strlen(t);
+		if(len > maxw) maxw = len;
+		if(count==MAXNAMES)
+			break;
+	}
+	closedir(dirp);
+	if(!count)
+		return;
+	qsort(names, count, sizeof(names[0]), namecompare);
+	++maxw;
+	int numcol = bc->txsize / maxw;
+	int numrow = (count + numcol-1) / numcol;
+
+	if((numcol-1) * numrow >= count)
+		--numcol;
+	int cw = bc->txsize / numcol;
+	int i, j;
+	for(i=0;i<numrow;++i)
+	{
+		int at = 0;
+		for(j=0;j<numcol;++j)
+		{
+			int which = i + j*numrow;
+			if(which >= count)
+				break;
+			while(at < j*cw)
+			{
+				tprintf(bc, " ");
+				++at;
+			}
+			at += tprintf(bc, "%s", names[which]);
+		}
+		tprintf(bc, "\n");
+	}
+
+}
+
 void dorun(bc *bc, char *text);
 
 struct cmd commandlist[]={
@@ -365,6 +443,7 @@ struct cmd commandlist[]={
 {"ren", doren},
 {"parse", doparse},
 {"help", dohelp},
+{"dir", dodir},
 {0, 0}};
 
 void processline(bc *bc, char *line)

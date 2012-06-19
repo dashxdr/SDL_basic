@@ -289,14 +289,15 @@ static int escapedata[20],ecount;
 	update(bc);
 }
 
-void tprintf(bc *bc, char *s, ...)
+int tprintf(bc *bc, char *s, ...)
 {
 char tbuff[2048];
 va_list ap;
+int len;
 
 	va_start(ap, s);
-	vsnprintf(tbuff, sizeof(tbuff), s, ap);
+	len = vsnprintf(tbuff, sizeof(tbuff), s, ap);
 	va_end(ap);
 	dprints(bc, tbuff);
-
+	return len;
 }
