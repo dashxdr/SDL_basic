@@ -37,7 +37,7 @@ test:	all
 	./basic
 
 WORK = /ram
-VER = 1.0.2
+VER = 1.0.3
 DDIR = SDL_basic-$(VER)
 
 package:  clean
