@@ -224,14 +224,12 @@ int i;
 #define PS ((ps *)parm)
 
 
-#define YYPARSE_PARAM parm
-#define YYLEX_PARAM parm
-
 int yylex(YYSTYPE *lvalp, ps *parm);
-void yyerror(char *s);
+void yyerror(ps *parm, char *s);
 
 %}
-%pure_parser
+%pure-parser
+%param {ps *parm}
 %token IF THEN ELSE
 %token ON GOTO GOSUB RETURN LET INPUT PRINT READ DATA DIM
 %token FOR TO NEXT STEP END STOP REM
@@ -276,7 +274,7 @@ prog2:
 line:
 	mark linenumber mark statements LF {addline(PS, $2.value.integer,
 					$1.value.step - PS->steps,
-					$2.at)}
+					$2.at);}
 	;
 
 linenumber:
@@ -289,60 +287,60 @@ statements:
 
 statement:
 	IF numexpr optthen fixif stint mark
-		{$4.value.step[1].i = $6.value.step - $4.value.step}
+		{$4.value.step[1].i = $6.value.step - $4.value.step;}
 	| IF numexpr optthen fixif stint ELSE fixifelse stint mark
 		{$4.value.step[1].i = $7.value.step - $4.value.step;
-		$7.value.step[-1].i = $9.value.step - $7.value.step+2}
-	| GOTO INTEGER {addlineref(PS, $2.at);emitfuncint(PS, rjmp, $2.value.integer)}
+		$7.value.step[-1].i = $9.value.step - $7.value.step+2;}
+	| GOTO INTEGER {addlineref(PS, $2.at);emitfuncint(PS, rjmp, $2.value.integer);}
 	| LET assignexpr {/* implemented */}
 	| assignexpr {/* implemented */}
-	| print printlist {if($2.value.integer) emitfunc(PS, lf)}
+	| print printlist {if($2.value.integer) emitfunc(PS, lf);}
 	| DIM dimarraylist
-	| END {emitfunc(PS, performend)}
-	| STOP {emitfunc(PS, performstop)}
-	| SLEEP num1 {emitfunc(PS, sleepd);emitfunc(PS, pop)}
-	| PEN num1 {emitfunc(PS, performpen)}
+	| END {emitfunc(PS, performend);}
+	| STOP {emitfunc(PS, performstop);}
+	| SLEEP num1 {emitfunc(PS, sleepd);emitfunc(PS, pop);}
+	| PEN num1 {emitfunc(PS, performpen);}
 	| COLOR num34 {if($2.value.count==3) emitfunc(PS, color3);
-			else emitfunc(PS, color4)}
-	| CLS {emitfunc(PS, cls)}
-	| HOME {emitfunc(PS, home)}
-	| CIRCLE num3 {emitfunc(PS, performcircle)}
-	| DISC num3 {emitfunc(PS, performdisc)}
-	| FILL {emitfunc(PS, performfill)}
-	| MOVE num2 {emitfunc(PS, performmove)}
-	| LINE num2 {emitfunc(PS, performline)}
-	| BOX num4 extrarender {emitfuncint(PS, box, $3.value.integer)}
-	| ARC num5 {emitfunc(PS, arc)}
-	| WEDGE num6 {emitfunc(PS, wedge)}
-	| RECT num4 extrarender {emitfuncint(PS, rect, $3.value.integer)}
-	| SHINIT {emitfunc(PS, shinit)}
-	| SHDONE {emitfunc(PS, shdone)}
-	| SHEND {emitfunc(PS, shend)}
-	| SHLINE num2 {emitfunc(PS, shline)}
-	| SHCURVE num4 {emitfunc(PS, shcurve)}
-	| SHCUBIC num6 {emitfunc(PS, shcubic)}
-	| SPOT {emitfunc(PS, spot)}
-	| UPDATE {emitfunc(PS, forceupdate)}
+			else emitfunc(PS, color4);}
+	| CLS {emitfunc(PS, cls);}
+	| HOME {emitfunc(PS, home);}
+	| CIRCLE num3 {emitfunc(PS, performcircle);}
+	| DISC num3 {emitfunc(PS, performdisc);}
+	| FILL {emitfunc(PS, performfill);}
+	| MOVE num2 {emitfunc(PS, performmove);}
+	| LINE num2 {emitfunc(PS, performline);}
+	| BOX num4 extrarender {emitfuncint(PS, box, $3.value.integer);}
+	| ARC num5 {emitfunc(PS, arc);}
+	| WEDGE num6 {emitfunc(PS, wedge);}
+	| RECT num4 extrarender {emitfuncint(PS, rect, $3.value.integer);}
+	| SHINIT {emitfunc(PS, shinit);}
+	| SHDONE {emitfunc(PS, shdone);}
+	| SHEND {emitfunc(PS, shend);}
+	| SHLINE num2 {emitfunc(PS, shline);}
+	| SHCURVE num4 {emitfunc(PS, shcurve);}
+	| SHCUBIC num6 {emitfunc(PS, shcubic);}
+	| SPOT {emitfunc(PS, spot);}
+	| UPDATE {emitfunc(PS, forceupdate);}
 	| FOR forvar '=' numexpr TO numexpr optstep
-		{emitfuncint(PS, pushav, $2.value.integer);emitfunc(PS, performfor)}
+		{emitfuncint(PS, pushav, $2.value.integer);emitfunc(PS, performfor);}
 	| NEXT optforvar
-	| GOSUB INTEGER {addlineref(PS, $2.at);emitfuncint(PS, rcall, $2.value.integer)}
-	| RETURN {emitfunc(PS, ret)}
+	| GOSUB INTEGER {addlineref(PS, $2.at);emitfuncint(PS, rcall, $2.value.integer);}
+	| RETURN {emitfunc(PS, ret);}
 	| REM {/* do nothing */}
-	| ON numexpr GOTO linelist {emitfuncint(PS, ongoto, $4.value.count)}
-	| ON numexpr GOSUB linelist {emitfuncint(PS, ongosub, $4.value.count)}
-	| INPUT inputlist {emitfuncint(PS, input, $2.value.count)}
+	| ON numexpr GOTO linelist {emitfuncint(PS, ongoto, $4.value.count);}
+	| ON numexpr GOSUB linelist {emitfuncint(PS, ongosub, $4.value.count);}
+	| INPUT inputlist {emitfuncint(PS, input, $2.value.count);}
 	| READ readlist {/* implemented */}
 	| DATA datalist {/* implemented */}
 	| QUIET silist
-	| TONE tonenumber otonelist {emitfunc(PS, soundgo)}
+	| TONE tonenumber otonelist {emitfunc(PS, soundgo);}
 	| RANDOM
 	| RESTORE
 	| CLEAR num1
-	| TEST {rendertest(PS->bc)}
+	| TEST {rendertest(PS->bc);}
 	;
 
-extrarender: /* nothing */ {$$.value.integer = 0}
+extrarender: /* nothing */ {$$.value.integer = 0;}
 	| erlist
 	;
 
@@ -350,20 +348,20 @@ erlist:
 	eritem
 	| erlist eritem {$$.value.integer =
 				append_modifier(PS, $1.at, $1.value.integer,
-					$2.value.integer)}
+					$2.value.integer);}
 	;
 
-eritem: ROUND numexpr {$$.value.integer = RENDER_ROUND}
-	| ROTATE numexpr {$$.value.integer = RENDER_ROTATE}
+eritem: ROUND numexpr {$$.value.integer = RENDER_ROUND;}
+	| ROTATE numexpr {$$.value.integer = RENDER_ROTATE;}
 	;
 
 
-silist: /* nothing */ {emitpushd(PS, 0.0);emitfunc(PS, quiet)}
-	| numexpr {emitfunc(PS, quiet)}
+silist: /* nothing */ {emitpushd(PS, 0.0);emitfunc(PS, quiet);}
+	| numexpr {emitfunc(PS, quiet);}
 	;
 
 tonenumber:
-	numexpr {emitfunc(PS, setsound)}
+	numexpr {emitfunc(PS, setsound);}
 	;
 
 otonelist: /* nothing */
@@ -378,14 +376,14 @@ tonelist:
 toneitem:
 	ADSR stringexpr
 	| WAVE
-	| FREQ numexpr {emitfunc(PS, freq)}
-	| DUR numexpr {emitfunc(PS, dur)}
-	| VOL numexpr {emitfunc(PS, vol)}
-	| FMUL numexpr {emitfunc(PS, fmul)}
-	| WSIN {emitfunc(PS, wsin)}
-	| WTRI {emitfunc(PS, wtri)}
-	| WSQR {emitfunc(PS, wsqr)}
-	| WSAW {emitfunc(PS, wsaw)}
+	| FREQ numexpr {emitfunc(PS, freq);}
+	| DUR numexpr {emitfunc(PS, dur);}
+	| VOL numexpr {emitfunc(PS, vol);}
+	| FMUL numexpr {emitfunc(PS, fmul);}
+	| WSIN {emitfunc(PS, wsin);}
+	| WTRI {emitfunc(PS, wtri);}
+	| WSQR {emitfunc(PS, wsqr);}
+	| WSAW {emitfunc(PS, wsaw);}
 	;
 
 
@@ -395,22 +393,22 @@ print: PRINT
 
 fixif: /* nothing */ {emitfunc(PS, skip2ne);
 		$$.value.step = PS->nextstep;
-		emitfuncint(PS, rjmp, 0)} // size of true side}
+		emitfuncint(PS, rjmp, 0);} // size of true side
 	;
 
 fixifelse: /* nothing */ {emitfuncint(PS, rjmp, 0); // true side to skip over false
 		$$.value.step = PS->nextstep;}
 	;
 
-mark: /* nothing */ {$$.value.step = PS->nextstep}
+mark: /* nothing */ {$$.value.step = PS->nextstep;}
 	;
 
-optstep: { emitpushd(PS, 1.0)}
+optstep: { emitpushd(PS, 1.0);}
 	| STEP numexpr
 	;
 
-optforvar: {emitfunc(PS, performnext)}
-	| forvar {emitfuncint(PS, pushav, $1.value.integer);emitfunc(PS, performnext1)}
+optforvar: {emitfunc(PS, performnext);}
+	| forvar {emitfuncint(PS, pushav, $1.value.integer);emitfunc(PS, performnext1);}
 	;
 
 forvar:
@@ -419,7 +417,7 @@ forvar:
 
 stint:
 	statements
-	| INTEGER {addlineref(PS, $1.at);emitfuncint(PS, rjmp, $1.value.integer)}
+	| INTEGER {addlineref(PS, $1.at);emitfuncint(PS, rjmp, $1.value.integer);}
 	;
 
 optthen: /* nothing */
@@ -427,27 +425,27 @@ optthen: /* nothing */
 	;
 
 num1:
-	numexpr {$$.value.count=1}
+	numexpr {$$.value.count=1;}
 	;
 
 num2:
-	numexpr ',' numexpr {$$.value.count = 2}
+	numexpr ',' numexpr {$$.value.count = 2;}
 	;
 num3:
-	numexpr ',' numexpr ',' numexpr {$$.value.count = 3}
+	numexpr ',' numexpr ',' numexpr {$$.value.count = 3;}
 	;
 num4:
-	numexpr ',' numexpr ',' numexpr ',' numexpr {$$.value.count = 4}
+	numexpr ',' numexpr ',' numexpr ',' numexpr {$$.value.count = 4;}
 	;
 
 num5:
 	numexpr ',' numexpr ',' numexpr ',' numexpr ',' numexpr
-		{$$.value.count = 5}
+		{$$.value.count = 5;}
 	;
 
 num6:
 	numexpr ',' numexpr ',' numexpr ',' numexpr ',' numexpr ',' numexpr
-		{$$.value.count = 6}
+		{$$.value.count = 6;}
 	;
 
 num34:
@@ -464,22 +462,22 @@ dimarraylist:
 dimarrayvar:
 	NUMSYMBOL '(' dimlist ')' {emitfuncint(PS, pushav, $1.value.integer);
 				emitfuncint(PS, dimd, $3.value.count);
-				rankcheck(PS, $1.value.integer, $3.value.count)}
+				rankcheck(PS, $1.value.integer, $3.value.count);}
 	| STRINGSYMBOL '(' dimlist ')' {emitfuncint(PS, pushav, $1.value.integer);
 				emitfuncint(PS, dims, $3.value.count);
-				rankcheck(PS, $1.value.integer, $3.value.count)}
+				rankcheck(PS, $1.value.integer, $3.value.count);}
 	;
 
-dimlist: INTEGER {$$.value.count = 1;emitfuncint(PS, pushi, $1.value.integer)}
+dimlist: INTEGER {$$.value.count = 1;emitfuncint(PS, pushi, $1.value.integer);}
 	| dimlist ',' INTEGER {$$.value.count = $1.value.count + 1;
-				emitfuncint(PS, pushi, $3.value.integer)}
+				emitfuncint(PS, pushi, $3.value.integer);}
 	;
 
 linelist: INTEGER {$$.value.count = 1;addlineref(PS, $1.at);
-				emitfuncint(PS, pushea, $1.value.integer)}
+				emitfuncint(PS, pushea, $1.value.integer);}
 	| linelist ',' INTEGER {$$.value.count = $1.value.count + 1;
 				addlineref(PS, $3.at);
-				emitfuncint(PS, pushea, $3.value.integer)}
+				emitfuncint(PS, pushea, $3.value.integer);}
 	;
 
 datalist:
@@ -488,12 +486,12 @@ datalist:
 	;
 
 dataentry:
-	real {adddata(PS, $1.value.real)}
+	real {adddata(PS, $1.value.real);}
 	| STRING
 	;
 
 real:
-	INTEGER {$$.value.real = (double)$1.value.integer}
+	INTEGER {$$.value.real = (double)$1.value.integer;}
 	| REAL
 	;
 
@@ -504,42 +502,42 @@ readlist:
 	;
 
 readvar:
-	numvar {emitfunc(PS, readd)}
+	numvar {emitfunc(PS, readd);}
 	| stringvar;
 
 numvar:
-	NUMSYMBOL {emitfuncint(PS, pushvd, $1.value.integer)}
+	NUMSYMBOL {emitfuncint(PS, pushvd, $1.value.integer);}
 	| NUMSYMBOL '(' numlist ')'
 			{emitfuncint(PS, arrayd, $1.value.integer);
-			rankcheck(PS, $1.value.integer, $3.value.count)}
+			rankcheck(PS, $1.value.integer, $3.value.count);}
 	;
 
 stringvar:
-	STRINGSYMBOL {emitfuncint(PS, pushvs, $1.value.integer)}
+	STRINGSYMBOL {emitfuncint(PS, pushvs, $1.value.integer);}
 	| STRINGSYMBOL '(' numlist ')'
 			{emitfuncint(PS, arrays, $1.value.integer);
-			rankcheck(PS, $1.value.integer, $3.value.count)}
+			rankcheck(PS, $1.value.integer, $3.value.count);}
 	;
 
 numlist:
-	numexpr {$$.value.count = 1}
-	| numlist ',' numexpr {$$.value.count = $1.value.count + 1}
+	numexpr {$$.value.count = 1;}
+	| numlist ',' numexpr {$$.value.count = $1.value.count + 1;}
 	;
 
-printlist: /* nothing */ {$$.value.integer = 1} // want newline
-	| printitem {$$.value.integer = 1} // want newline
-	| printlist printsep printitem {$$.value.integer = 1} // want newline
-	| printlist printsep {$$.value.integer = 0} // no newline
+printlist: /* nothing */ {$$.value.integer = 1;} // want newline
+	| printitem {$$.value.integer = 1;} // want newline
+	| printlist printsep printitem {$$.value.integer = 1;} // want newline
+	| printlist printsep {$$.value.integer = 0;} // no newline
 	;
 
 printsep: ';'
-	| ',' {emitfunc(PS, tab)}
+	| ',' {emitfunc(PS, tab);}
 	;
 
 printitem:
-	'@' numexpr {emitfunc(PS, printat)}
-	| numexpr {emitfunc(PS, printd)}
-	| stringexpr {emitfunc(PS, prints)}
+	'@' numexpr {emitfunc(PS, printat);}
+	| numexpr {emitfunc(PS, printd);}
+	| stringexpr {emitfunc(PS, prints);}
 	;
 
 singlenumpar:
@@ -554,121 +552,121 @@ inputlist:
 	inputlist2
 	| STRING ';' inputlist2 {$$.value.count = $3.value.count;
 				emitpushs(PS, $1.value.string);
-				emitfunc(PS, prints)}
+				emitfunc(PS, prints);}
 	;
 
 inputlist2:
-	inputvar {$$.value.count = 1}
-	| inputlist2 ',' inputvar {$$.value.count = $1.value.count + 1}
+	inputvar {$$.value.count = 1;}
+	| inputlist2 ',' inputvar {$$.value.count = $1.value.count + 1;}
 	;
 
 inputvar:
-	numvar {emitfuncint(PS, pushi, 0)}
-	| stringvar {emitfuncint(PS, pushi, 1)}
+	numvar {emitfuncint(PS, pushi, 0);}
+	| stringvar {emitfuncint(PS, pushi, 1);}
 	;
 
 assignexpr:
-	numvar '=' numexpr {emitfunc(PS, assignd)}
-	| stringvar '=' stringexpr {emitfunc(PS, assigns)}
+	numvar '=' numexpr {emitfunc(PS, assignd);}
+	| stringvar '=' stringexpr {emitfunc(PS, assigns);}
 	;
 
 numexpr:
-	'-' numexpr %prec UNARY {emitfunc(PS, chs)}
-	| NOT numexpr {emitfunc(PS, not)}
+	'-' numexpr %prec UNARY {emitfunc(PS, chs);}
+	| NOT numexpr {emitfunc(PS, not);}
 	| '(' numexpr ')'
-	| numexpr '+' numexpr {emitfunc(PS, addd)}
-	| numexpr '-' numexpr {emitfunc(PS, subd)}
-	| numexpr '*' numexpr {emitfunc(PS, muld)}
-	| numexpr '/' numexpr {emitfunc(PS, divd)}
-	| numexpr MOD numexpr {emitfunc(PS, modd)}
-	| numexpr POWER numexpr {emitfunc(PS, powerd)}
+	| numexpr '+' numexpr {emitfunc(PS, addd);}
+	| numexpr '-' numexpr {emitfunc(PS, subd);}
+	| numexpr '*' numexpr {emitfunc(PS, muld);}
+	| numexpr '/' numexpr {emitfunc(PS, divd);}
+	| numexpr MOD numexpr {emitfunc(PS, modd);}
+	| numexpr POWER numexpr {emitfunc(PS, powerd);}
 	| numexpr LL numexpr
 	| numexpr RR numexpr
-	| numexpr '=' numexpr {emitfunc(PS, eqd)}
-	| numexpr NE numexpr {emitfunc(PS, ned)}
-	| numexpr LT numexpr {emitfunc(PS, ltd)}
-	| numexpr GT numexpr {emitfunc(PS, gtd)}
-	| numexpr LE numexpr {emitfunc(PS, led)}
-	| numexpr GE numexpr {emitfunc(PS, ged)}
-	| numexpr AND numexpr {emitfunc(PS, andd)}
-	| numexpr OR numexpr {emitfunc(PS, ord)}
-	| numexpr XOR numexpr {emitfunc(PS, xord)}
-	| numexpr ANDAND numexpr {emitfunc(PS, andandd)}
-	| numexpr OROR numexpr {emitfunc(PS, orord)}
-	| stringexpr '=' stringexpr {emitfunc(PS, eqs)}
-	| stringexpr NE stringexpr {emitfunc(PS, nes)}
+	| numexpr '=' numexpr {emitfunc(PS, eqd);}
+	| numexpr NE numexpr {emitfunc(PS, ned);}
+	| numexpr LT numexpr {emitfunc(PS, ltd);}
+	| numexpr GT numexpr {emitfunc(PS, gtd);}
+	| numexpr LE numexpr {emitfunc(PS, led);}
+	| numexpr GE numexpr {emitfunc(PS, ged);}
+	| numexpr AND numexpr {emitfunc(PS, andd);}
+	| numexpr OR numexpr {emitfunc(PS, ord);}
+	| numexpr XOR numexpr {emitfunc(PS, xord);}
+	| numexpr ANDAND numexpr {emitfunc(PS, andandd);}
+	| numexpr OROR numexpr {emitfunc(PS, orord);}
+	| stringexpr '=' stringexpr {emitfunc(PS, eqs);}
+	| stringexpr NE stringexpr {emitfunc(PS, nes);}
 	| numfunc
 	| special
-	| numvar {emitfunc(PS, evald)}
-	| real {emitpushd(PS, $1.value.real)}
+	| numvar {emitfunc(PS, evald);}
+	| real {emitpushd(PS, $1.value.real);}
 	;
 
 singlestringpar: '(' stringexpr ')'
 	;
 
 numfunc:
-	INT singlenumpar {emitfunc(PS, intd)}
-	| FIX singlenumpar {emitfunc(PS, fixd)}
-	| SGN singlenumpar {emitfunc(PS, sgnd)}
-	| SIN singlenumpar {emitfunc(PS, sind)}
-	| COS singlenumpar {emitfunc(PS, cosd)}
-	| RND singlenumpar {emitfunc(PS, rndd)}
-	| POW doublenumpar {emitfunc(PS, powd)}
-	| LOG singlenumpar {emitfunc(PS, logd)}
-	| EXP singlenumpar {emitfunc(PS, expd)}
-	| TAN singlenumpar {emitfunc(PS, tand)}
-	| ATN singlenumpar {emitfunc(PS, atnd)}
-	| ATN2 doublenumpar {emitfunc(PS, atn2d)}
-	| ABS singlenumpar {emitfunc(PS, absd)}
-	| SQR singlenumpar {emitfunc(PS, sqrd)}
-	| SLEEP singlenumpar {emitfunc(PS, sleepd)}
-	| KEY singlenumpar {emitfunc(PS, keyd)}
-	| NOTE singlenumpar {emitfunc(PS, note)}
-	| LEN singlestringpar {emitfunc(PS, lend)}
-	| VAL singlestringpar {emitfunc(PS, vald)}
-	| ASC singlestringpar {emitfunc(PS, ascd)}
+	INT singlenumpar {emitfunc(PS, intd);}
+	| FIX singlenumpar {emitfunc(PS, fixd);}
+	| SGN singlenumpar {emitfunc(PS, sgnd);}
+	| SIN singlenumpar {emitfunc(PS, sind);}
+	| COS singlenumpar {emitfunc(PS, cosd);}
+	| RND singlenumpar {emitfunc(PS, rndd);}
+	| POW doublenumpar {emitfunc(PS, powd);}
+	| LOG singlenumpar {emitfunc(PS, logd);}
+	| EXP singlenumpar {emitfunc(PS, expd);}
+	| TAN singlenumpar {emitfunc(PS, tand);}
+	| ATN singlenumpar {emitfunc(PS, atnd);}
+	| ATN2 doublenumpar {emitfunc(PS, atn2d);}
+	| ABS singlenumpar {emitfunc(PS, absd);}
+	| SQR singlenumpar {emitfunc(PS, sqrd);}
+	| SLEEP singlenumpar {emitfunc(PS, sleepd);}
+	| KEY singlenumpar {emitfunc(PS, keyd);}
+	| NOTE singlenumpar {emitfunc(PS, note);}
+	| LEN singlestringpar {emitfunc(PS, lend);}
+	| VAL singlestringpar {emitfunc(PS, vald);}
+	| ASC singlestringpar {emitfunc(PS, ascd);}
 	;
 
 special:
-	MOUSEX {emitfunc(PS, mousexd)}
-	| MOUSEY {emitfunc(PS, mouseyd)}
-	| MOUSEB {emitfunc(PS, mousebd)}
-	| XSIZE {emitpushd(PS, PS->bc->xsize)}
-	| YSIZE {emitpushd(PS, PS->bc->ysize)}
-	| TICKS {emitfunc(PS, ticksd)}
-	| KEYCODE {emitfunc(PS, keycoded)}
+	MOUSEX {emitfunc(PS, mousexd);}
+	| MOUSEY {emitfunc(PS, mouseyd);}
+	| MOUSEB {emitfunc(PS, mousebd);}
+	| XSIZE {emitpushd(PS, PS->bc->xsize);}
+	| YSIZE {emitpushd(PS, PS->bc->ysize);}
+	| TICKS {emitfunc(PS, ticksd);}
+	| KEYCODE {emitfunc(PS, keycoded);}
 	;
 specialstr:
-	INKEYSTR {emitfunc(PS, inkey)}
+	INKEYSTR {emitfunc(PS, inkey);}
 	;
 
 stringexpr:
 	sitem
-	| stringexpr '+' sitem {emitfunc(PS, adds)}
-	| stringexpr sitem {emitfunc(PS, adds)}
+	| stringexpr '+' sitem {emitfunc(PS, adds);}
+	| stringexpr sitem {emitfunc(PS, adds);}
 	;
 
 sitem:
-	STRING {emitpushs(PS, $1.value.string)}
+	STRING {emitpushs(PS, $1.value.string);}
 	| specialstr
 	| stringfunc
-	| stringvar {emitfunc(PS, evals)}
-	| TAB singlenumpar {emitfunc(PS, tabstr)}
+	| stringvar {emitfunc(PS, evals);}
+	| TAB singlenumpar {emitfunc(PS, tabstr);}
 	;
 
 stringfunc:
-	LEFTSTR '(' stringexpr ',' numexpr ')' {emitfunc(PS, leftstr)}
-	| RIGHTSTR '(' stringexpr ',' numexpr ')' {emitfunc(PS, rightstr)}
+	LEFTSTR '(' stringexpr ',' numexpr ')' {emitfunc(PS, leftstr);}
+	| RIGHTSTR '(' stringexpr ',' numexpr ')' {emitfunc(PS, rightstr);}
 	| MIDSTR '(' stringexpr ',' numexpr ',' numexpr ')'
-			 {emitfunc(PS, midstr)}
-	| CHRSTR singlenumpar {emitfunc(PS, chrstr)}
-	| STRSTR singlenumpar {emitfunc(PS, performstrstr)}
-	| STRINGSTR '(' numexpr ',' stringexpr ')' {emitfunc(PS, stringstr)}
+			 {emitfunc(PS, midstr);}
+	| CHRSTR singlenumpar {emitfunc(PS, chrstr);}
+	| STRSTR singlenumpar {emitfunc(PS, performstrstr);}
+	| STRINGSTR '(' numexpr ',' stringexpr ')' {emitfunc(PS, stringstr);}
 	;
 
 %%
 
-void yyerror(char *s)
+void yyerror(ps *parm, char *s)
 {
 }
 
