@@ -177,7 +177,7 @@ va_list ap;
 }
 
 void dump_modifiers(bc *bc,
-		void (*pr)(struct basic_context *bc, char *format, ...),
+		int (*pr)(struct basic_context *bc, char *format, ...),
 		unsigned int v)
 {
 int t;
@@ -207,7 +207,7 @@ step *e, *first;
 linemap *lm = bc->lm, *elm = lm + bc->numlines;
 disentry *de;
 char temp[257];
-void (*pr)(struct basic_context *bc, char *format, ...);
+int (*pr)(struct basic_context *bc, char *format, ...);
 
 //	pr=xpr;
 	pr=tprintf;

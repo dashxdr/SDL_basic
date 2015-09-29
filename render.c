@@ -345,14 +345,14 @@ float a,r;
 	myparams.clip_box.xMax = bc->xsize;
 	myparams.clip_box.yMin = 0;
 	myparams.clip_box.yMax = bc->ysize;
-	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);
+	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);res=res;
 
 	bc->temp = maprgb(bc, bc->gred, bc->ggreen, bc->gblue) |
 		(bc->galpha<<24);
 
 	SDL_basic_ft_grays_raster.raster_reset(myraster, bc->pool, sizeof(bc->pool));
 
-	res=SDL_basic_ft_grays_raster.raster_render(myraster, &myparams);
+	res=SDL_basic_ft_grays_raster.raster_render(myraster, &myparams);res=res;
 
 	SDL_basic_ft_grays_raster.raster_done(myraster);
 
@@ -412,7 +412,7 @@ FT_Outline myoutline;
 	myparams.clip_box.xMax = bc->xsize;
 	myparams.clip_box.yMin = 0;
 	myparams.clip_box.yMax = bc->ysize;
-	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);
+	res=SDL_basic_ft_grays_raster.raster_new(0, &myraster);res=res;
 
 	bc->temp = maprgb(bc, bc->gred, bc->ggreen, bc->gblue) |
 		(bc->galpha<<24);

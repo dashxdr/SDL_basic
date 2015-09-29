@@ -4,9 +4,6 @@
    dashxdr@gmail.com
 */
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
 #include "misc.h"
 
 typedef struct {
@@ -277,7 +274,6 @@ int hcomp(const void *p1, const void *p2)
 void listhelp(bc *bc, char *p)
 {
 help *h;
-int online;
 help *ht[HTMAX];
 int n,i,j, nc, nr;
 #define WIDTH 10
@@ -292,7 +288,6 @@ int n,i,j, nc, nr;
 	h=helplist;
 	nc = (bc->txsize-1) / WIDTH;
 	nr = (n + nc-1)/nc;
-	online=0;
 	for(i=0;i<nr;++i)
 	{
 		for(j=i;j<n;j+=nr)
