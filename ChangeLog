@@ -8,6 +8,8 @@ Had to tweak the grammar.y file for recent versions of bison to get it to
 build.
 
 Tweaked Makefile for newer LDARGS parameter.
+
+** is the exponent (power) operator. ~ is unary binary NOT operator.
 ----------------------------------------------------------------------------
 David Ashley (DA) Mon Jun 30 00:09:19 EDT 2008
 dashxdr@gmail.com
