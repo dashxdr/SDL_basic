@@ -4,7 +4,7 @@ CC	= gcc
 MAXE = -fmax-errors=8
 CFLAGS = -O2 -Wall $(shell sdl-config --cflags) $(DBG) $(MAXE)
 LDFLAGS = $(DBG)
-LDLIBS = $(shell sdl-config --libs) -lm
+LDLIBS = $(shell sdl-config --libs) -lm -lSDL_image
 
 # ftgrays standalone
 CFLAGS += -D_STANDALONE_

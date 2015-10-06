@@ -417,6 +417,25 @@ void lend(bc *bc){lenascval(bc, TLEN);}
 void ascd(bc *bc){lenascval(bc, TASC);}
 void vald(bc *bc){lenascval(bc, TVAL);}
 
+void loadtexture(bc *bc)
+{
+	struct bstring *bs = bc->vsp[-1].bs;
+	bc->vsp[-1].bs = 0;
+	int i;
+	for(i=1;i<MAXTEXTURES;++i)
+		if(bc->textures[i] == 0)
+			break;
+	if(i<MAXTEXTURES)
+	{
+		bc->textures[i] = IMG_Load(bs->string);
+		if(bc->textures[i])
+			bc->vsp[-1].d = i;
+		else
+			verror(bc, "Couldn't read image file %s\n", bs->string);
+	}
+	free_bstring(bc, bs);
+}
+
 
 #define SLEFT 0
 #define SMID 1
@@ -1096,6 +1115,11 @@ double x, y, ri, ro, a, da;
 	shape_done(bc, &bc->shape);
 }
 
+void performdrawtexture(bc *bc)
+{
+	drawtexture(bc, bc->vsp[-3].d, bc->vsp[-2].d, bc->vsp[-1].d);
+	bc->vsp -= 3;
+}
 
 void performdisc(bc *bc)
 {
