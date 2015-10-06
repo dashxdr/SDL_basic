@@ -438,5 +438,6 @@ void drawtexture(bc *bc, int n, double x, double y)
 		r.y = y;
 		r.w = r.h = 0;
 		SDL_BlitSurface(bc->textures[n], 0, bc->thescreen, &r);
+		taint(bc);
 	}
 }
