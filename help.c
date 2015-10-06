@@ -261,7 +261,10 @@ help helplist[]={
 {"wsaw", "tone", ""},
 {"wsqr", "tone", ""},
 {"wtri", "tone", ""},
-
+{"loadtexture", 0, "LOADTEXTURE(\"filename.png\") returns an integer associated with the\n"
+		"  image file specified. The integer can be used with DRAWTEXTURE.\n"},
+{"drawtexture", 0, "DRAWTEXTURE texture_number, x, y\n"
+		"  draw texture centered at specified coordinates. See LOADTEXTURE.\n"},
 {0,0}
 };
 
@@ -276,7 +279,7 @@ void listhelp(bc *bc, char *p)
 help *h;
 help *ht[HTMAX];
 int n,i,j, nc, nr;
-#define WIDTH 10
+#define WIDTH 13
 
 	h=helplist;
 	for(n=0;n<HTMAX && h->name;++n, ++h)
@@ -291,7 +294,7 @@ int n,i,j, nc, nr;
 	for(i=0;i<nr;++i)
 	{
 		for(j=i;j<n;j+=nr)
-			tprintf(bc, "%-10s", ht[j]->name);
+			tprintf(bc, "%-12s", ht[j]->name);
 		tprintf(bc, "\n");
 	}
 }
