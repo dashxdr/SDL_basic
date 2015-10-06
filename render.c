@@ -431,13 +431,14 @@ FT_Outline myoutline;
 
 void drawtexture(bc *bc, int n, double x, double y)
 {
-	if(n>0 && n<MAXTEXTURES && bc->textures[n])
+	SDL_Surface *s;
+	if(n>0 && n<MAXTEXTURES && (s=bc->textures[n]))
 	{
 		SDL_Rect r;
-		r.x = x;
-		r.y = y;
+		r.x = x - s->w/2;
+		r.y = y - s->h/2;
 		r.w = r.h = 0;
-		SDL_BlitSurface(bc->textures[n], 0, bc->thescreen, &r);
+		SDL_BlitSurface(s, 0, bc->thescreen, &r);
 		taint(bc);
 	}
 }

@@ -7,3 +7,6 @@
 70 next i
 80 update
 90 next j
+100 drawtexture sprite, mousex, mousey
+110 sleep .02
+120 goto 100
