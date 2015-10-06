@@ -37,7 +37,7 @@ test:	all
 	./basic
 
 WORK = /ram
-VER = 1.0.3
+VER = 1.0.4
 DDIR = SDL_basic-$(VER)
 
 package:  clean
@@ -45,5 +45,6 @@ package:  clean
 	mkdir $(WORK)/$(DDIR)
 	cp *.c *.h *.y Makefile* README COPYING AUTHORS TODO $(WORK)/$(DDIR)
 	cp cool*.bas cubic.bas startrek1.bas wumpus.bas $(WORK)/$(DDIR)
+	cp sprite.png $(WORK)/$(DDIR)
 	cp INSTALL ChangeLog $(WORK)/$(DDIR)
 	cd $(WORK) && tar czf $(DDIR).tgz $(DDIR)
