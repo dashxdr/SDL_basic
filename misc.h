@@ -187,7 +187,7 @@ typedef struct basic_context {
 	int randomblock[RANDOM_SIZE];
 	int rpointer;
 // Loaded sdl textures
-#define MAXTEXTURES 64
+#define MAXTEXTURES 256
 	SDL_Surface *textures[MAXTEXTURES];
 } bc;
 
