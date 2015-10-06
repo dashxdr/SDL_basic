@@ -429,4 +429,14 @@ FT_Outline myoutline;
 	taint(bc);
 }
 
-
+void drawtexture(bc *bc, int n, double x, double y)
+{
+	if(n>0 && n<MAXTEXTURES && bc->textures[n])
+	{
+		SDL_Rect r;
+		r.x = x;
+		r.y = y;
+		r.w = r.h = 0;
+		SDL_BlitSurface(bc->textures[n], 0, bc->thescreen, &r);
+	}
+}

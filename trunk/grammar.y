@@ -247,6 +247,7 @@ void yyerror(ps *parm, char *s);
 %token LF
 %token TONE ADSR WAVE FREQ DUR FMUL VOL WSIN WSQR WTRI WSAW
 %token QUIET NOTE
+%token LOADTEXTURE DRAWTEXTURE
 %left OROR
 %left ANDAND
 %left '=' NE LT GT LE GE
@@ -320,6 +321,7 @@ statement:
 	| SHCURVE num4 {emitfunc(PS, shcurve);}
 	| SHCUBIC num6 {emitfunc(PS, shcubic);}
 	| SPOT {emitfunc(PS, spot);}
+	| DRAWTEXTURE num3 {emitfunc(PS, performdrawtexture);}
 	| UPDATE {emitfunc(PS, forceupdate);}
 	| FOR forvar '=' numexpr TO numexpr optstep
 		{emitfuncint(PS, pushav, $2.value.integer);emitfunc(PS, performfor);}
@@ -625,6 +627,7 @@ numfunc:
 	| LEN singlestringpar {emitfunc(PS, lend);}
 	| VAL singlestringpar {emitfunc(PS, vald);}
 	| ASC singlestringpar {emitfunc(PS, ascd);}
+	| LOADTEXTURE singlestringpar {emitfunc(PS, loadtexture);}
 	;
 
 special:
@@ -769,6 +772,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "data")) return DATA;
 	if(iskeyword(ps, "dim")) return DIM;
 	if(iskeyword(ps, "disc")) return DISC;
+	if(iskeyword(ps, "drawtexture")) return DRAWTEXTURE;
 	if(iskeyword(ps, "dur")) return DUR;
 	if(iskeyword(ps, "else")) return ELSE;
 	if(iskeyword(ps, "end")) return END;
@@ -791,6 +795,7 @@ printf("here:%s\n", ps->yypntr);
 	if(iskeyword(ps, "len")) return LEN;
 	if(iskeyword(ps, "let")) return LET;
 	if(iskeyword(ps, "line")) return LINE;
+	if(iskeyword(ps, "loadtexture")) return LOADTEXTURE;
 	if(iskeyword(ps, "log")) return LOG;
 	if(iskeyword(ps, "mid$")) return MIDSTR;
 	if(iskeyword(ps, "mod")) return MOD;
@@ -1037,6 +1042,15 @@ void pruninit(bc *bc)
 	freeold(bc);
 	bc->starttime = SDL_GetTicks();
 	memset(bc->vvars, 0, sizeof(bc->vvars));
+	int i;
+	for(i=0;i<MAXTEXTURES;++i)
+	{
+		if(bc->textures[i])
+		{
+			SDL_FreeSurface(bc->textures[i]);
+			bc->textures[i] = 0;
+		}
+	}
 	reset_waitbase(bc);
 }
 

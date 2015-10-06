@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <math.h>
 #include "ftgrays.h"
 
@@ -185,6 +186,9 @@ typedef struct basic_context {
 // random numbers
 	int randomblock[RANDOM_SIZE];
 	int rpointer;
+// Loaded sdl textures
+#define MAXTEXTURES 64
+	SDL_Surface *textures[MAXTEXTURES];
 } bc;
 
 // main.c
@@ -225,6 +229,7 @@ void spot(bc *bc);
 void lock(bc *bc);
 void unlock(bc *bc);
 void arc_piece(shape *shape, double xc, double yc, double r, double a, double da);
+void drawtexture(bc *bc, int num, double x, double y);
 
 // keyboard.c
 
@@ -404,6 +409,8 @@ DECLARE(shcurve)
 DECLARE(shcubic)
 DECLARE(not)
 DECLARE(modd)
+DECLARE(loadtexture)
+DECLARE(performdrawtexture)
 
 void vmachine(bc *bc, step *program, step *stack);
 void reset_waitbase(bc *bc);
