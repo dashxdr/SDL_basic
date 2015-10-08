@@ -108,6 +108,52 @@ unsigned char fontdata[96][13]={
 #define FONTW 6
 #define FONTH 13
 
+void initfont(bc *bc)
+{
+	const int ftw = 128, fth = 256;
+	Uint32 *pixels = calloc(4, ftw*fth), *p;
+	int i, j;
+	Uint32 mymap(int r, int g, int b) {return (b&255) | ((g&255)<<8) | ((r&255)<<16);}
+	for(j=0;j<2;++j)
+	{
+		int fg, bg;
+		if(j==0)
+		{
+			fg = mymap(255, 255, 255);
+			bg = mymap(0, 0, 0);
+		} else
+		{
+			fg = mymap(0, 0, 0);
+			bg = mymap(255, 0, 0);
+		}
+		for(i=0;i<96;++i)
+		{
+			int x, y;
+			x = 8*(i&15);
+			y = 13*(i>>4) + j*128;
+			p = pixels + x + y*ftw;
+			int v;
+			unsigned char *cp = fontdata[i];
+			for(v=0;v<13;++v)
+			{
+				int c = cp[v];
+				p[0]= (c&0x01) ? fg : bg;
+				p[1]= (c&0x02) ? fg : bg;
+				p[2]= (c&0x04) ? fg : bg;
+				p[3]= (c&0x08) ? fg : bg;
+				p[4]= (c&0x10) ? fg : bg;
+				p[5]= (c&0x20) ? fg : bg;
+				p += 128;
+			}
+		}
+	}
+	bc->font = SDL_CreateTexture(bc->renderer,SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING, ftw, fth);
+	SDL_UpdateTexture(bc->font, 0, pixels, ftw*sizeof(Uint32));
+
+	free(pixels);
+}
+
 void cleartext(bc *bc)
 {
 	memset(bc->textstate, ' ', bc->txsize * bc->tysize);
@@ -115,66 +161,48 @@ void cleartext(bc *bc)
 
 void inittext(bc *bc)
 {
+	initfont(bc);
 	bc->txsize = bc->xsize/FONTW;
 	bc->tysize = bc->ysize/FONTH;
 	bc->fwidth = FONTW;
 	bc->fheight = FONTH;
 	bc->textsize = bc->txsize * bc->tysize;
-#warning 3 memory checks
 	bc->textstate = malloc(bc->textsize);
 	bc->textbak = malloc(bc->textsize);
 	bc->scrollhistory = malloc(bc->txsize * SCROLLHISTORYSIZE);
+	if(!bc->textstate || !bc->textbak || !bc->scrollhistory)
+	{
+		fprintf(stderr, "%s: Memory allocation failure, aborting...\n",
+				__FUNCTION__);
+		exit(-1);
+	}
 	cleartext(bc);
 	bc->debhist=malloc(LINESIZE*HISTSIZE);
 }
 
 
-void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str)
+void drawtext(bc *bc, int x, int y, int colormode, char *str)
 {
-unsigned char c;
+	int c;
 	taint(bc);
 	while((c=*str++))
 	{
-		c-=' ';
-		if(c>=96)
-			c=0;
-		drawchar(bc, x, y, fontdata[c], fgcolor, bgcolor);
+		drawchar(bc, x, y, c, colormode);
 		x+=6;
 	}
 }
 
-// 32bpp
 void scrollup(bc *bc)
 {
-int i;
-int h,w;
-unsigned char *p1, *p2;
-int pitch;
-
 	taint(bc);
 	lock(bc);
-	w=bc->xsize*4;
-	h=bc->ysize-FONTH;
-	pitch = bc->thescreen->pitch;
-	p1 = bc->thescreen->pixels;
-	p2 = p1 + pitch*FONTH;
-	for(i=0;i<h;++i)
-	{
-		memcpy(p1, p2, w);
-		p1+=pitch;
-		p2+=pitch;
-	}
-	for(i=0;i<FONTH;++i)
-	{
-		memset(p1, 0, w);
-		p1+=pitch;
-	}
 	memcpy(bc->scrollhistory+(bc->scrollhistoryin++ & (SCROLLHISTORYSIZE-1))*
 			bc->txsize, bc->textstate, bc->txsize);
 	memmove(bc->textstate, bc->textstate + bc->txsize,
 		bc->txsize * (bc->tysize-1));
 	memset(bc->textstate + bc->txsize * (bc->tysize-1), ' ', bc->txsize);
 	unlock(bc);
+	showhistory(bc, 0); // real hack, to avoid having to read back pixels...
 }
 
 void cursor(bc *bc, int onoff)
@@ -185,9 +213,7 @@ char tt[2];
 	taint(bc);
 	tt[0] = bc->textstate[bc->typos*bc->txsize + bc->txpos];
 	tt[1] = 0;
-	drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH,
-		onoff ? bc->black : bc->white,
-		onoff ? bc->cursorcolor : bc->black, tt);
+	drawtext(bc, bc->txpos*FONTW, bc->typos*FONTH, onoff, tt);
 	bc->cursorstate = onoff;
 }
 
@@ -205,7 +231,7 @@ void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c)
 char tt[2];
 	tt[0]=c;
 	tt[1]=0;
-	drawtext(bc, x*FONTW, y*FONTH, bc->white, bc->black, tt);
+	drawtext(bc, x*FONTW, y*FONTH, 0, tt);
 	if(x<bc->txsize && y<bc->tysize)
 		bc->textstate[y*bc->txsize + x] = c;
 }

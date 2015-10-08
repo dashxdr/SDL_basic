@@ -1,4 +1,13 @@
 ----------------------------------------------------------------------------
+David Ashley (DA) Thu Oct  8 14:29:16 CDT 2015
+dashxdr@gmail.com
+
+Current version 104.
+
+Migrated to SDL2.
+
+Added loadtexture and drawtexture functions.
+----------------------------------------------------------------------------
 David Ashley (DA) Tue Sep 29 09:42:22 CDT 2015
 dashxdr@gmail.com
 

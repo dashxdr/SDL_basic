@@ -113,9 +113,16 @@ typedef struct {
 
 #define MAX_SOUNDS 32
 
+typedef struct mytexture {
+	SDL_Texture *texture;
+	int w, h;
+} mytexture;
+
 typedef struct basic_context {
 	int flags;
-	SDL_Surface *thescreen;
+	SDL_Renderer *renderer;
+	SDL_Window *window;
+	SDL_Texture *font;
 	double time;
 	int mousex, mousey, mouseb;
 	int xsize, ysize;
@@ -188,7 +195,7 @@ typedef struct basic_context {
 	int rpointer;
 // Loaded sdl textures
 #define MAXTEXTURES 256
-	SDL_Surface *textures[MAXTEXTURES];
+	mytexture textures[MAXTEXTURES];
 } bc;
 
 // main.c
@@ -199,7 +206,7 @@ int randnum(bc *bc);
 // font.c
 
 void inittext(bc *bc);
-void drawtext(bc *bc, int x, int y, Uint32 fgcolor, Uint32 bgcolor, char *str);
+void drawtext(bc *bc, int x, int y, int colormode, char *str);
 void cursor(bc *bc, int onoff);
 int tprintf(bc *bc, char *s, ...);
 void drawcharxy(bc *bc, unsigned int x, unsigned int y, char c);
@@ -214,7 +221,7 @@ void cleartext(bc *bc);
 void update(bc *bc);
 void forceupdate(bc *bc);
 void resetupdate(bc *bc);
-void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg);
+void drawchar(bc *bc, int x, int y, int c, int colormode);
 void taint(bc *bc);
 void stroke(bc *bc, double x, double y);
 void fillscreen(bc *bc, int r, int g, int b, int a);
@@ -239,6 +246,7 @@ void scaninput(bc *bc);
 void flushinput(bc *bc);
 int takedown(bc *bc);
 int checkpressed(bc *bc, int code);
+int showhistory(bc *bc, int back);
 
 #define MYF1 0x180
 #define MYF2 0x181

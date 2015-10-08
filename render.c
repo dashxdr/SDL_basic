@@ -11,65 +11,28 @@
 
 Uint32 maprgb(bc *bc, int r,int g,int b)
 {
-	return SDL_MapRGB(bc->thescreen->format,r,g,b);
+	return (r&255) | ((g&255)<<8) | ((b&255)<<16);
 }
-
-static inline void
-colordot_32(SDL_Surface *surf, unsigned int x, unsigned int y, Uint32 c, int f2)
+inline void setcolor(bc *bc, int c)
 {
-Uint32 a;
-	a=((f2+1) * (c>>24))>>8;
-	if(a==0xff)
-		*((Uint32 *)(surf->pixels)+y * surf->pitch/4+x)=c;
-	else
-	{
-		Uint32 *p, t;
-		Uint32 ai;
-		
-		p=(Uint32 *)(surf->pixels)+y * (surf->pitch>>2)+x;
-
-		ai=a^255;
-		t=*p;
-
-		*p = ((a*(c&0xff) + ai*(t&0xff))>>8) |
-			(((a*(c&0xff00) + ai*(t&0xff00))&0xff0000)>>8) |
-			(((a*(c&0xff0000) + ai*(t&0xff0000))&0xff000000)>>8);
-	}
+	SDL_SetRenderDrawColor(bc->renderer, (c&255), (c>>8)&255, (c>>16)&255, 255);
 }
+
 
 void myspanner(int y, int count, FT_Span *spans, void *user)
 {
 bc *bc=user;
 int x, w;
 Uint32 color;
-SDL_Surface *surf = bc->thescreen;
-Uint32 r,g,b,a, f, fi;
-Uint32 *p, t;
-
-#if 0
-int coverage;
+Uint32 r,g,b,a, f;
 
 // renders spans in reverse order, but why not? They don't overlap
 	spans += count;
 	color = bc->temp;
-	while(count--)
-	{
-		--spans;
-		x=spans->x;
-		w=spans->len;
-		coverage=spans->coverage;
-		while(w--)
-			colordot_32(surf, x++, y, color, coverage);
-	}
-#else
-// renders spans in reverse order, but why not? They don't overlap
-	spans += count;
-	color = bc->temp;
-	r=color&0xff;
-	g=color & 0xff00;
-	b=color & 0xff0000;
+	r=color&255;
+	g=(color>>8)&255;
+	b=(color>>16)&255;
 	a=(color>>24)&255;
-	p=(Uint32 *)(surf->pixels)+y * (surf->pitch>>2);
 	while(count--)
 	{
 		--spans;
@@ -77,77 +40,39 @@ int coverage;
 		w=spans->len;
 		f = ((spans->coverage+1)*a)>>8;
 
-		if(f==0xff)
-		{
-			while(w--)
-				p[x++] = color;
-		} else
-		{
-			fi=f^255;
-			while(w--)
-			{
-				t=p[x];
-				p[x++] = ((f*r + fi*(t&0xff))>>8) |
-					(((f*g + fi*(t&0xff00))&0xff0000)>>8) |
-					(((f*b + fi*(t&0xff0000))&0xff000000)>>8);
-			}
-		}
+		SDL_SetRenderDrawColor(bc->renderer, r, g, b, f);
+		SDL_Rect r = {x, y, w, 1};
+		SDL_RenderFillRect(bc->renderer, &r);
 	}
-#endif
-
 }
 
 
 void fillscreen(bc *bc, int r, int g, int b, int a)
 {
-int i;
-Uint32 color;
-int w;
-SDL_Surface *scr = bc->thescreen;
-
 	taint(bc);
-	lock(bc);
-	color = maprgb(bc, r, g, b) | 0xff000000;
-	if(a==255)
-	{
-		for(i=0;i<bc->xsize;++i)
-			colordot_32(scr, i, 0, color, 255);
-		w=bc->xsize * 4;
-		for(i=1;i<bc->ysize;++i)
-		{
-			memcpy(scr->pixels + i*scr->pitch,
-					scr->pixels, w);
-		}
-	} else
-	{
-		int x,y;
-		for(y=0;y<bc->ysize;++y)
-			for(x=0;x<bc->xsize;++x)
-				colordot_32(scr, x, y, color, a);
-	}
-	unlock(bc);
+	SDL_SetRenderDrawColor(bc->renderer, r, g, b, a);
+	SDL_RenderClear(bc->renderer);
 }
 
-void drawchar(bc *bc, int x, int y, unsigned char *p, Uint32 fg, Uint32 bg)
+void drawchar(bc *bc, int x, int y, int c, int colormode)
 {
-Uint32 *p2 = (void *)( bc->thescreen->pixels + y*bc->thescreen->pitch + x*4);
-int v;
-unsigned char c;
-int step = bc->thescreen->pitch >> 2;
+	c &= 0x7f;
+	if(c<' ' || c>=128)
+		return;
+	c -= ' ';
 
-	lock(bc);
-	for(v=0;v<13;++v)
-	{
-		c=*p++;
-		p2[0]= (c&0x01) ? fg : bg;
-		p2[1]= (c&0x02) ? fg : bg;
-		p2[2]= (c&0x04) ? fg : bg;
-		p2[3]= (c&0x08) ? fg : bg;
-		p2[4]= (c&0x10) ? fg : bg;
-		p2[5]= (c&0x20) ? fg : bg;
-		p2 += step;
-	}
-	unlock(bc);
+	SDL_Rect rs, rd;
+
+	rs.x = 8*(c&15);
+	rs.y = 13*(c>>4) + colormode*128;
+	rs.w = 6;
+	rs.h = 13;
+
+	rd.x = x;
+	rd.y = y;
+	rd.w = 6;
+	rd.h = 13;
+	SDL_RenderCopy(bc->renderer, bc->font, &rs, &rd);
 }
 
 void taint(bc *bc)
@@ -165,8 +90,7 @@ int diff;
 	diff = bc->nextupdate - now;
 	if(diff>0 && diff<250) return;
 	bc->nextupdate=now+20;
-#warning must lock
-	SDL_UpdateRect(bc->thescreen, 0, 0, 0, 0);
+	SDL_RenderPresent(bc->renderer);
 	bc->tainted=0;
 	scaninput(bc);
 }
@@ -187,19 +111,9 @@ void resetupdate(bc *bc)
 
 void lock(bc *bc)
 {
-//	if(SDL_MUSTLOCK(bc->thescreen))
-	{
-		if ( SDL_LockSurface(bc->thescreen) < 0 )
-		{
-			fprintf(stderr, "Couldn't lock display surface: %s\n",
-								SDL_GetError());
-		}
-	}
 }
 void unlock(bc *bc)
 {
-//	if(SDL_MUSTLOCK(bc->thescreen))
-		SDL_UnlockSurface(bc->thescreen);
 }
 
 
@@ -304,6 +218,12 @@ void disc(bc *bc, double cx, double cy, double radius)
 
 #define IFACTOR 64  // used to fix coords to the grays rendering engine 
 
+void blend_onoff(bc *bc, int onoff)
+{
+	SDL_SetRenderDrawBlendMode(bc->renderer, onoff ? SDL_BLENDMODE_BLEND :
+			SDL_BLENDMODE_NONE);
+}
+
 void rendertest(bc *bc)
 {
 	printf("render test!\n");
@@ -317,6 +237,7 @@ FT_Outline myoutline;
 int i;
 float a,r;
 
+	blend_onoff(bc, 1);
 	for(i=0;i<100;++i)
 	{
 		a=i*3.1415928*2/100;
@@ -355,6 +276,7 @@ float a,r;
 	res=SDL_basic_ft_grays_raster.raster_render(myraster, &myparams);res=res;
 
 	SDL_basic_ft_grays_raster.raster_done(myraster);
+	blend_onoff(bc, 0);
 
 	taint(bc);
 }
@@ -392,6 +314,7 @@ FT_Raster myraster;
 FT_Raster_Params myparams;
 FT_Outline myoutline;
 
+	blend_onoff(bc, 1);
 	shape_end(shape);
 
 	myoutline.n_contours = shape->numcontours;;
@@ -424,21 +347,22 @@ FT_Outline myoutline;
 	unlock(bc);
 
 	SDL_basic_ft_grays_raster.raster_done(myraster);
-
+	blend_onoff(bc, 0);
 
 	taint(bc);
 }
 
 void drawtexture(bc *bc, int n, double x, double y)
 {
-	SDL_Surface *s;
-	if(n>0 && n<MAXTEXTURES && (s=bc->textures[n]))
+	mytexture *mt;
+	if(n>0 && n<MAXTEXTURES && (mt=bc->textures+n)->texture)
 	{
 		SDL_Rect r;
-		r.x = x - s->w/2;
-		r.y = y - s->h/2;
-		r.w = r.h = 0;
-		SDL_BlitSurface(s, 0, bc->thescreen, &r);
+		r.x = x - mt->w/2;
+		r.y = y - mt->h/2;
+		r.w = mt->w;
+		r.h = mt->h;
+		SDL_RenderCopy(bc->renderer, mt->texture, 0, &r);
 		taint(bc);
 	}
 }

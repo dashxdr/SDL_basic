@@ -1045,10 +1045,10 @@ void pruninit(bc *bc)
 	int i;
 	for(i=0;i<MAXTEXTURES;++i)
 	{
-		if(bc->textures[i])
+		if(bc->textures[i].texture)
 		{
-			SDL_FreeSurface(bc->textures[i]);
-			bc->textures[i] = 0;
+			SDL_DestroyTexture(bc->textures[i].texture);
+			bc->textures[i].texture = 0;
 		}
 	}
 	reset_waitbase(bc);

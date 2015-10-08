@@ -420,16 +420,24 @@ void vald(bc *bc){lenascval(bc, TVAL);}
 void loadtexture(bc *bc)
 {
 	struct bstring *bs = bc->vsp[-1].bs;
-	bc->vsp[-1].bs = 0;
+	bc->vsp[-1].d = 0;
 	int i;
+	mytexture *mt;
 	for(i=1;i<MAXTEXTURES;++i)
-		if(bc->textures[i] == 0)
+	{
+		mt = bc->textures + i;
+		if(mt->texture == 0)
 			break;
+	}
 	if(i<MAXTEXTURES)
 	{
-		bc->textures[i] = IMG_Load(bs->string);
-		if(bc->textures[i])
+		SDL_Texture *t = IMG_LoadTexture(bc->renderer, bs->string);
+		if(t)
+		{
 			bc->vsp[-1].d = i;
+			mt->texture = t;
+			SDL_QueryTexture(t, 0, 0, &mt->w, &mt->h);
+		}
 		else
 			verror(bc, "Couldn't read image file %s\n", bs->string);
 	}

@@ -103,7 +103,7 @@ int p;
 	return p;
 }
 
-void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
+void initbc(bc *bc, SDL_Renderer *renderer, SDL_Window *window, int xsize, int ysize)
 {
 	memset(bc, 0, sizeof(mybc));
 	memcpy(bc->randomblock, randomblock, sizeof(bc->randomblock));
@@ -113,10 +113,12 @@ void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
 	bc->txpos = 0;
 	bc->typos = 0;
 	bc->cursorstate = 0;
-	bc->thescreen = surf;
-	bc->white = SDL_MapRGB(bc->thescreen->format, 255, 255, 255);
-	bc->black = SDL_MapRGB(bc->thescreen->format, 0, 0, 0);
-	bc->cursorcolor = SDL_MapRGB(bc->thescreen->format, 255, 0, 0);
+	bc->renderer = renderer;
+	bc->window = window; // actually serves no purpose...
+//	bc->thescreen = surf;
+//	bc->white = SDL_MapRGB(bc->thescreen->format, 255, 255, 255);
+//	bc->black = SDL_MapRGB(bc->thescreen->format, 0, 0, 0);
+//	bc->cursorcolor = SDL_MapRGB(bc->thescreen->format, 255, 0, 0);
 	inittext(bc);
 	pruninit(bc);
 }
@@ -124,12 +126,10 @@ void initbc(bc *bc, SDL_Surface *surf, int xsize, int ysize)
 
 int main(int argc,char **argv)
 {
-int videoflags;
-bc *bc;
-SDL_Surface *thescreen;
-int xsize, ysize;
-int i;
-int v1,v2;
+	bc *bc;
+	int xsize, ysize;
+	int i;
+	int v1,v2;
 	xsize=IXSIZE;
 	ysize=IYSIZE;
 
@@ -159,17 +159,17 @@ int v1,v2;
 		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
 		exit(1);
 	}
-	videoflags = 0; // SDL_RESIZABLE
-	thescreen = SDL_SetVideoMode(xsize, ysize, 32, videoflags);
-	if ( thescreen == NULL )
-	{
-		fprintf(stderr, "Couldn't set display mode: %s\n",
-							SDL_GetError());
-		exit(5);
-	}
+	signal(SIGINT, SIG_DFL);
+	signal(SIGTERM, SIG_DFL);
+
+
+	SDL_Window *window = SDL_CreateWindow("SDL_basic", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+						xsize, ysize, SDL_WINDOW_HIDDEN);
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_ShowWindow(window);
 
 	bc=&mybc;
-	initbc(bc, thescreen, xsize, ysize);
+	initbc(bc, renderer, window, xsize, ysize);
 
 	SDL_AddTimer(10, mytimer, bc);
 	soundopen(bc);

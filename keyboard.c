@@ -229,6 +229,21 @@ void fakekey(bc *bc, int key, int mod)
 	markkey(bc, key, mod, 0);
 }
 
+void process_wheel(bc *bc, int delta, int shifted)
+{
+	if(!delta) return;
+	int key;
+	if(delta<0)
+	{
+		key = SDLK_PAGEDOWN;
+		delta = -delta;
+	} else
+		key = SDLK_PAGEUP;
+	delta *= 3;
+	while(delta-- > 0)
+		fakekey(bc, key, 0);
+}
+
 void scaninput(bc *bc)
 {
 SDL_Event event;
@@ -238,6 +253,7 @@ int key,mod;
 	bc->numdown=0;
 	while(SDL_PollEvent(&event))
 	{
+		int shifted = mod & (KMOD_LSHIFT|KMOD_RSHIFT);shifted=shifted;
 		switch(event.type)
 		{
 		case SDL_KEYDOWN:
@@ -256,22 +272,12 @@ int key,mod;
 			bc->mousey=event.button.y;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-// button 5 down = scrolling down. Button 4 down = scrolling up
-			if(event.button.button == 5)
-			{
-				fakekey(bc, SDLK_PAGEDOWN, 0);
-				fakekey(bc, SDLK_PAGEDOWN, 0);
-				fakekey(bc, SDLK_PAGEDOWN, 0);
-			}
-			else if(event.button.button == 4)
-			{
-				fakekey(bc, SDLK_PAGEUP, 0);
-				fakekey(bc, SDLK_PAGEUP, 0);
-				fakekey(bc, SDLK_PAGEUP, 0);
-			}
 			bc->mouseb|=1<<(event.button.button-1);
 			bc->mousex=event.button.x;
 			bc->mousey=event.button.y;
+			break;
+		case SDL_MOUSEWHEEL:
+			process_wheel(bc, event.wheel.y, shifted);
 			break;
 		case SDL_MOUSEMOTION:
 			bc->mousex=event.motion.x;
