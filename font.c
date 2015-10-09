@@ -4,8 +4,11 @@
    dashxdr@gmail.com
 */
 #include <string.h>
-#include "misc.h"
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "misc.h"
 
 unsigned char fontdata[96][13]={
 {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},

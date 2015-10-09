@@ -5,7 +5,7 @@
 */
 #include <string.h>
 #include <ctype.h>
-#include <SDL.h>
+
 #include "misc.h"
 
 #define ENDMARK 0xaabacada
@@ -229,7 +229,7 @@ void fakekey(bc *bc, int key, int mod)
 	markkey(bc, key, mod, 0);
 }
 
-void process_wheel(bc *bc, int delta, int shifted)
+void process_wheel(bc *bc, int delta)
 {
 	if(!delta) return;
 	int key;
@@ -246,14 +246,13 @@ void process_wheel(bc *bc, int delta, int shifted)
 
 void scaninput(bc *bc)
 {
-SDL_Event event;
-int key,mod;
 
 	update(bc);
 	bc->numdown=0;
+	SDL_Event event;
 	while(SDL_PollEvent(&event))
 	{
-		int shifted = mod & (KMOD_LSHIFT|KMOD_RSHIFT);shifted=shifted;
+		int mod, key;
 		switch(event.type)
 		{
 		case SDL_KEYDOWN:
@@ -277,7 +276,7 @@ int key,mod;
 			bc->mousey=event.button.y;
 			break;
 		case SDL_MOUSEWHEEL:
-			process_wheel(bc, event.wheel.y, shifted);
+			process_wheel(bc, event.wheel.y);
 			break;
 		case SDL_MOUSEMOTION:
 			bc->mousex=event.motion.x;

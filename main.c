@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <SDL.h>
 #include "misc.h"
 
 #define IXSIZE 1024

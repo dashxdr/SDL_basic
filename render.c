@@ -4,7 +4,7 @@
    dashxdr@gmail.com
 */
 #include <string.h>
-#include <SDL.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "misc.h"
