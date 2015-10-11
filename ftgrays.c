@@ -1397,7 +1397,7 @@
            (int)span->x + span->len == (int)x &&
            span->coverage == coverage )
       {
-        span->len = (unsigned short)( span->len + acount );
+        span->len = ( span->len + acount );
         return;
       }
 
@@ -1436,7 +1436,7 @@
 
       /* add a gray span to the current list */
       span->x        = (short)x;
-      span->len      = (unsigned short)acount;
+      span->len      = acount;
       span->coverage = (unsigned char)coverage;
       ras.num_gray_spans++;
     }

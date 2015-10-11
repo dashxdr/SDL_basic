@@ -105,7 +105,7 @@ typedef struct {
 typedef struct {
 	int numpoints;
 	int numcontours;
-	short pathstops[MAX_SHAPE_CONTOURS];
+	int pathstops[MAX_SHAPE_CONTOURS];
 	FT_Vector  points[MAX_SHAPE_POINTS];
 	char tags[MAX_SHAPE_POINTS];
 

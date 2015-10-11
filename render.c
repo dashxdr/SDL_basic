@@ -229,7 +229,7 @@ void rendertest(bc *bc)
 	printf("render test!\n");
 FT_Vector points[1024];
 char tags[1024];
-short pathstops[100];
+int pathstops[100];
 int res;
 FT_Raster myraster;
 FT_Raster_Params myparams;
