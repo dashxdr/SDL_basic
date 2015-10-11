@@ -6,7 +6,9 @@
 60 drawtexture sprite, rnd(xsize), rnd(ysize)
 70 next i
 80 update
-90 next j
-100 drawtexture sprite, mousex, mousey
-110 sleep .02
-120 goto 100
+90 sleep .02
+100 next j
+110 drawtexture sprite, mousex, mousey
+120 update
+130 sleep .02
+140 goto 110
